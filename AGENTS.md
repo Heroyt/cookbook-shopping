@@ -42,6 +42,29 @@ These requirements are mandatory for every implementation task and take preceden
 - Start with [docs/developer-guide/index.md](docs/developer-guide/index.md), then read the relevant topic guides in [docs/developer-guide/](docs/developer-guide/) for current implementation guidance and roadmap context.
 - Do not silently implement behavior that contradicts these sources. If the sources conflict with each other or with the requested change, surface the conflict and ask for direction before proceeding.
 
+## Preferred Skills and Workflows
+
+- Check the available skill catalog before acting, activate every skill relevant to the task, and read its complete `SKILL.md` plus every required referenced file before making changes.
+- Skills supplement the project instructions and domain-decision sources above; they do not override them.
+
+### Planning, Delivery, and Documentation
+
+- Use [$grill-me](/Users/heroyt/.agents/skills/grill-me/SKILL.md) when the user explicitly asks to stress-test or sharpen a plan or design before implementation.
+- Use [$grill-with-docs](/Users/heroyt/.agents/skills/grill-with-docs/SKILL.md) when the user explicitly asks to sharpen a design while recording domain language and architectural decisions.
+- Use [$implement](/Users/heroyt/.codex/skills/implement/SKILL.md) for work based on an approved PRD or issue set. Follow its TDD, regular-check, final-review, and commit workflow.
+- Use [$esoul-maintain-application-documentation](/Users/heroyt/.agents/skills/esoul-maintain-application-documentation/SKILL.md) whenever creating, refreshing, verifying, reviewing, rendering, or integrating application documentation. Select its `create`, `refresh`, or `verify` mode and follow the specification and publication gates it requires.
+
+### Project-Specific Development
+
+- Use [$laravel-best-practices](.agents/skills/laravel-best-practices/SKILL.md) whenever writing, reviewing, or refactoring Laravel backend PHP. Read every rule file mapped to the affected concerns before editing.
+- Use [$shadcn-vue](.agents/skills/shadcn-vue/SKILL.md) for shadcn-vue components, forms, registries, presets, composition, and styling; inspect the project context and component documentation before changing UI components.
+- Use [$inertia-vue-development](.agents/skills/inertia-vue-development/SKILL.md) together with [$vue-best-practices](/Users/heroyt/.agents/skills/vue-best-practices/SKILL.md) for Inertia or Vue pages, forms, navigation, and client-side state.
+- Use [$wayfinder-development](.agents/skills/wayfinder-development/SKILL.md) whenever frontend code calls Laravel routes or controller actions.
+- Use [$tailwindcss-development](.agents/skills/tailwindcss-development/SKILL.md) for Tailwind CSS styling or layout work.
+- Use [$fortify-development](.agents/skills/fortify-development/SKILL.md) for authentication, registration, password reset, email verification, two-factor authentication, passkeys, and profile-security flows.
+- Use [$infer-conventions](.agents/skills/infer-conventions/SKILL.md) when detecting or recording application conventions in `.ai/rules`.
+- Do not activate the available Pest testing skill: this repository uses pure PHPUnit.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
