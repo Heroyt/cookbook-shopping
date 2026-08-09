@@ -2,8 +2,16 @@
 
 declare(strict_types=1);
 
-test('returns a successful response', function (): void {
-    $response = $this->get(route('home'));
+namespace Tests\Feature;
 
-    $response->assertOk();
-});
+use Tests\TestCase;
+
+final class ExampleTest extends TestCase
+{
+    public function test_returns_a_successful_response(): void
+    {
+        $response = $this->get(route('home'));
+
+        $response->assertOk();
+    }
+}

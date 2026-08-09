@@ -2,17 +2,27 @@
 
 declare(strict_types=1);
 
+namespace Tests\Feature;
+
 use App\Models\User;
+use Tests\TestCase;
 
-test('guests are redirected to the login page', function (): void {
-    $response = $this->get(route('dashboard'));
-    $response->assertRedirect(route('login'));
-});
+final class DashboardTest extends TestCase
+{
+    public function test_guests_are_redirected_to_the_login_page(): void
+    {
+        $response = $this->get(route('dashboard'));
 
-test('authenticated users can visit the dashboard', function (): void {
-    $user = User::factory()->create();
-    $this->actingAs($user);
+        $response->assertRedirect(route('login'));
+    }
 
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
-});
+    public function test_authenticated_users_can_visit_the_dashboard(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $response = $this->get(route('dashboard'));
+
+        $response->assertOk();
+    }
+}
