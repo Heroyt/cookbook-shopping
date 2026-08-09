@@ -15,9 +15,9 @@ pipeline {
 		// Images
 		PHP_TEST_IMAGE = 'php:8.5'
 		NODE_TEST_IMAGE = 'node:lts'
-		APP_IMAGE = 'plemenna_kniha'
+		APP_IMAGE = 'cook-book-shopping-list'
 
-		DEPLOY_STACK_NAME = 'pk'
+		DEPLOY_STACK_NAME = 'cook-book'
 	}
 
 	stages {

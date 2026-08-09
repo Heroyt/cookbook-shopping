@@ -11,7 +11,13 @@
         "format:check": "prettier --check resources/",
         "lint": "eslint . --fix",
         "lint:check": "eslint .",
-        "types:check": "vue-tsc --noEmit"
+        "types:check": "vue-tsc --noEmit",
+        "eslint": "eslint .",
+        "prettier": "prettier --check resources/",
+        "test:node": "vitest run",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "tsc": "vue-tsc --noEmit -p tsconfig.json"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.5",
