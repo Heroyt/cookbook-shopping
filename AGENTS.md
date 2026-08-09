@@ -28,6 +28,20 @@ These requirements are mandatory for every implementation task and take preceden
 - PHP tests use pure PHPUnit. Do not add Pest syntax or dependencies.
 - Frontend tests use Vitest.
 
+## Git Commits
+
+- When committing changes, use the subject format `:emoji: [optional context] message`.
+- Write the gitmoji as its colon-wrapped code, not as a Unicode emoji. For example: `:bug: [shopping-list] fix package rounding`.
+- Keep commits focused on one logical change. Split unrelated implementation, tests, documentation, and tooling changes into separate commits when that improves reviewability.
+- Stage only the intended files and preserve unrelated user changes already present in the worktree.
+
+## Domain Context and Decisions
+
+- Before planning or implementing domain behavior, read [CONTEXT.md](CONTEXT.md) for the ubiquitous language, core concepts, invariants, and currently agreed behavior.
+- Read the relevant accepted architectural decisions in [docs/adr/](docs/adr/) before changing domain boundaries, persistence, tenancy, module structure, or other architecture governed by an ADR.
+- Start with [docs/developer-guide/index.md](docs/developer-guide/index.md), then read the relevant topic guides in [docs/developer-guide/](docs/developer-guide/) for current implementation guidance and roadmap context.
+- Do not silently implement behavior that contradicts these sources. If the sources conflict with each other or with the requested change, surface the conflict and ask for direction before proceeding.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
