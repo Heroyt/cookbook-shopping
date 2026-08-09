@@ -223,3 +223,25 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Correct all actionable semantic findings before committing the guide. Preserve unresolved implementation choices and external infrastructure gaps as explicit decision gates rather than inventing deployed behavior. Keep the accepted documentation-tool/PDF exception open.
 - Rationale: The reviews found real clean-checkout, CI, authentication, unit-conversion, lifecycle, planned-label, information-architecture, and accessibility issues. Resolving them makes the Markdown an evidence-backed development reference without overstating implementation or publication readiness.
 - Follow-up or review date: Re-run all publication gates after the managed documentation tool becomes available and after planned capabilities become implemented behavior.
+
+### DOC-0020 — Keep managed tooling deferred after verifying the 0.6.3 source installer
+
+- Date: 2026-08-09
+- Mode: Refresh
+- Status: Superseded
+- Affects: Specification evidence gaps and publication contract
+- Evidence: Release `0.6.3` metadata and checksum manifest, tag `0.6.3`, source commit `7aa33237bbe3a84c7505cc101bd4a466a66c5c21`, installer blob `c3c2a0bdb114b7092d4f490abb20e93d6515f959`, and the bootstrap error for the missing `CONFIG_SCHEMA_VERSION`
+- Decision: Leave `docs/documentation` and `docs/documentation.toml` absent. Do not patch, reconstruct, or substitute the release installer; retry only after the upstream release publishes a compatible bootstrap and manifest.
+- Rationale: The tag-pinned source installer is authentic to the recorded release commit, but it cannot consume the published `0.6.3` manifest. Local modification would bypass the skill's managed-tool trust and upgrade contract.
+- Follow-up or review date: Superseded by DOC-0021 after the User explicitly approved a temporary trusted manual installation.
+
+### DOC-0021 — Temporarily install trusted 0.6.3 tooling with local compatibility fixes
+
+- Date: 2026-08-09
+- Mode: Refresh
+- Status: Approved
+- Affects: Managed documentation tooling, renderer trust, validation, and publication contract
+- Evidence: User approval on 2026-08-09; release `0.6.3`; tag source commit `7aa33237bbe3a84c7505cc101bd4a466a66c5c21`; installer blob `c3c2a0bdb114b7092d4f490abb20e93d6515f959`; the published `release.env`; immutable Scaleway installer digest `sha256:c895b325eaa5884f09e836fd6ca5a24f20ca988ee8cec9454275e182cd42803b`; immutable Scaleway renderer digest `sha256:927cb33b8c8e44ce3f161e7d541f9d054caad71394288ebfd3d987ede2a580b3`; successful `doctor` and `validate` runs
+- Decision: Temporarily install the verified `0.6.3` source installer by supplying the missing `CONFIG_SCHEMA_VERSION=1` value in an otherwise unchanged local copy of the release manifest. Keep the remote profile pinned to the approved Scaleway renderer. Locally patch the managed launcher to reuse that exact allowlisted digest when it is already cached, because OrbStack/Docker 29 rejects a redundant pull with `cannot overwrite digest`; preserve the normal pull path when the image is absent and record the patched launcher checksum in the managed-file manifest.
+- Rationale: The User and tooling authors explicitly trust this release and approved a temporary manual compatibility path. The workaround preserves immutable image pinning, renderer allowlisting, managed-file integrity checks, container isolation, and the stable `docs/documentation` command while avoiding the two confirmed bootstrap/runtime defects.
+- Follow-up or review date: Replace the temporary installation with an unmodified official release as soon as the public installer, release manifest, and redundant digest-pull behavior are corrected; remove the local launcher patch during that upgrade.
