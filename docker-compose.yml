@@ -1,0 +1,39 @@
+services:
+    laravel:
+        build:
+            context: './'
+            dockerfile: ./docker/dev/Dockerfile
+            args:
+              WWWGROUP: '${WWWGROUP:-sail}'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        ports:
+            - '${VITE_PORT:-5173}:5173'
+        expose:
+          - 9000
+        env_file:
+          - .env
+        environment:
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            OTEL_PHP_DISABLED_INSTRUMENTATIONS: 'all'
+        volumes:
+            - '.:/var/www'
+        networks:
+            - sail
+    nginx:
+        image: 'nginx:alpine'
+        ports:
+            - '${APP_PORT:-80}:80'
+        volumes:
+            - './docker/dev/nginx.conf:/etc/nginx/conf.d/default.conf'
+            - '.:/var/www'
+        networks:
+            - sail
+        depends_on:
+            - laravel
+networks:
+    sail:
+        driver: bridge

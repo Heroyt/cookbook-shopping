@@ -18,6 +18,8 @@
         "laravel/wayfinder": "^0.1.14"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^4.4",
+        "brianium/paratest": "^7.23",
         "fakerphp/faker": "^1.24",
         "larastan/larastan": "^3.9",
         "laravel/boost": "^2.2",
@@ -95,7 +97,11 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ]
+        ],
+        "phpstan": "./vendor/bin/phpstan --memory-limit=1G analyse",
+        "cbf": "./vendor/bin/pint",
+        "pint": "./vendor/bin/pint",
+        "cs": "./vendor/bin/pint --test"
     },
     "extra": {
         "laravel": {

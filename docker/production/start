@@ -1,0 +1,54 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "Starting Laravel application..."
+
+# Make sure that all necessary directories exist
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/logs
+mkdir -p storage/app/public
+mkdir -p storage/app/private
+
+# Ensure proper permissions
+chown -R www-data:www-data storage bootstrap/cache
+
+# Check if running in dev environment
+IS_DEV=false
+if [ "$APP_ENV" = "local" ] || [ "$APP_DEBUG" = "true" ]; then
+    IS_DEV=true
+fi
+
+if [ "$IS_DEV" = "true" ]; then
+    echo "Running in DEV mode - clearing all caches..."
+    php artisan config:clear
+    php artisan route:clear
+    php artisan view:clear
+    php artisan cache:clear
+    php artisan optimize:clear
+    echo "All caches cleared"
+else
+    # Prepare laravel for production
+    echo "Optimizing Laravel..."
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan optimize
+fi
+
+php artisan storage:link
+
+# Run database migrations
+echo "Running migrations..."
+php artisan migrate --force --no-interaction || echo "Migration failed" # Allow migrations to fail
+
+# Start crond in the background
+echo "Starting scheduler (crond)..."
+crond -b -l 2
+echo "Scheduler started"
+
+echo "Starting PHP-FPM..."
+# Start the FPM server in the foreground
+exec php-fpm

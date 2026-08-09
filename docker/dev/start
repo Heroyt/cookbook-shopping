@@ -1,0 +1,69 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "Starting Laravel application..."
+
+# Make sure that all necessary directories exist
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
+mkdir -p storage/logs
+mkdir -p storage/app/public
+mkdir -p storage/app/private
+mkdir -p bootstrap/cache
+
+chmod -R 775 storage bootstrap/cache
+
+# Check if running in dev environment (APP_ENV=local or APP_DEBUG=true)
+IS_DEV=false
+if [ "$APP_ENV" = "local" ] || [ "$APP_DEBUG" = "true" ]; then
+    IS_DEV=true
+fi
+
+if [ "$IS_DEV" = "true" ]; then
+    echo "Running in DEV mode..."
+
+    echo "Installing dependencies with composer..."
+    composer install --no-interaction --prefer-dist --optimize-autoloader || echo "Warning: Composer install had issues"
+  fi
+
+if [ "$DB_CONNECTION" = "sqlite" ]; then
+    # For SQLite, ensure the database file exists before migrating
+    echo "Using SQLite database, ensuring database file ${DB_DATABASE} exists..."
+    touch "${DB_DATABASE}"
+fi
+# Run database migrations
+echo "Running migrations..."
+php artisan migrate --force || echo "Migration failed" # Allow migrations to fail
+
+if [ "$IS_DEV" = "true" ]; then
+    echo "Clearing all caches..."
+    php artisan config:clear
+    php artisan route:clear
+    php artisan view:clear
+    php artisan cache:clear
+    php artisan optimize:clear
+    echo "All caches cleared"
+
+    echo "Installing npm dependencies and building assets..."
+    env CI=true pnpm install
+else
+    # Prepare laravel for production
+    echo "Optimizing Laravel..."
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan optimize
+fi
+
+php artisan storage:link
+
+# Start crond in the background
+echo "Starting scheduler (crond)..."
+crond -b -l 2
+echo "Scheduler started"
+
+# Start supervisor
+echo "Starting supervisor for queue worker..."
+exec supervisord -c /etc/supervisor/supervisord.conf || echo "Warning: Queue worker startup had issues"
