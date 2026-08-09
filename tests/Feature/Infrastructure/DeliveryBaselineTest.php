@@ -85,6 +85,8 @@ SH);
 
         $this->assertSame('pnpm@11.17.0', $packageManifest['packageManager']);
         $this->assertStringContainsString("touch('database/database.sqlite')", $setupCommands);
+        $this->assertStringContainsString('php artisan key:generate --no-interaction', $setupCommands);
+        $this->assertStringContainsString('php artisan migrate --force --no-interaction', $setupCommands);
         $this->assertStringContainsString('pnpm install --frozen-lockfile', $setupCommands);
         $this->assertStringContainsString('pnpm run build', $setupCommands);
         $this->assertDoesNotMatchRegularExpression('/(?:^|\n)npm /', $setupCommands . "\n" . $ciCommands);
