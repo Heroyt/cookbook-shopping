@@ -25,8 +25,10 @@ These requirements are mandatory for every implementation task and take preceden
 
 ## Testing Frameworks
 
+- Every implementation change must be programmatically tested. Add or update the narrowest relevant test coverage and run it during implementation.
 - PHP tests use pure PHPUnit. Do not add Pest syntax or dependencies.
 - Frontend tests use Vitest.
+- Do not delete tests without explicit user approval.
 
 ## Git Commits
 
@@ -50,7 +52,7 @@ These requirements are mandatory for every implementation task and take preceden
 ### Planning, Delivery, and Documentation
 
 - Use [$grill-me](/Users/heroyt/.agents/skills/grill-me/SKILL.md) when the user explicitly asks to stress-test or sharpen a plan or design before implementation.
-- Use [$grill-with-docs](/Users/heroyt/.agents/skills/grill-with-docs/SKILL.md) when the user explicitly asks to sharpen a design while recording domain language and architectural decisions.
+- Use [$grill-with-docs](/Users/heroyt/.agents/skills/grill-with-docs/SKILL.md) when the user explicitly asks to sharpen a design while recording domain language and architectural decisions, or when another active skill requires that workflow.
 - Use [$implement](/Users/heroyt/.codex/skills/implement/SKILL.md) for work based on an approved PRD or issue set. Follow its TDD, regular-check, final-review, and commit workflow.
 - Use [$esoul-maintain-application-documentation](/Users/heroyt/.agents/skills/esoul-maintain-application-documentation/SKILL.md) whenever creating, refreshing, verifying, reviewing, rendering, or integrating application documentation. Select its `create`, `refresh`, or `verify` mode and follow the specification and publication gates it requires.
 
@@ -63,7 +65,6 @@ These requirements are mandatory for every implementation task and take preceden
 - Use [$tailwindcss-development](.agents/skills/tailwindcss-development/SKILL.md) for Tailwind CSS styling or layout work.
 - Use [$fortify-development](.agents/skills/fortify-development/SKILL.md) for authentication, registration, password reset, email verification, two-factor authentication, passkeys, and profile-security flows.
 - Use [$infer-conventions](.agents/skills/infer-conventions/SKILL.md) when detecting or recording application conventions in `.ai/rules`.
-- Do not activate the available Pest testing skill: this repository uses pure PHPUnit.
 
 <laravel-boost-guidelines>
 === foundation rules ===
@@ -80,10 +81,6 @@ Before relying on a package's API, confirm its installed version:
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
-## Skills Activation
-
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
-
 ## Conventions
 
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
@@ -98,10 +95,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
-
-## Frontend Bundling
-
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
 
 ## Documentation Files
 
@@ -171,21 +164,12 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
 
-=== tests rules ===
-
-# Test Enforcement
-
-- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
-
 === inertia-laravel/core rules ===
 
 # Inertia
 
 - Inertia creates fully client-side rendered SPAs without modern SPA complexity, leveraging existing server-side patterns.
 - Components live in `resources/js/pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
-- ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
-- IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 # Inertia v3
 
@@ -229,7 +213,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Vite Error
 
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
+- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, run `pnpm build` or ask the user to run `pnpm dev` or `composer run dev`.
 
 === wayfinder/core rules ===
 
@@ -237,27 +221,10 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `@/actions/` (controllers) or `@/routes/` (named routes).
 
-=== pint/core rules ===
-
-# Laravel Pint Code Formatter
-
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
-
-=== phpunit/core rules ===
-
-## PHPUnit
-
-- This project uses pure PHPUnit for testing. Create tests with `php artisan make:test {name}` or add `--unit` for unit tests.
-- PHPUnit test classes must extend the appropriate project test case and use PHPUnit attributes or methods. Do not use Pest functions or expectations.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
-- Do NOT delete tests without approval.
-
 === inertia-vue/core rules ===
 
 # Inertia + Vue
 
 Vue components must have a single root element.
-- IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 </laravel-boost-guidelines>
