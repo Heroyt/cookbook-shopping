@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Requests\Settings;
 
 use App\Concerns\PasswordValidationRules;
+use App\Http\Requests\AuthenticatedRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class ProfileDeleteRequest extends FormRequest
+class ProfileDeleteRequest extends AuthenticatedRequest
 {
     use PasswordValidationRules;
 

@@ -4,6 +4,18 @@ declare(strict_types=1);
 
 use Laravel\Fortify\Features;
 
+$appUrl = config('app.url');
+
+if ( ! is_string($appUrl)) {
+    throw new \UnexpectedValueException('The app.url configuration value must be a string.');
+}
+
+$relyingPartyId = parse_url($appUrl, PHP_URL_HOST);
+
+if ( ! is_string($relyingPartyId)) {
+    throw new \UnexpectedValueException('The app.url configuration value must contain a host.');
+}
+
 return [
 
     /*
@@ -144,8 +156,8 @@ return [
     */
 
     'passkeys' => [
-        'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
-        'allowed_origins' => [config('app.url')],
+        'relying_party_id' => $relyingPartyId,
+        'allowed_origins' => [$appUrl],
         'user_handle_secret' => env('PASSKEYS_USER_HANDLE_SECRET', config('app.key')),
         'timeout' => 60000,
     ],

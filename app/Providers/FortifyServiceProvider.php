@@ -67,15 +67,18 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureRateLimiting(): void
     {
-
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
+            $username = $request->string(Fortify::username())->lower()->toString();
+            $throttleKey = Str::transliterate($username . '|' . ($request->ip() ?? 'unknown'));
 
             return Limit::perMinute(5)->by($throttleKey);
         });
 
-        RateLimiter::for('passkeys', fn (Request $request) => Limit::perMinute(10)->by(
-            ($request->input('credential.id') ?: $request->session()->getId()) . '|' . $request->ip(),
-        ));
+        RateLimiter::for('passkeys', function (Request $request) {
+            $credentialId = $request->string('credential.id')->toString();
+            $identifier = $credentialId !== '' ? $credentialId : $request->session()->getId();
+
+            return Limit::perMinute(10)->by($identifier . '|' . ($request->ip() ?? 'unknown'));
+        });
     }
 }

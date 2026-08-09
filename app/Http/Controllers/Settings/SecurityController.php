@@ -12,6 +12,8 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Fortify\Features;
+use Laravel\Passkeys\Passkey;
+use UnexpectedValueException;
 
 class SecurityController extends Controller
 {
@@ -20,21 +22,29 @@ class SecurityController extends Controller
      */
     public function edit(TwoFactorAuthenticationRequest $request): Response
     {
+        $user = $request->authenticatedUser();
+
         $props = [
             'canManagePasskeys' => Features::canManagePasskeys(),
             'passkeys' => Features::canManagePasskeys()
-                ? $request->user()
+                ? $user
                     ->passkeys()
                     ->select(['id', 'name', 'credential', 'created_at', 'last_used_at'])
                     ->latest()
                     ->get()
-                    ->map(fn ($passkey) => [
-                        'id' => $passkey->id,
-                        'name' => $passkey->name,
-                        'authenticator' => $passkey->authenticator,
-                        'created_at_diff' => $passkey->created_at->diffForHumans(),
-                        'last_used_at_diff' => $passkey->last_used_at?->diffForHumans(),
-                    ])
+                    ->map(function (Passkey $passkey): array {
+                        if ($passkey->created_at === null) {
+                            throw new UnexpectedValueException('A persisted passkey must have a creation timestamp.');
+                        }
+
+                        return [
+                            'id' => $passkey->id,
+                            'name' => $passkey->name,
+                            'authenticator' => $passkey->authenticator,
+                            'created_at_diff' => $passkey->created_at->diffForHumans(),
+                            'last_used_at_diff' => $passkey->last_used_at?->diffForHumans(),
+                        ];
+                    })
                     ->values()
                     ->all()
                 : [],
@@ -49,7 +59,7 @@ class SecurityController extends Controller
      */
     public function update(PasswordUpdateRequest $request): RedirectResponse
     {
-        $request->user()->update([
+        $request->authenticatedUser()->update([
             'password' => $request->password,
         ]);
 
