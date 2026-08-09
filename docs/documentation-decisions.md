@@ -201,3 +201,25 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Approve documentation specification `0.1.0` after incorporating Family ownership, Current Family scoping, Stores, and persistence-independent Shopping List generation.
 - Rationale: The revision aligns the documentation contract with the current authoritative domain glossary and ADRs while preserving the previously approved audience, language, safety, publication, and versioning policies.
 - Follow-up or review date: Reopen the specification when a refresh changes one of its governing assumptions.
+
+### DOC-0018 — Publish an evidence-separated developer implementation guide
+
+- Date: 2026-08-09
+- Mode: Create
+- Status: Approved
+- Affects: Developer/operator guide architecture, data, infrastructure, deployment, and roadmap chapters
+- Evidence: User request on 2026-08-09, approved `docs/documentation-spec.md`, `CONTEXT.md`, `docs/adr/`, and repository implementation/configuration
+- Decision: Document the implemented Laravel application and delivery assets as current behavior, while presenting the approved domain model, conceptual data structure, production baseline, and dependency-ordered implementation roadmap only in visually distinct **Planned** content.
+- Rationale: Developers need an actionable design and deployment path, but the repository currently implements only the authenticated application shell and does not prove the intended domain or external production topology exists.
+- Follow-up or review date: Convert each planned section to current documentation only after its implementation and operational evidence are verified.
+
+### DOC-0019 — Resolve independent developer-guide review findings
+
+- Date: 2026-08-09
+- Mode: Create
+- Status: Approved
+- Affects: Entire developer/operator guide
+- Evidence: Independent repository-correctness, specification-completeness, and domain-consistency reviews; repository code/configuration; `CONTEXT.md`; `docs/adr/`
+- Decision: Correct all actionable semantic findings before committing the guide. Preserve unresolved implementation choices and external infrastructure gaps as explicit decision gates rather than inventing deployed behavior. Keep the accepted documentation-tool/PDF exception open.
+- Rationale: The reviews found real clean-checkout, CI, authentication, unit-conversion, lifecycle, planned-label, information-architecture, and accessibility issues. Resolving them makes the Markdown an evidence-backed development reference without overstating implementation or publication readiness.
+- Follow-up or review date: Re-run all publication gates after the managed documentation tool becomes available and after planned capabilities become implemented behavior.

@@ -1,0 +1,44 @@
+# Developer and Operator Guide
+
+Documentation version: **0.1.0**
+
+This guide is the main technical entry point for developing and operating the cookbook and shopping-planning application. It describes the application that exists in the repository today and the approved domain design that has not yet been implemented.
+
+## Status language
+
+Unmarked statements describe current repository evidence. A blockquote beginning with **Planned** describes approved intent rather than available behavior.
+
+The canonical implementation-free vocabulary remains in [the domain glossary](../../CONTEXT.md). Architectural trade-offs are recorded in the [ADR directory](../adr/).
+
+## Guide map
+
+1. [Current application](current-application.md) — implemented routes, authentication, frontend shell, and persistence.
+2. [Architecture and system boundaries](architecture.md) — current request flow and planned modular-monolith boundaries.
+3. [Local development](local-development.md) — workstation and Docker workflows, generated route bindings, and verification.
+4. [Domain model](domain-model.md) — module boundaries, ADR map, and capability navigation.
+5. [Family access](family-access.md) — ownership, membership, Current Family selection, and unresolved account lifecycle gates.
+6. [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, alternatives, composition, search, and archival.
+7. [Nutrition](nutrition.md) — Ingredient bases, per-serving calculation, overrides, incomplete profiles, and daily totals.
+8. [Stores and shopping order](stores-shopping-order.md) — reusable Sections, placement, removal, and grouping.
+9. [Calendar planning](calendar-planning.md) — Calendar Entries, derived days, Meal Labels, weekly planning, and Simple Plans.
+10. [Shopping-list generation](shopping-generation.md) — service boundary, conversions, aggregation, alternatives, and output.
+11. [Planned data structure](data-structure.md) — conceptual relational model, ownership keys, constraints, and snapshots.
+12. [Frontend architecture and navigation](frontend-navigation.md) — current shell and planned responsive workflows.
+13. [Infrastructure and deployment](infrastructure-deployment.md) — current Docker/Jenkins delivery path, operational gaps, and planned production topology.
+14. [Security and observability](security-observability.md) — implemented controls, Family authorization requirements, secrets, health, and telemetry.
+15. [Implementation roadmap](implementation-roadmap.md) — dependency-ordered vertical slices and completion gates.
+
+## Evidence hierarchy
+
+When sources disagree, use this order:
+
+1. Code, tests, migrations, configuration, and observed behavior for implemented functionality.
+2. The [approved documentation specification](../documentation-spec.md), [domain glossary](../../CONTEXT.md), and [ADRs](../adr/) for intended behavior.
+3. Official third-party documentation for framework and platform contracts.
+4. Existing prose as supporting evidence that must still be verified.
+
+The connected Laravel Boost database is explicitly excluded as evidence because the approved [documentation decision](../documentation-decisions.md#doc-0001--exclude-the-connected-laravel-boost-database-from-documentation-evidence) identifies it as belonging to another application.
+
+## Known publication limitation
+
+The Markdown guide is the source of truth. The managed documentation installer and renderer are unavailable under the approved documentation-tool exception, so PDF generation and visual PDF inspection are not part of this revision. Do not call this guide publish-ready until those gates can run.

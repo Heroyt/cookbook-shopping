@@ -167,8 +167,8 @@ Version documentation independently using semantic versioning, beginning at `0.1
 ## Acceptance criteria
 
 - [x] Specification approved before substantial authoring.
-- [ ] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
-- [ ] All material claims have evidence or explicit user attestation.
-- [ ] Every published screenshot is manifested and approved.
+- [x] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
+- [x] All material claims have evidence or explicit user attestation.
+- [x] Every published screenshot is manifested and approved; this revision publishes no screenshots.
 - [ ] Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
-- [ ] Correctness and completeness review findings are resolved or explicitly accepted.
+- [x] Correctness and completeness review findings are resolved or explicitly accepted.
