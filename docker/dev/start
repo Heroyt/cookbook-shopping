@@ -25,8 +25,8 @@ if [ "$IS_DEV" = "true" ]; then
     echo "Running in DEV mode..."
 
     echo "Installing dependencies with composer..."
-    composer install --no-interaction --prefer-dist --optimize-autoloader || echo "Warning: Composer install had issues"
-  fi
+    composer install --no-interaction --prefer-dist --optimize-autoloader
+fi
 
 if [ "$DB_CONNECTION" = "sqlite" ]; then
     # For SQLite, ensure the database file exists before migrating
@@ -35,7 +35,7 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
 fi
 # Run database migrations
 echo "Running migrations..."
-php artisan migrate --force || echo "Migration failed" # Allow migrations to fail
+php artisan migrate --force --no-interaction
 
 if [ "$IS_DEV" = "true" ]; then
     echo "Clearing all caches..."
@@ -46,8 +46,8 @@ if [ "$IS_DEV" = "true" ]; then
     php artisan optimize:clear
     echo "All caches cleared"
 
-    echo "Installing npm dependencies and building assets..."
-    env CI=true pnpm install
+    echo "Installing pnpm dependencies and building assets..."
+    env CI=true pnpm install --frozen-lockfile
 else
     # Prepare laravel for production
     echo "Optimizing Laravel..."
@@ -66,4 +66,4 @@ echo "Scheduler started"
 
 # Start supervisor
 echo "Starting supervisor for queue worker..."
-exec supervisord -c /etc/supervisor/supervisord.conf || echo "Warning: Queue worker startup had issues"
+exec supervisord -c /etc/supervisor/supervisord.conf

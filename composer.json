@@ -46,10 +46,11 @@
         "setup": [
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
+            "pnpm install --frozen-lockfile",
+            "pnpm run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
@@ -63,9 +64,9 @@
         ],
         "ci:check": [
             "Composer\\Config::disableProcessTimeout",
-            "npm run lint:check",
-            "npm run format:check",
-            "npm run types:check",
+            "pnpm run lint:check",
+            "pnpm run format:check",
+            "pnpm run types:check",
             "@test"
         ],
         "types:check": [

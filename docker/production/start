@@ -42,7 +42,7 @@ php artisan storage:link
 
 # Run database migrations
 echo "Running migrations..."
-php artisan migrate --force --no-interaction || echo "Migration failed" # Allow migrations to fail
+php artisan migrate --force --no-interaction
 
 # Start crond in the background
 echo "Starting scheduler (crond)..."

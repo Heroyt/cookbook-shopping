@@ -31,7 +31,7 @@ RUN rm -rf  \
 RUN apk add --no-cache nodejs npm
 
 # Install pnpm via npm (pinned to match "packageManager" in package.json)
-RUN npm install -g pnpm@10.30.2
+RUN npm install -g pnpm@11.17.0
 
 # COPY php configuration
 COPY docker/dev/php.ini /usr/local/etc/php/conf.d/app.ini

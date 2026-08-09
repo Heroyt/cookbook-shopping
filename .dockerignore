@@ -6,7 +6,8 @@ gen
 npm-debug.log
 yarn-error.log
 bootstrap/compiled.php
-.env
+.env*
+!.env.example
 Homestead.yaml
 Homestead.json
 /.vagrant

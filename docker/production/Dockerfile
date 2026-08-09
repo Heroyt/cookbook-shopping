@@ -30,7 +30,6 @@ COPY package.json /var/www/package.json
 COPY vite.config.ts /var/www/vite.config.ts
 COPY tsconfig.json /var/www/tsconfig.json
 COPY .npmrc /var/www/.npmrc
-COPY .env.docker /var/www/.env
 
 RUN mkdir -p /var/www/storage  \
     /var/www/storage/framework/views  \
@@ -44,17 +43,13 @@ RUN mkdir -p /var/www/storage  \
 WORKDIR /var/www
 
 RUN composer install --no-dev --optimize-autoloader && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache && \
-    php artisan storage:link && \
     php artisan wayfinder:generate
 
 FROM node:lts-alpine AS node_builder
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
 
 # Copy only package files to leverage Docker cache
 WORKDIR /var/www
@@ -78,8 +73,8 @@ COPY --from=php_builder /var/www/resources/js/actions /var/www/resources/js/acti
 COPY --from=php_builder /var/www/resources/js/routes /var/www/resources/js/routes
 COPY --from=php_builder /var/www/resources/js/wayfinder /var/www/resources/js/wayfinder
 
-# Use --no-frozen-lockfile to allow pnpm to resolve platform-specific packages
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile && \
+# Install exactly the dependency graph committed in pnpm-lock.yaml.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile && \
     pnpm run build
 
 FROM base AS app

@@ -31,6 +31,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@11.17.0 --activate
+
       - name: Setup Application
         run: composer setup
 
