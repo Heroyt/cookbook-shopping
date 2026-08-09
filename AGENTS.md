@@ -1,3 +1,33 @@
+# Project Verification Requirements
+
+These requirements are mandatory for every implementation task and take precedence over generic verification guidance below.
+
+## During Implementation
+
+- After each meaningful code change, run the narrowest relevant test or test file and the relevant static check for the files changed before continuing. Do not defer all verification until the end of the task.
+- When a check fails, fix the cause and rerun that check. Do not finalize with known failures.
+
+## Before Finalizing
+
+- For PHP changes, run all of the following:
+  - `vendor/bin/pint --dirty --format agent`
+  - `composer cs`
+  - `composer phpstan`
+  - The affected PHPUnit tests with `php artisan test --compact <test-file>` or `php artisan test --compact --filter=<test-name>`.
+- For frontend JavaScript, TypeScript, or Vue changes, run all of the following:
+  - `pnpm eslint`
+  - `pnpm prettier`
+  - `pnpm tsc`
+  - The affected Vitest tests with `pnpm test:node --maxWorkers=1 --testTimeout=10000 <test-file>`; run the command without `<test-file>` when changes have broad impact.
+- For changes spanning PHP and frontend code, run both verification groups.
+- For build tooling, dependency, Docker, or CI changes, also run the relevant install and production build commands, including `pnpm install --frozen-lockfile` and `pnpm build` when the frontend build is affected.
+- In the final response, list the checks that were run and their outcomes.
+
+## Testing Frameworks
+
+- PHP tests use pure PHPUnit. Do not add Pest syntax or dependencies.
+- Frontend tests use Vitest.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -177,12 +207,12 @@ Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `
 - If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
 - Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
 
-=== pest/core rules ===
+=== phpunit/core rules ===
 
-## Pest
+## PHPUnit
 
-- This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
-- The `{name}` argument should not include the test suite directory. Use `php artisan make:test --pest SomeFeatureTest` instead of `php artisan make:test --pest Feature/SomeFeatureTest`.
+- This project uses pure PHPUnit for testing. Create tests with `php artisan make:test {name}` or add `--unit` for unit tests.
+- PHPUnit test classes must extend the appropriate project test case and use PHPUnit attributes or methods. Do not use Pest functions or expectations.
 - Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
 - Do NOT delete tests without approval.
 
