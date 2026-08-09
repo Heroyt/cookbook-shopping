@@ -1,0 +1,767 @@
+#!/bin/sh
+set -eu
+
+DOCS_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd)
+PROJECT_ROOT=$(CDPATH= cd "${DOCS_DIR}/.." && pwd)
+CONFIG="${PROJECT_ROOT}/docs/documentation.toml"
+TOOLS_DIR="${PROJECT_ROOT}/docs/.documentation-tools"
+VERSION_FILE="${TOOLS_DIR}/VERSION"
+MANIFEST_FILE="${TOOLS_DIR}/managed-files.json"
+
+usage() {
+    echo "Usage: docs/documentation {doctor|validate|build|render|redact PLAN|version}" >&2
+    exit 2
+}
+
+toml_string() {
+    wanted_section=$1
+    wanted_key=$2
+    awk -v wanted_section="${wanted_section}" -v wanted_key="${wanted_key}" '
+        BEGIN {
+            section = ""
+            in_array_table = 0
+        }
+        /^[[:space:]]*\[\[/ {
+            section = ""
+            in_array_table = 1
+            next
+        }
+        /^[[:space:]]*\[[^[]/ {
+            value = $0
+            sub(/^[[:space:]]*\[/, "", value)
+            sub(/\][[:space:]]*(#.*)?$/, "", value)
+            section = value
+            in_array_table = 0
+            next
+        }
+        !in_array_table && section == wanted_section {
+            line = $0
+            sub(/^[[:space:]]*/, "", line)
+            if (index(line, wanted_key) != 1) {
+                next
+            }
+            rest = substr(line, length(wanted_key) + 1)
+            if (rest !~ /^[[:space:]]*=/) {
+                next
+            }
+            sub(/^[[:space:]]*=[[:space:]]*/, "", rest)
+            if (rest !~ /^"/) {
+                parse_error = 1
+                exit
+            }
+            sub(/^"/, "", rest)
+            quote = index(rest, "\"")
+            if (quote == 0) {
+                parse_error = 1
+                exit
+            }
+            print substr(rest, 1, quote - 1)
+            found = 1
+            exit
+        }
+        END {
+            if (parse_error) {
+                exit 3
+            }
+            if (!found) {
+                exit 4
+            }
+        }
+    ' "${CONFIG}"
+}
+
+read_setting() {
+    section=$1
+    key=$2
+    fallback=$3
+    if value=$(toml_string "${section}" "${key}"); then
+        setting_value=${value}
+        setting_error=
+        return 0
+    else
+        status=$?
+    fi
+    if [ "${status}" -eq 4 ]; then
+        setting_value=${fallback}
+        setting_error=
+        return 0
+    fi
+    setting_value=${fallback}
+    setting_error="${key} must be a simple quoted TOML string for Docker bootstrap"
+    return 1
+}
+
+project_relative_path_is_valid() {
+    value=$1
+    case "${value}" in
+        ""|"."|".."|/*|.git|.git/*|*/.git|*/.git/*|../*|*/../*|*/..|*//*|*/./*|./*|*/|*\\*)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+require_project_relative_path() {
+    key=$1
+    value=$2
+    if ! project_relative_path_is_valid "${value}"; then
+        echo "ERROR: ${key} must be a normalized project-relative path outside .git: ${value}" >&2
+        exit 1
+    fi
+}
+
+reject_symlink_components() {
+    key=$1
+    value=$2
+    current=${PROJECT_ROOT}
+    previous_ifs=${IFS}
+    IFS=/
+    set -f
+    set -- ${value}
+    set +f
+    IFS=${previous_ifs}
+    for component do
+        current="${current}/${component}"
+        if [ -L "${current}" ]; then
+            echo "ERROR: ${key} must not traverse a symbolic link: ${value}" >&2
+            exit 1
+        fi
+    done
+}
+
+git_ignored() {
+    git -C "${PROJECT_ROOT}" check-ignore --no-index -q "$1"
+}
+
+toml_root_integer() {
+    wanted_key=$1
+    awk -v wanted_key="${wanted_key}" '
+        /^[[:space:]]*\[/ {
+            exit
+        }
+        {
+            line = $0
+            sub(/^[[:space:]]*/, "", line)
+            if (index(line, wanted_key) != 1) {
+                next
+            }
+            rest = substr(line, length(wanted_key) + 1)
+            if (rest !~ /^[[:space:]]*=/) {
+                next
+            }
+            sub(/^[[:space:]]*=[[:space:]]*/, "", rest)
+            sub(/[[:space:]]*(#.*)?$/, "", rest)
+            if (rest !~ /^[1-9][0-9]*$/) {
+                exit 2
+            }
+            print rest
+            found = 1
+            exit
+        }
+        END {
+            if (!found) {
+                exit 1
+            }
+        }
+    ' "${CONFIG}"
+}
+
+manifest_string() {
+    wanted_key=$1
+    awk -v wanted_key="${wanted_key}" '
+        {
+            line = $0
+            sub(/^[[:space:]]*/, "", line)
+            prefix = "^\"" wanted_key "\"[[:space:]]*:[[:space:]]*\""
+            if (line !~ prefix) {
+                next
+            }
+            sub(prefix, "", line)
+            value = line
+            quote = index(value, "\"")
+            if (quote == 0) {
+                exit 2
+            }
+            print substr(value, 1, quote - 1)
+            found = 1
+            exit
+        }
+        END {
+            if (!found) {
+                exit 1
+            }
+        }
+    ' "${MANIFEST_FILE}"
+}
+
+manifest_entries() {
+    awk '
+        /^[[:space:]]*"managed_files":[[:space:]]*\{/ {
+            managed_files = 1
+            next
+        }
+        managed_files && /^[[:space:]]*\}/ {
+            found_end = 1
+            exit
+        }
+        managed_files {
+            line = $0
+            sub(/^[[:space:]]*/, "", line)
+            sub(/,[[:space:]]*$/, "", line)
+            if (line !~ /^"[^"]+":[[:space:]]*"[0-9a-f]+"$/) {
+                invalid = 1
+                exit
+            }
+            sub(/^"/, "", line)
+            separator = index(line, "\":")
+            path = substr(line, 1, separator - 1)
+            digest = substr(line, separator + 2)
+            sub(/^[[:space:]]*"/, "", digest)
+            sub(/"$/, "", digest)
+            if (length(digest) != 64 || digest !~ /^[0-9a-f]+$/) {
+                invalid = 1
+                exit
+            }
+            printf "%s\t%s\n", path, digest
+            entries++
+        }
+        END {
+            if (!managed_files || !found_end || invalid || entries == 0) {
+                exit 1
+            }
+        }
+    ' "${MANIFEST_FILE}"
+}
+
+sha256_file() {
+    path=$1
+    if command -v sha256sum >/dev/null 2>&1; then
+        if digest_line=$(sha256sum "${path}"); then
+            printf '%s\n' "${digest_line}" | awk '{print $1}'
+            return
+        fi
+        return 1
+    fi
+    if command -v shasum >/dev/null 2>&1; then
+        if digest_line=$(shasum -a 256 "${path}"); then
+            printf '%s\n' "${digest_line}" | awk '{print $1}'
+            return
+        fi
+        return 1
+    fi
+    return 1
+}
+
+resolve_trusted_renderer_image() {
+    if [ -n "${DOCUMENTATION_REMOTE_RENDERER_IMAGE:-}" ]; then
+        printf '%s\n' "${DOCUMENTATION_REMOTE_RENDERER_IMAGE}"
+        return
+    fi
+    if command -v git >/dev/null 2>&1 &&
+        git -C "${PROJECT_ROOT}" rev-parse --git-dir >/dev/null 2>&1
+    then
+        git -C "${PROJECT_ROOT}" config --local --get documentation.remoteRendererImage 2>/dev/null || true
+    fi
+}
+
+doctor_ok() {
+    echo "OK: $*"
+}
+
+doctor_warning() {
+    echo "WARNING: $*"
+    doctor_warnings=$((doctor_warnings + 1))
+}
+
+doctor_error() {
+    echo "ERROR: $*"
+    doctor_errors=$((doctor_errors + 1))
+}
+
+doctor() {
+    doctor_errors=0
+    doctor_warnings=0
+    for setting_issue in \
+        "${output_dir_setting_error}" \
+        "${work_dir_setting_error}" \
+        "${pdf_mode_setting_error}" \
+        "${pdf_image_setting_error}" \
+        "${pdf_platform_setting_error}" \
+        "${pdf_dockerfile_setting_error}"
+    do
+        if [ -n "${setting_issue}" ]; then
+            doctor_error "${setting_issue}"
+        fi
+    done
+    if ! project_relative_path_is_valid "${output_dir}"; then
+        doctor_error "output_dir is not a normalized project-relative path: ${output_dir}"
+    fi
+    if ! project_relative_path_is_valid "${work_dir}"; then
+        doctor_error "work_dir is not a normalized project-relative path: ${work_dir}"
+    fi
+    installed_version=
+    if [ -f "${VERSION_FILE}" ]; then
+        installed_version=$(sed -n '1p' "${VERSION_FILE}")
+    fi
+    if [ ! -f "${VERSION_FILE}" ]; then
+        doctor_error "managed tool VERSION file is missing: ${VERSION_FILE}"
+    elif printf '%s\n' "${installed_version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+        doctor_ok "installed tool version ${installed_version}"
+    else
+        doctor_error "managed tool VERSION is not semantic: ${installed_version}"
+    fi
+
+    install_profile=unknown
+    if [ ! -f "${MANIFEST_FILE}" ]; then
+        doctor_error "managed-file manifest is missing"
+    else
+        if install_profile=$(manifest_string install_profile); then
+            [ -n "${install_profile}" ] || install_profile=local
+            case "${install_profile}" in
+                local|remote)
+                    doctor_ok "installation profile ${install_profile}"
+                    ;;
+                *)
+                    doctor_error "managed-file manifest contains an invalid installation profile"
+                    ;;
+            esac
+        else
+            manifest_status=$?
+            if [ "${manifest_status}" -eq 1 ]; then
+                install_profile=local
+                doctor_warning "managed-file manifest predates installation profiles; assuming local"
+            else
+                doctor_error "managed-file manifest contains an invalid installation profile"
+            fi
+        fi
+
+        if ! command -v sha256sum >/dev/null 2>&1 &&
+            ! command -v shasum >/dev/null 2>&1
+        then
+            doctor_warning "managed-file drift could not be checked because no SHA-256 command is available"
+        elif entries=$(manifest_entries); then
+            tab=$(printf '\t')
+            drift=$(
+                while IFS="${tab}" read -r managed_path expected_hash; do
+                    target="${PROJECT_ROOT}/${managed_path}"
+                    if [ -L "${target}" ]; then
+                        echo "${managed_path}: symbolic link"
+                    elif [ ! -f "${target}" ]; then
+                        echo "${managed_path}: missing"
+                    elif ! actual_hash=$(sha256_file "${target}"); then
+                        echo "${managed_path}: could not calculate checksum"
+                    elif [ "${actual_hash}" != "${expected_hash}" ]; then
+                        echo "${managed_path}: checksum differs"
+                    fi
+                done <<EOF
+${entries}
+EOF
+            )
+            if [ -n "${drift}" ]; then
+                doctor_error "managed-file drift detected"
+                printf '%s\n' "${drift}" | sed 's/^/  - /'
+            else
+                doctor_ok "managed files match their recorded checksums"
+            fi
+        else
+            doctor_error "managed-file manifest contains an invalid managed_files map"
+        fi
+    fi
+
+    config_schema=
+    if config_schema=$(toml_root_integer schema_version); then
+        doctor_ok "configuration schema ${config_schema} is valid"
+    else
+        doctor_error "configuration schema_version is missing or invalid"
+    fi
+
+    docker_ready=0
+    if ! command -v docker >/dev/null 2>&1; then
+        doctor_error "Docker is not installed"
+    elif ! docker info >/dev/null 2>&1; then
+        doctor_error "Docker is installed but the daemon is unavailable"
+    else
+        docker_ready=1
+        doctor_ok "Docker daemon is available"
+    fi
+
+    case "${pdf_mode}" in
+        local)
+            if [ "${install_profile}" = "remote" ]; then
+                doctor_error "configuration selects local mode but the remote installation profile has no build sources"
+            fi
+            if ! project_relative_path_is_valid "${pdf_dockerfile}"; then
+                doctor_error "pdf.dockerfile is not a normalized project-relative path: ${pdf_dockerfile}"
+            elif [ -f "${PROJECT_ROOT}/${pdf_dockerfile}" ] &&
+                [ ! -L "${PROJECT_ROOT}/${pdf_dockerfile}" ]
+            then
+                doctor_ok "local renderer Dockerfile is available"
+            else
+                doctor_error "local renderer Dockerfile is missing or symbolic: ${pdf_dockerfile}"
+            fi
+            ;;
+        remote)
+            if ! printf '%s\n' "${pdf_image}" | grep -Eq '^[^[:space:]@]+@sha256:[0-9a-f]{64}$'; then
+                doctor_error "remote pdf.image is not pinned by an immutable sha256 digest"
+            else
+                doctor_ok "configured renderer image is digest-pinned"
+            fi
+            if [ -z "${trusted_renderer_image}" ]; then
+                doctor_error "trusted renderer allowlist is missing from DOCUMENTATION_REMOTE_RENDERER_IMAGE or local Git configuration"
+            elif [ "${trusted_renderer_image}" != "${pdf_image}" ]; then
+                doctor_error "trusted renderer allowlist does not match configured pdf.image"
+            else
+                doctor_ok "trusted renderer allowlist matches configured pdf.image"
+            fi
+            if [ "${docker_ready}" -eq 1 ]; then
+                if docker manifest inspect "${pdf_image}" >/dev/null 2>&1; then
+                    doctor_ok "registry manifest is reachable"
+                else
+                    doctor_warning "registry manifest is unavailable; verify authentication and network access"
+                fi
+            fi
+            ;;
+        *)
+            doctor_error "pdf.mode must be local or remote: ${pdf_mode}"
+            ;;
+    esac
+
+    deprecated_keys=$(awk '
+        BEGIN { in_array_table = 0 }
+        /^[[:space:]]*\[\[/ {
+            section = ""
+            in_array_table = 1
+            next
+        }
+        /^[[:space:]]*\[[^[]/ {
+            section = $0
+            sub(/^[[:space:]]*\[/, "", section)
+            sub(/\][[:space:]]*(#.*)?$/, "", section)
+            in_array_table = 0
+            next
+        }
+        !in_array_table && section == "pdf" &&
+            /^[[:space:]]*(paper_size|main_font|mono_font|accent_color)[[:space:]]*=/ {
+            line = $0
+            sub(/^[[:space:]]*/, "", line)
+            sub(/[[:space:]]*=.*$/, "", line)
+            print line
+        }
+    ' "${CONFIG}" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+    if [ -n "${deprecated_keys}" ]; then
+        doctor_warning "legacy flat PDF settings are present (${deprecated_keys}); prefer pdf.theme_overrides"
+    else
+        doctor_ok "no deprecated configuration settings detected"
+    fi
+
+    echo "Doctor completed with ${doctor_errors} error(s) and ${doctor_warnings} warning(s)."
+    if [ "${doctor_errors}" -gt 0 ]; then
+        return 1
+    fi
+}
+
+prepare_image() {
+    install_profile=local
+    if [ -f "${MANIFEST_FILE}" ]; then
+        if install_profile=$(manifest_string install_profile); then
+            [ -n "${install_profile}" ] || install_profile=local
+        else
+            profile_status=$?
+            if [ "${profile_status}" -ne 1 ]; then
+                echo "ERROR: Managed-file manifest contains an invalid installation profile." >&2
+                exit 1
+            fi
+        fi
+    fi
+    case "${install_profile}" in
+        local|remote) ;;
+        *)
+            echo "ERROR: Managed-file manifest contains an invalid installation profile." >&2
+            exit 1
+            ;;
+    esac
+    if [ "${install_profile}" = "remote" ] && [ "${pdf_mode}" != "remote" ]; then
+        echo "ERROR: The remote installation profile is incompatible with pdf.mode '${pdf_mode}'." >&2
+        exit 1
+    fi
+
+    if [ "${pdf_mode}" = "remote" ]; then
+        if ! printf '%s\n' "${pdf_image}" | grep -Eq '^[^[:space:]@]+@sha256:[0-9a-f]{64}$'; then
+            echo "ERROR: Remote pdf.image must be pinned by an immutable sha256 digest." >&2
+            exit 1
+        fi
+        if [ -z "${trusted_renderer_image}" ]; then
+            echo "ERROR: Remote mode requires DOCUMENTATION_REMOTE_RENDERER_IMAGE or documentation.remoteRendererImage in local Git configuration." >&2
+            exit 1
+        fi
+        if [ "${pdf_image}" != "${trusted_renderer_image}" ]; then
+            echo "ERROR: Configured remote renderer is not allowlisted." >&2
+            exit 1
+        fi
+        # OrbStack/Docker 29 may reject a redundant digest pull with
+        # "cannot overwrite digest" even when the exact immutable image is
+        # already present. Reuse only the fully pinned, allowlisted reference;
+        # a missing image still follows the normal authenticated pull path.
+        if docker image inspect "${pdf_image}" >/dev/null 2>&1; then
+            renderer_image=${pdf_image}
+            return
+        fi
+        set -- docker pull
+        if [ -n "${pdf_platform}" ]; then
+            set -- "$@" --platform "${pdf_platform}"
+        fi
+        "$@" "${pdf_image}"
+        renderer_image=${pdf_image}
+        return
+    fi
+
+    if [ "${pdf_mode}" != "local" ]; then
+        echo "ERROR: pdf.mode must be 'local' or 'remote'." >&2
+        exit 1
+    fi
+    require_project_relative_path "pdf.dockerfile" "${pdf_dockerfile}"
+    reject_symlink_components "pdf.dockerfile" "${pdf_dockerfile}"
+    dockerfile="${PROJECT_ROOT}/${pdf_dockerfile}"
+    if [ ! -f "${dockerfile}" ]; then
+        echo "ERROR: Missing configured Dockerfile: ${pdf_dockerfile}" >&2
+        exit 1
+    fi
+    context=$(dirname "${dockerfile}")
+    version=$(sed -n '1p' "${VERSION_FILE}")
+    if ! printf '%s\n' "${version}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+        echo "ERROR: Managed tool VERSION must be semantic: ${version}" >&2
+        exit 1
+    fi
+    renderer_image="esoul-documentation-tools:${version}"
+    set -- docker build
+    if [ -n "${pdf_platform}" ]; then
+        set -- "$@" --platform "${pdf_platform}"
+    fi
+    "$@" \
+        --build-arg "DOC_UID=$(id -u)" \
+        --build-arg "DOC_GID=$(id -g)" \
+        --file "${dockerfile}" \
+        --tag "${renderer_image}" \
+        "${context}"
+}
+
+run_renderer() {
+    renderer_mode=$1
+    renderer_action=$2
+    renderer_plan=${3:-}
+    set -- docker run \
+        --rm \
+        --read-only \
+        --cap-drop ALL \
+        --security-opt no-new-privileges \
+        --pids-limit 512 \
+        --memory 2g \
+        --memory-swap 2g \
+        --shm-size 256m \
+        --network none \
+        --tmpfs /tmp:rw,nosuid,nodev,size=1g \
+        --env HOME=/tmp \
+        --env XDG_CACHE_HOME=/tmp/.cache \
+        --env "DOC_COMMIT=${doc_commit}" \
+        --env "DOC_GIT_TAG=${doc_git_tag}" \
+        --env "DOC_GENERATED_AT=${doc_generated_at}" \
+        --env "DOC_GIT_CHECKS_AVAILABLE=${git_checks_available}" \
+        --env "DOC_WORK_IGNORED=${work_ignored}" \
+        --env "DOC_OUTPUT_IGNORED=${output_ignored}" \
+        --volume "${PROJECT_ROOT}:/workspace:ro"
+    if [ -n "${trusted_renderer_image}" ]; then
+        set -- "$@" --env "DOCUMENTATION_REMOTE_RENDERER_IMAGE=${trusted_renderer_image}"
+    fi
+    if [ -n "${pdf_platform}" ]; then
+        set -- "$@" --platform "${pdf_platform}"
+    fi
+    set -- "$@" --user "$(id -u):$(id -g)"
+    if [ "${renderer_mode}" = "writable" ]; then
+        reject_symlink_components "output_dir" "${output_dir}"
+        reject_symlink_components "work_dir" "${work_dir}"
+        mkdir -p "${PROJECT_ROOT}/${output_dir}" "${PROJECT_ROOT}/${work_dir}"
+        set -- "$@" \
+            --volume "${PROJECT_ROOT}/${output_dir}:/workspace/${output_dir}:rw" \
+            --volume "${PROJECT_ROOT}/${work_dir}:/workspace/${work_dir}:rw"
+    fi
+    set -- "$@" \
+        "${renderer_image}" \
+        --project-root /workspace \
+        --config docs/documentation.toml
+    case "${renderer_action}" in
+        build)
+            ;;
+        validate)
+            set -- "$@" --validate-only
+            ;;
+        render)
+            set -- "$@" --render-only
+            ;;
+        redact)
+            set -- "$@" --redact "${renderer_plan}"
+            ;;
+        *)
+            echo "ERROR: Unknown renderer action: ${renderer_action}" >&2
+            exit 2
+            ;;
+    esac
+    exec "$@"
+}
+
+command=${1:-}
+case "${command}" in
+    version)
+        [ "$#" -eq 1 ] || usage
+        if [ ! -f "${VERSION_FILE}" ]; then
+            echo "unknown"
+            exit 0
+        fi
+        sed -n '1p' "${VERSION_FILE}"
+        exit 0
+        ;;
+    doctor)
+        [ "$#" -eq 1 ] || usage
+        ;;
+    validate|build|render)
+        [ "$#" -eq 1 ] || usage
+        ;;
+    redact)
+        [ "$#" -eq 2 ] || usage
+        ;;
+    *)
+        usage
+        ;;
+esac
+
+if [ ! -f "${CONFIG}" ]; then
+    echo "ERROR: Missing docs/documentation.toml" >&2
+    exit 1
+fi
+if [ "${command}" != "doctor" ] && [ ! -f "${VERSION_FILE}" ]; then
+    echo "ERROR: Missing managed tool VERSION file." >&2
+    exit 1
+fi
+
+output_dir_setting_error=
+work_dir_setting_error=
+pdf_mode_setting_error=
+pdf_image_setting_error=
+pdf_platform_setting_error=
+pdf_dockerfile_setting_error=
+
+if ! read_setting "" output_dir "docs/pdf"; then
+    output_dir_setting_error=${setting_error}
+fi
+output_dir=${setting_value}
+if ! read_setting "" work_dir "docs/.documentation-work"; then
+    work_dir_setting_error=${setting_error}
+fi
+work_dir=${setting_value}
+if ! read_setting pdf mode local; then
+    pdf_mode_setting_error=${setting_error}
+fi
+pdf_mode=${setting_value}
+if ! read_setting pdf image ""; then
+    pdf_image_setting_error=${setting_error}
+fi
+pdf_image=${setting_value}
+if ! read_setting pdf platform ""; then
+    pdf_platform_setting_error=${setting_error}
+fi
+pdf_platform=${setting_value}
+if ! read_setting pdf dockerfile "docs/.documentation-tools/pdf/Dockerfile"; then
+    pdf_dockerfile_setting_error=${setting_error}
+fi
+pdf_dockerfile=${setting_value}
+trusted_renderer_image=$(resolve_trusted_renderer_image)
+
+if [ "${command}" = "doctor" ]; then
+    doctor
+    exit $?
+fi
+
+for setting_issue in \
+    "${output_dir_setting_error}" \
+    "${work_dir_setting_error}" \
+    "${pdf_mode_setting_error}" \
+    "${pdf_image_setting_error}" \
+    "${pdf_platform_setting_error}" \
+    "${pdf_dockerfile_setting_error}"
+do
+    if [ -n "${setting_issue}" ]; then
+        echo "ERROR: ${setting_issue}." >&2
+        exit 1
+    fi
+done
+require_project_relative_path "output_dir" "${output_dir}"
+require_project_relative_path "work_dir" "${work_dir}"
+plan=
+if [ "${command}" = "redact" ]; then
+    plan=$2
+    require_project_relative_path "redaction plan" "${plan}"
+    reject_symlink_components "redaction plan" "${plan}"
+    if [ ! -f "${PROJECT_ROOT}/${plan}" ]; then
+        echo "ERROR: Redaction plan does not exist: ${plan}" >&2
+        exit 1
+    fi
+fi
+
+if ! command -v docker >/dev/null 2>&1; then
+    echo "ERROR: Docker is required for '${command}'." >&2
+    exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+    echo "ERROR: Docker is installed but the daemon is unavailable." >&2
+    exit 1
+fi
+
+doc_commit=unknown
+doc_git_tag=
+git_checks_available=0
+work_ignored=0
+output_ignored=0
+if command -v git >/dev/null 2>&1 && [ -e "${PROJECT_ROOT}/.git" ]; then
+    git_checks_available=1
+    doc_commit=$(git -C "${PROJECT_ROOT}" rev-parse --short=12 HEAD 2>/dev/null || printf unknown)
+    doc_git_tag=$(git -C "${PROJECT_ROOT}" describe --tags --abbrev=0 2>/dev/null || true)
+    if git_ignored "${work_dir}/.ignore-probe"; then
+        work_ignored=1
+    fi
+    if git_ignored "${output_dir}/.ignore-probe.pdf"; then
+        output_ignored=1
+    fi
+fi
+if [ -n "${SOURCE_DATE_EPOCH:-}" ]; then
+    case "${SOURCE_DATE_EPOCH}" in
+        *[!0-9]*|"")
+            echo "ERROR: SOURCE_DATE_EPOCH must be a non-negative integer." >&2
+            exit 1
+            ;;
+    esac
+    if doc_generated_at=$(date -u -d "@${SOURCE_DATE_EPOCH}" '+%Y-%m-%d %H:%M UTC' 2>/dev/null); then
+        :
+    elif doc_generated_at=$(date -u -r "${SOURCE_DATE_EPOCH}" '+%Y-%m-%d %H:%M UTC' 2>/dev/null); then
+        :
+    else
+        echo "ERROR: SOURCE_DATE_EPOCH is outside the supported timestamp range." >&2
+        exit 1
+    fi
+else
+    doc_generated_at=$(date -u '+%Y-%m-%d %H:%M UTC')
+fi
+
+prepare_image
+case "${command}" in
+    validate)
+        run_renderer readonly validate
+        ;;
+    build)
+        run_renderer writable build
+        ;;
+    render)
+        run_renderer writable render
+        ;;
+    redact)
+        run_renderer writable redact "${plan}"
+        ;;
+esac

@@ -1,0 +1,86 @@
+schema_version = 1
+documentation_version = "0.1.0"
+primary_language = "en"
+output_dir = "docs/pdf"
+work_dir = "docs/.documentation-work"
+commit_pdf_outputs = false
+
+[project]
+name = "Cookbook and Shopping Planning"
+logo = ""
+copyright = ""
+contact = ""
+
+[pdf]
+mode = "remote"
+image = "rg.fr-par.scw.cloud/esoul-internal-tools/documentation-tools@sha256:927cb33b8c8e44ce3f161e7d541f9d054caad71394288ebfd3d987ede2a580b3"
+platform = "linux/amd64"
+dockerfile = "docs/.documentation-tools/pdf/Dockerfile"
+template = ""
+header_include = "docs/.documentation-tools/pdf/header.tex"
+theme = "default"
+font_dirs = []
+header_left = "Cookbook and Shopping Planning"
+footer_left = ""
+
+# Project-local fonts can be loaded without changing the renderer image:
+# font_dirs = ["docs/fonts"]
+#
+# Optional typed overrides for the selected theme:
+# [pdf.theme_overrides]
+# accent_color = "1B6B93"
+# text_color = "1B1B1D"
+# heading_color = "0E0F11"
+# link_color = "1B6B93"
+# url_color = "1B6B93"
+# paper_size = "a4"
+# main_font = "Noto Sans"
+# heading_font = "Noto Sans"
+# mono_font = "Noto Sans Mono"
+# font_size = "11pt"
+# margin = "24mm"
+# note_background = "F7F7F7"
+# note_border = "4A494A"
+# tip_background = "F7F7F7"
+# tip_border = "4A494A"
+# important_background = "F7F7F7"
+# important_border = "4A494A"
+# warning_background = "F7F7F7"
+# warning_border = "4A494A"
+# caution_background = "F7F7F7"
+# caution_border = "4A494A"
+# planned_background = "F7F7F7"
+# planned_border = "4A494A"
+
+[privacy]
+allowed_email_domains = ["example.com", "example.org", "example.net"]
+allowed_hosts = []
+
+[[guides]]
+id = "developer-guide"
+title = "Cookbook and Shopping Planning — Developer and Operator Guide"
+output = "developer-guide-en.pdf"
+document_version = "0.1.0"
+cross_document_links = "notice"
+invalid_links = "notice"
+link_notice_style = "plain"
+link_notice_paths = "original"
+sources = [
+  "docs/developer-guide/index.md",
+  "docs/developer-guide/current-application.md",
+  "docs/developer-guide/architecture.md",
+  "docs/developer-guide/local-development.md",
+  "docs/developer-guide/domain-model.md",
+  "docs/developer-guide/family-access.md",
+  "docs/developer-guide/recipes-ingredients.md",
+  "docs/developer-guide/nutrition.md",
+  "docs/developer-guide/stores-shopping-order.md",
+  "docs/developer-guide/calendar-planning.md",
+  "docs/developer-guide/shopping-generation.md",
+  "docs/developer-guide/data-structure.md",
+  "docs/developer-guide/frontend-navigation.md",
+  "docs/developer-guide/infrastructure-deployment.md",
+  "docs/developer-guide/security-observability.md",
+  "docs/developer-guide/implementation-roadmap.md",
+]
+landscape_sources = []

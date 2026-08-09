@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "tool_version": "0.6.3",
+  "install_profile": "remote",
+  "managed_files": {
+    "docs/.documentation-tools/VERSION": "c9f56eb9348cbc8345bdaea7ca24c9f960e1598af05472794760a2682ff07a8c",
+    "docs/.documentation-tools/pdf/header.tex": "e1ff367e53bc75537048ce608b6e396482d6b945d137fe1e35b1ef9a2e641e26",
+    "docs/documentation": "564c69d59f7577697bdb3f226b09ce44d2b09d11bf1f450a77ec7163f269451a"
+  }
+}
