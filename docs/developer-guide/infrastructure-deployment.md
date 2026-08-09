@@ -8,10 +8,11 @@ This chapter describes the infrastructure that is present in the repository toda
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Local runtime      | Docker Compose runs an Nginx container and one development application container                                                  | The application, Vite server, scheduler, and queue worker can run together for development                             |
 | Production runtime | A multi-stage Dockerfile builds a PHP-FPM image with compiled frontend assets                                                     | A separate web proxy and runtime stack are required; neither is defined in this repository                             |
-| Persistence        | SQLite is the configured default; cache and queue also default to the database                                                    | The database file and local storage directories must survive container replacement                                     |
+| Local persistence  | SQLite is the development and test default; cache and queue also default to the database                                           | Local setup needs a writable SQLite file                                                                               |
+| Production database | MariaDB is selected in ADR 0005 and `.env.production.example`; no database service is committed                                  | Provisioning, versioning, credentials, backup, restore, and availability remain deployment responsibilities            |
 | Delivery           | Jenkins tests, builds, pushes, and asks Komodo to redeploy the `cook-book` stack on `main` or `master`                            | The Jenkins shared libraries, credentials, Komodo stack definition, and server configuration are external dependencies |
 | Recovery           | No backup, restore, retention, or disaster-recovery automation is committed                                                       | Production recovery cannot currently be performed from this repository alone                                           |
-| Scaling            | PHP-FPM is stateless only in part; SQLite, local files, file sessions in the Docker environment, and per-container cron are local | The current configuration is suitable for a single application instance, not safe horizontal scaling                   |
+| Scaling            | MariaDB is external to application roles, but local files and per-container cron remain local                                      | Horizontal scaling remains unsafe until storage and execution-role gates are resolved                                  |
 
 ## Local Docker topology
 
@@ -52,7 +53,7 @@ The entrypoint performs the following work every time the development container 
 1. Creates writable framework and storage directories.
 2. Runs `composer install` when `APP_ENV=local` or `APP_DEBUG=true`.
 3. Ensures the configured SQLite file exists and runs migrations.
-4. Clears Laravel caches and runs `pnpm install`.
+4. Clears Laravel caches and runs `pnpm install --frozen-lockfile`.
 5. Creates the public storage link.
 6. Starts cron and Supervisor.
 
@@ -64,15 +65,15 @@ Laravel reads runtime choices from environment variables through the files under
 
 | Data                      | Current driver                                    | Location or table                                                               | Persistence requirement                                                                            |
 | ------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Application data          | SQLite                                            | `DB_DATABASE`; otherwise `database/database.sqlite`                             | Persist and back up the database file                                                              |
-| Sessions                  | Database in `.env.example`; file in `.env.docker` | `sessions` table or `storage/framework/sessions`                                | Preserve the chosen backend for uninterrupted login sessions                                       |
+| Application data          | SQLite locally; MariaDB in production             | Local `DB_DATABASE` file or the configured MariaDB schema                       | Back up the production MariaDB service and preserve local databases when needed                     |
+| Sessions                  | Database in the local and production examples     | `sessions` table                                                                | Preserve the chosen database for uninterrupted login sessions                                       |
 | Cache and locks           | Database                                          | `cache` and `cache_locks` tables                                                | Disposable for recovery, but required while the application is running                             |
 | Queue and failures        | Database                                          | `jobs`, `job_batches`, and `failed_jobs` tables                                 | Preserve while work is pending or failures require inspection                                      |
 | Private uploads           | Local filesystem                                  | `storage/app/private`                                                           | Persist and back up once the application stores user media                                         |
 | Public uploads            | Local filesystem                                  | `storage/app/public`, exposed through `public/storage`                          | Persist and back up once the application stores public media                                       |
-| Application logs          | `stack` containing `single`                       | `storage/logs/laravel.log`                                                      | Collect externally or preserve long enough to diagnose incidents                                   |
+| Application logs          | Local `stack`/`single`; production example `stderr` | Local `storage/logs/laravel.log` or the production container's standard error | Collect externally and retain long enough to diagnose incidents                                     |
 | Scheduler and worker logs | Local files                                       | `storage/logs/scheduler.log` and `storage/logs/queue-worker.log` in development | Collect or rotate explicitly                                                                       |
-| Mail                      | Log driver                                        | Application log                                                                 | Password-reset messages are logged rather than delivered until a real mail transport is configured |
+| Mail                      | Local log driver; production example SMTP         | Local application log or the configured production SMTP service                 | Inject and verify production SMTP credentials before password resets can be delivered               |
 
 The schema for sessions, cache, queues, failed jobs, and authentication data is committed under [`database/migrations/`](../../database/migrations). Supported Laravel connection definitions for MySQL, MariaDB, PostgreSQL, SQL Server, Redis, S3, and several mail transports exist, but configuration support is not evidence that those services are provisioned or tested for this application.
 
@@ -82,28 +83,34 @@ The application exposes Laravel's built-in health endpoint at `/up` through [`bo
 
 [`docker/production/Dockerfile`](../../docker/production/Dockerfile) builds a PHP 8.5 image in stages:
 
-1. The PHP builder copies application sources, installs Composer dependencies without development packages, caches Laravel configuration/routes/views, creates the storage link, and generates Wayfinder output.
+1. The PHP builder copies application sources, installs Composer dependencies without development packages, and generates Wayfinder output without copying an environment file or caching runtime configuration.
 2. A Node LTS builder supplies Node and Corepack.
 3. The combined build installs JavaScript dependencies and runs `pnpm run build`.
 4. The final image contains the application, compiled assets, PHP-FPM configuration, and a cron entry for Laravel's scheduler.
 
 The final container exposes FastCGI on port `9000` and runs PHP-FPM in the foreground. It does not contain Nginx and it does not start a queue worker. A production deployment must therefore provide a FastCGI-aware web proxy and, if queued jobs are used, a separately supervised worker process.
 
-At startup, the [production entrypoint](../../docker/production/start) creates storage directories, applies ownership, optimizes Laravel outside development mode, creates the storage link, runs migrations, starts cron, and then starts PHP-FPM.
+At startup, the [production entrypoint](../../docker/production/start) creates storage directories, applies ownership, caches configuration and other Laravel optimizations from runtime-injected values, creates the storage link, and runs migrations. A migration failure terminates startup before cron or PHP-FPM begins. A successful startup then starts cron and PHP-FPM.
 
 ### Current production blockers and risks
 
-- The production Dockerfile copies the tracked `.env.docker` into the image. That file currently identifies a local, debug-enabled environment with an empty application key. Runtime environment variables can override those values, but the image is not production-safe without a complete external environment definition.
-- `.env.docker` selects `database/db.sqlite`, while SQLite files are excluded from the Docker build context. Unlike the development entrypoint, the production entrypoint does not create the file. A persistent database path must be mounted or an external database must be configured.
-- Both entrypoints suppress migration failures and continue starting the application. A deployment can therefore report a running process while its schema is stale.
+- The selected MariaDB production database is not provisioned by any committed stack, and its supported server version, credentials, availability, connection limits, backup, and restore behavior are not defined here.
+- The image deliberately contains no `.env` or build-time Laravel configuration cache. The external deployment must inject every required runtime value; `.env.production.example` is a non-secret contract, not deployable credentials.
 - The final image stores uploads, framework state, scheduler output, and default logs on its writable container filesystem unless the external stack mounts persistent storage.
+- The final image contains no readiness check or production queue-worker process.
+- Every application container runs migrations during startup. Until the
+  production rollout serializes migrations through a release job or one
+  designated instance, multiple replicas must not start concurrently against
+  an unapplied schema. The rollout and rollback contract must keep application
+  and schema versions compatible.
 - Every application replica starts cron. Multiple replicas would execute the same scheduled work unless scheduling is separated or guarded.
 - The image uses local PHP-FPM limits of ten children. No load test or capacity target is committed, so this is a configuration value rather than a demonstrated capacity.
-- The development Dockerfile pins pnpm 10.30.2, `package.json` declares pnpm 11.17.0, the production builder activates the latest pnpm, and GitHub Actions uses npm through Composer scripts. These paths do not currently enforce one reproducible JavaScript toolchain.
+
+The development image, production image, package manifest, clean-checkout setup, and GitHub Actions path now use pnpm 11.17.0 with the committed frozen lockfile. The native clean-checkout and production-image build have both been exercised successfully; this does not prove the external deployment topology.
 
 > **Planned**
 >
-> Establish a production environment contract before the first public deployment. It should inject a persistent `APP_KEY`, set `APP_ENV=production` and `APP_DEBUG=false`, configure the canonical HTTPS `APP_URL`, secure session cookies, a delivering mail transport, the chosen database and filesystem, and production log routing. Do not derive production secrets from the tracked `.env.docker` file.
+> Complete the production environment contract before the first public deployment. The tracked `.env.production.example` selects MariaDB and names non-secret settings, while the deployment must inject a persistent `APP_KEY`, reviewed MariaDB credentials, the canonical HTTPS `APP_URL`, a delivering mail transport, the selected durable filesystem, and production log routing.
 
 ## Deployment decision gates
 
@@ -111,7 +118,7 @@ At startup, the [production entrypoint](../../docker/production/start) creates s
 >
 > The committed delivery assets are not yet an executable production topology. Resolve and record these choices before Slice 0 can pass:
 >
-> - **Database:** either constrain the service to one application replica with a durable SQLite volume, or select and provision an external transactional database. Record backup, restore, migration, and connection-pool behavior for the chosen option.
+> - **Database:** MariaDB is selected for production and SQLite remains the development/test database. Provision the MariaDB service and record its supported version, availability, credentials, backup, restore, migration, and connection-pool behavior. Decide whether the connection is restricted to a private trusted network or protected with TLS; when TLS is required, inject and verify the CA and connection options. Verify database-specific migrations and constraints against MariaDB before product tables ship.
 > - **Media:** choose a durable mounted filesystem or S3-compatible object storage for Recipe, Ingredient, and Store images. Define authorization, retention, deletion, and backup behavior.
 > - **Stack ownership:** place the Komodo stack, proxy/TLS contract, networks, health checks, persistent mounts, worker, scheduler, and runtime secrets under version control here or in a named operations repository.
 > - **Execution roles:** decide whether web, queue worker, and scheduler use one image with different commands or distinct images. Exactly one scheduler trigger must operate, and workers must restart on deployment.
@@ -124,7 +131,13 @@ At startup, the [production entrypoint](../../docker/production/start) creates s
 
 Two CI definitions are present.
 
-The [GitHub Actions workflow](../../.github/workflows/tests.yml) runs for pull requests and pushes to `main`. It installs PHP 8.5 and Node 22, runs `composer setup`, and then `composer ci:check`. That path installs and builds frontend dependencies with npm even though pnpm is the declared package manager. It also runs SQLite migrations without creating the ignored `database/database.sqlite` file on a clean checkout, so the workflow is not reproducible until setup creates that file or selects an in-memory database.
+The [GitHub Actions workflow](../../.github/workflows/tests.yml) runs for pull requests and pushes to `main`. It installs PHP 8.5 and Node 22, activates pnpm 11.17.0, runs `composer setup`, and then `composer ci:check`. The setup script creates the ignored SQLite file before migration, installs the frozen pnpm dependency graph, and builds production assets. An isolated clean-checkout execution of that sequence succeeds.
+
+Current automated application tests run only on SQLite. The delivery contract
+checks that MariaDB is selected and that the production image includes its PDO
+driver, but it does not connect to a MariaDB server. Once the server version and
+provisioning are selected, CI must add a MariaDB migration, constraint, and
+query-compatibility job before database-sensitive product migrations ship.
 
 The [Jenkins pipeline](../../Jenkinsfile) is the deployment path. It depends on organization-provided `dockerHelpers`, `testing`, and `deploy` shared libraries. Its relevant flow is:
 
@@ -142,7 +155,7 @@ The repository does not contain the shared-library implementations, registry ret
 
 ## Recovery and data protection
 
-There is no implemented backup or restore process. No committed job copies the SQLite database or uploaded files, no retention schedule is defined, and no restore test is recorded. Operators must not describe the application as recoverable until both the mutable database and storage contents are covered by a tested process.
+There is no implemented backup or restore process. No committed job backs up the selected MariaDB production database or uploaded files, no retention schedule is defined, and no restore test is recorded. Operators must not describe the application as recoverable until both the mutable database and storage contents are covered by a tested process.
 
 Cache data can be rebuilt, but the database may also contain sessions, queued work, and failed-job records in addition to primary application data. Decide deliberately whether those operational tables belong in recovery objectives. The application key is also recovery-critical: changing or losing it invalidates encrypted application data and signed/encrypted cookies.
 
@@ -152,7 +165,7 @@ Cache data can be rebuilt, but the database may also contain sessions, queued wo
 
 ## Scaling model
 
-The current topology should be treated as a single-instance deployment. SQLite and local files are node-local, file sessions cannot roam between instances, each replica would run the scheduler, and the production image has no queue-worker topology.
+No committed production topology exists yet. MariaDB removes the selected production database from individual application containers, but local files remain node-local, each web replica would run the scheduler, and the production image has no queue-worker topology.
 
 > **Planned**
 >
@@ -168,7 +181,7 @@ Read the complete application-container log:
 docker compose logs laravel
 ```
 
-Check first for an empty or unwritable `DB_DATABASE`, a missing `APP_KEY`, dependency-installation failures, or storage permissions. Be aware that a message saying `Migration failed` is non-fatal in the current entrypoint; inspect and resolve the underlying migration error before trusting the application.
+Check first for a missing `APP_KEY`, invalid database settings, an unavailable MariaDB service in production, an empty or unwritable SQLite path in development, dependency-installation failures, or storage permissions. Migration and dependency failures now terminate the entrypoint; resolve the reported error before restarting it.
 
 ### The page loads without frontend updates
 
@@ -201,7 +214,7 @@ The following cannot be verified from this repository:
 - The actual public host, reverse proxy, TLS termination, DNS, firewall, and runtime topology.
 - The Komodo stack definition, deployed environment variables, persistent mounts, health checks, and rollback behavior.
 - Scaleway registry access and image-retention behavior.
-- Production database choice and backup/restore process.
+- Provisioned MariaDB version, topology, credentials, availability, and backup/restore process.
 - Production mail delivery, centralized logs, metrics, traces, alerts, and incident response.
 - Capacity, availability, recovery, and data-retention objectives.
 

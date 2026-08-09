@@ -39,6 +39,11 @@ When sources disagree, use this order:
 
 The connected Laravel Boost database is explicitly excluded as evidence because the approved [documentation decision](../documentation-decisions.md#doc-0001--exclude-the-connected-laravel-boost-database-from-documentation-evidence) identifies it as belonging to another application.
 
-## Known publication limitation
+## Publication verification
 
-The Markdown guide is the source of truth. The managed documentation installer and renderer are unavailable under the approved documentation-tool exception, so PDF generation and visual PDF inspection are not part of this revision. Do not call this guide publish-ready until those gates can run.
+The Markdown guide is the source of truth. The repository's temporary managed
+documentation tooling is available under the approved exception recorded in
+[DOC-0021](../documentation-decisions.md#doc-0021--temporarily-install-trusted-063-tooling-with-local-compatibility-fixes).
+Its doctor, validation, PDF build, and visual inspection gates pass for this
+revision. The generated PDF remains an ignored build artifact and must be
+regenerated from the Markdown sources for publication.

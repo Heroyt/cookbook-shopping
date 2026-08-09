@@ -158,24 +158,15 @@ been operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 
 ## Known current-state gaps
 
-- The package manifest declares pnpm 11.17.0, the development image installs
-  pnpm 10.30.2, and the production image activates unpinned `pnpm@latest`.
-  Reproducible local and container builds should converge on one pinned version.
-- The Composer `setup` script invokes npm even though pnpm and
-  `pnpm-lock.yaml` are the declared frontend package contract.
-- The same `setup` script runs SQLite migrations without first creating
-  `database/database.sqlite`. GitHub Actions invokes it on a clean checkout, so
-  the workflow needs an explicit database-file step or an in-memory setup
-  database before it can be treated as reproducible.
-- The production Docker build copies `.env.docker` into the image. That file
-  contains local/debug defaults and a deployment-specific URL. Operators must
-  supply reviewed runtime configuration; the image should not be treated as a
-  production-ready configuration artifact by itself.
-- The container entrypoints tolerate migration failures and continue startup,
-  which can leave application code running against an outdated schema.
 - The development Compose stack defines no database service. Its default
-  practical path is the repository's SQLite database, or an externally managed
-  database configured in `.env`.
+  path is the repository's SQLite database. Production is configured for
+  MariaDB, but no production database service or external provisioning is
+  represented in this repository yet.
+- The production image contains PHP-FPM and a scheduler trigger but no web
+  proxy, queue-worker process, readiness check, or deployable production stack.
+- Runtime configuration is injected rather than baked into the production
+  image, but the deployment platform's secret definitions and validated
+  production values are not committed here.
 - Cookbook-specific authorization, isolation tests, storage strategy, backup
   policy, monitoring, and recovery are not implemented yet.
 

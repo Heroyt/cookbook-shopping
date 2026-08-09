@@ -7,18 +7,31 @@ This roadmap orders the approved MVP by dependency and risk. It is an implementa
 
 ## Slice 0: delivery baseline
 
+The verified Slice 0 increments are:
+
+- `composer setup` succeeds from an isolated clean checkout with SQLite,
+  frozen pnpm dependencies, migrations, and a production frontend build.
+- Development and test configuration use SQLite; the production environment
+  contract uses MariaDB.
+- Development and production entry points fail immediately when migrations
+  fail.
+- Production images accept runtime environment injection instead of copying an
+  environment file or caching Laravel configuration during the image build.
+- The production image builds with the declared pnpm version and includes the
+  MariaDB PDO driver.
+
 > **Planned**
 >
-> Before adding Family data, make the existing delivery path safe to extend:
+> Complete the remaining delivery baseline before adding Family data:
 >
-> - Verify local native and Docker setup from a clean checkout.
-> - Decide the production database and durable photo-storage backend.
+> - Provision the production MariaDB service and decide the durable
+>   photo-storage backend.
 > - Represent the production ingress, database, volumes/object storage, queue worker, scheduler, and backup jobs in deployable configuration.
-> - Stop swallowing migration failures in the production entry point.
-> - Move runtime secrets out of image-build inputs.
 > - Define readiness checks, backup restoration, and rollback procedures.
 >
-> **Completion gate:** a production-like deployment can boot, migrate, serve `/up`, run a queue job, persist a test file, back up its database and media, and restore both into an isolated environment.
+> **Completion gate (not yet met):** a production-like deployment can boot,
+> migrate, serve `/up`, run a queue job, persist a test file, back up its
+> database and media, and restore both into an isolated environment.
 
 ## Slice 1: Family access
 

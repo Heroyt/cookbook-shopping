@@ -41,9 +41,16 @@ The default `.env.example` uses SQLite plus database-backed sessions, cache,
 and queues. Migrations therefore create all state needed for a basic local run.
 Do not commit `.env` or a populated SQLite database.
 
-The repository also provides `composer setup`, but that script currently runs
-`npm install` and `npm run build` despite the declared pnpm package manager and
-lock file. Prefer the explicit pnpm sequence above until the script is aligned.
+The repository also provides `composer setup`, which performs this clean-checkout
+sequence: it installs Composer dependencies, creates `.env` and the SQLite file
+when missing, generates the application key, migrates, installs the frozen pnpm
+dependency graph, and builds production assets.
+
+Treat `composer setup` as a clean-checkout bootstrap command. It generates a new
+`APP_KEY` even when `.env` already exists, so rerunning it can invalidate
+encrypted values, cookies, and sessions. For an established checkout, run only
+the required `composer install`, `php artisan migrate`, frozen pnpm install, or
+frontend build command instead.
 
 Optional development data can be added with:
 
@@ -123,8 +130,10 @@ the Laravel container. Stop the foreground stack with Control-C; use
 
 The SQLite path must be explicit because the development entrypoint touches the
 shell value of `DB_DATABASE` before Laravel applies its configuration default.
-The tracked `.env.docker` is deployment-specific evidence used by the
-production build, not a safe general-purpose local template.
+The tracked `.env.docker` is retained as historical deployment evidence, but it
+is not copied into either image and is not a safe general-purpose local
+template. Runtime production configuration must be injected from the deployment
+environment; start from `.env.production.example` when defining those values.
 
 See [docker-compose.yml](../../docker-compose.yml),
 [the development image](../../docker/dev/Dockerfile),

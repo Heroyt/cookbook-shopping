@@ -40,10 +40,16 @@ Production must set `APP_DEBUG=false`, use HTTPS, set secure session-cookie beha
 
 Environment files and runtime secret stores are configuration sources, never documentation sources. Do not copy real values into logs, screenshots, issue descriptions, or this guide.
 
-The production Docker build currently copies `.env.docker` into a build layer before running Laravel configuration caching. That file is tracked and therefore must contain only non-secret build defaults. Runtime credentials—including `APP_KEY`, database credentials, mail credentials, object-storage keys, telemetry endpoints with credentials, and deployment credentials—should be injected by the deployment platform.
+The production Dockerfile does not copy environment files into the image, does
+not cache Laravel configuration during the image build, and produces an image
+without an application environment file. `.dockerignore` excludes `.env*` from
+the build context except the non-secret `.env.example`; the Dockerfile's
+selective copies do not include that exception. The entrypoint generates
+Laravel caches only after runtime configuration is present. The tracked
+[production environment example](../../.env.production.example) names required
+settings without supplying secret values.
 
-> **Planned**
-> Remove build-time dependence on an application environment file. Build immutable code and assets, inject production configuration through Komodo/runtime secrets, and generate Laravel caches at container startup only after runtime configuration is present. Add a CI check that rejects known secret patterns and verifies production-required variables without printing values.
+Runtime credentials—including `APP_KEY`, MariaDB credentials, mail credentials, object-storage keys, telemetry endpoints with credentials, and deployment credentials—must be injected by the deployment platform. The repository still needs a CI check that rejects known secret patterns and verifies production-required variables without printing values.
 
 ## Health and logs
 

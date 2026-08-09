@@ -94,7 +94,8 @@ The conceptual model below applies the decisions to use [Family ownership](../ad
 
 > **Planned** — Resolve these points before writing the affected migrations:
 >
-> - database engine and case-insensitive uniqueness strategy;
+> - case-insensitive uniqueness strategy that behaves consistently across the
+>   selected production MariaDB database and local/test SQLite databases;
 > - decimal precision and rounding policy for intermediate conversions;
 > - whether Current Family preference is server-side per User or local per device while preserving membership validation;
 > - how account provisioning works while self-registration is disabled, because add-by-email accepts only an already registered User;

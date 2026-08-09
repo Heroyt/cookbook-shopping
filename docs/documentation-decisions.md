@@ -245,3 +245,25 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Temporarily install the verified `0.6.3` source installer by supplying the missing `CONFIG_SCHEMA_VERSION=1` value in an otherwise unchanged local copy of the release manifest. Keep the remote profile pinned to the approved Scaleway renderer. Locally patch the managed launcher to reuse that exact allowlisted digest when it is already cached, because OrbStack/Docker 29 rejects a redundant pull with `cannot overwrite digest`; preserve the normal pull path when the image is absent and record the patched launcher checksum in the managed-file manifest.
 - Rationale: The User and tooling authors explicitly trust this release and approved a temporary manual compatibility path. The workaround preserves immutable image pinning, renderer allowlisting, managed-file integrity checks, container isolation, and the stable `docs/documentation` command while avoiding the two confirmed bootstrap/runtime defects.
 - Follow-up or review date: Replace the temporary installation with an unmodified official release as soon as the public installer, release manifest, and redundant digest-pull behavior are corrected; remove the local launcher patch during that upgrade.
+
+### DOC-0022 — Use MariaDB in production and SQLite for development and tests
+
+- Date: 2026-08-09
+- Mode: Refresh
+- Status: Approved
+- Affects: Developer/operator guide data, local-development, infrastructure, and roadmap chapters
+- Evidence: User attestation on 2026-08-09; `.env.example`; `.env.production.example`; `phpunit.xml`; `config/database.php`; `docs/adr/0005-use-mariadb-in-production-and-sqlite-locally.md`
+- Decision: Use MariaDB for production persistence while native development, Docker development, and automated tests use SQLite.
+- Rationale: This is the production database boundary explicitly selected by the User. The repository must continue to verify database-specific constraints and queries across both engines where their behavior differs.
+- Follow-up or review date: Reassess only if the production database engine changes.
+
+### DOC-0023 — Resolve the Slice 0 refresh review and propose version 0.1.1
+
+- Date: 2026-08-09
+- Mode: Refresh
+- Status: Pending version approval
+- Affects: Developer/operator guide and documentation publication metadata
+- Evidence: Independent repository-correctness and specification-completeness reviews; verified clean-checkout setup, production-image build, managed documentation validation, PDF build, and visual inspection
+- Decision: Correct the stale tooling status, planned/current Slice 0 split, mail scheme, local/production log and mail distinctions, migration concurrency risk, SQLite-only verification scope, setup key-rotation warning, environment placeholders, database transport-security gate, and Docker environment-file wording. Retain `0.1.0` in the specification, guide index, and renderer configuration until the User explicitly approves the proposed patch release `0.1.1`.
+- Rationale: Every actionable review finding is corrected in the Markdown or environment contract. The remaining version change requires explicit approval under DOC-0013 and must not be applied implicitly during implementation.
+- Follow-up or review date: Ask the User to approve or reject documentation version `0.1.1` at the Slice 0 handback.
