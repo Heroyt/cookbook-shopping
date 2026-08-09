@@ -59,7 +59,10 @@ These requirements are mandatory for every implementation task and take preceden
 ### Project-Specific Development
 
 - Use [$laravel-best-practices](.agents/skills/laravel-best-practices/SKILL.md) whenever writing, reviewing, or refactoring Laravel backend PHP. Read every rule file mapped to the affected concerns before editing.
-- Use [$shadcn-vue](.agents/skills/shadcn-vue/SKILL.md) for shadcn-vue components, forms, registries, presets, composition, and styling; inspect the project context and component documentation before changing UI components.
+- shadcn-vue is the default UI component library. Activate [$shadcn-vue](.agents/skills/shadcn-vue/SKILL.md) for every UI component, form, registry, preset, composition, or styling task.
+- Before creating a custom UI component or styled substitute, inspect the installed shadcn-vue components, search the configured registries, and read the relevant component documentation.
+- Prefer reusing or composing shadcn-vue components and their built-in variants over custom implementations. Do not recreate available primitives such as buttons, form fields, dialogs, alerts, empty states, toasts, separators, skeletons, badges, or navigation controls.
+- Create a custom UI component only when no suitable shadcn-vue component or composition exists. Keep ordinary semantic markup for page structure, but do not use styled markup to imitate an available component.
 - Use [$inertia-vue-development](.agents/skills/inertia-vue-development/SKILL.md) together with [$vue-best-practices](/Users/heroyt/.agents/skills/vue-best-practices/SKILL.md) for Inertia or Vue pages, forms, navigation, and client-side state.
 - Use [$wayfinder-development](.agents/skills/wayfinder-development/SKILL.md) whenever frontend code calls Laravel routes or controller actions.
 - Use [$tailwindcss-development](.agents/skills/tailwindcss-development/SKILL.md) for Tailwind CSS styling or layout work.
