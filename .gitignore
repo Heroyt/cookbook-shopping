@@ -11,6 +11,8 @@
 /resources/js/routes
 /resources/js/wayfinder
 /vendor
+/docs/.documentation-work/
+/docs/pdf/
 .DS_Store
 .env
 .env.backup
