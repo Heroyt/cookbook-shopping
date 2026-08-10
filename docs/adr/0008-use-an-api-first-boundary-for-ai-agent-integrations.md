@@ -1,0 +1,3 @@
+# Use an API-first boundary for AI agent integrations
+
+AI agents integrate through a versioned REST/JSON API described by OpenAPI rather than through MCP as the primary interface. The first clients are trusted agents configured manually by a Family member, and the API may expose full cookbook and planning lifecycle operations through Agent Change Sets. This keeps the integration usable by agents and ordinary HTTP clients without adding MCP transport and OAuth discovery complexity; a later MCP server may be added as a thin adapter over the same application services rather than becoming a second domain boundary.

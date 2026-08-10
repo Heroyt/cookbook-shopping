@@ -22,7 +22,7 @@ The Stores page is the only Cookbook navigation and currently supports creation,
 >
 > Add primary destinations for Recipes, Ingredients, Stores, the weekly planner, Simple Plan, and Shopping List history. Store Section management belongs with Store management because Sections are reusable entities whose traversal position is configured per Store. Recipe Tags belong with Cookbook maintenance rather than becoming a competing top-level taxonomy.
 >
-> Preserve account settings in the User menu. Use generated Wayfinder functions for application routes and Inertia navigation for page transitions. Domain calculations and authorization remain on the Laravel side; navigation state must never be treated as proof that a record belongs to the Current Family.
+> Preserve account settings in the User menu. Add Current Family Agent Access and Agent Change History destinations when Agent Integration is delivered; these are Family management surfaces, not global account settings. Use generated Wayfinder functions for application routes and Inertia navigation for page transitions. Domain calculations and authorization remain on the Laravel side; navigation state must never be treated as proof that a record belongs to the Current Family.
 
 ## Planned management workflows
 

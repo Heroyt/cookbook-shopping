@@ -84,6 +84,7 @@ Developer/operator guide:
 - Current application architecture, development, testing, operation, and troubleshooting.
 - The canonical domain model and its supporting ADRs.
 - Approved planned domain design when clearly marked **Planned**.
+- The planned Agent API, credential, OpenAPI, Change Set, and operational-history boundary when clearly marked **Planned**.
 
 ### Excluded
 
@@ -122,6 +123,7 @@ Use a multi-page guide rooted at `docs/developer-guide/index.md` with focused ch
 - Nutrition: Ingredient profiles, calculated Recipe nutrition, overrides, and totals
 - Calendar planning: Calendar Entries, Calendar Days, Meal Labels, and Simple Plans
 - Shopping List generation: Recipe Selections, quantity aggregation, purchasable units, Surplus, and saved snapshots
+- Agent integrations: Agent Credentials, Family Catalog, atomic Agent Change Sets, generated OpenAPI contract, and history
 - Architecture and system boundaries
 - Local development and configuration
 - Authentication, authorization, and security

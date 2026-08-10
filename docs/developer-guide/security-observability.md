@@ -41,6 +41,18 @@ that cannot be redirected by client input.
 > - Database constraints that prevent cross-Family relationships.
 > - Tests that use at least two Families and prove reads and writes cannot cross the boundary.
 
+## Planned Agent API controls
+
+> **Planned**
+>
+> Authenticate the Agent API with expiring Laravel Sanctum bearer tokens represented as Agent Credentials. Each credential belongs to one issuing User and exactly one Family, derives Family scope from that server-side association, and is automatically unusable when the issuer leaves the Family or the User is deleted. The plaintext secret is shown once; only its hash and non-secret metadata are retained.
+>
+> Require `content:read` on every credential and grant `cookbook:write`, `planning:write`, and `destructive:write` explicitly. No ability permits Family, membership, User, or credential administration over the API. Default expiry is 90 days and maximum expiry is one year. Creation and rotation require recent password confirmation; any current Family member may revoke a credential immediately without reconfirmation.
+>
+> Rotation immediately invalidates the previous secret and every unapplied Change Set preview created by it. Keep revoked metadata non-restorable until Family deletion. Rate-limit each credential independently, enforce the approved payload and operation limits before preview work, and never log bearer secrets or canonical request content that may contain sensitive Family data.
+>
+> Agent mutations use an immutable preview followed by digest-bound atomic apply. Only the credential that created a preview may apply it. Apply rechecks live issuer membership, abilities, expiry, record timestamps, warnings, and Family ownership inside the transaction. Tests must use multiple Users, Families, credentials, and abilities to prove that changing a route identifier or request body cannot widen scope. See [Agent integrations](agent-integrations.md) and [ADR 0009](../adr/0009-scope-agent-credentials-to-one-user-and-family.md).
+
 ## Planned photos and files
 
 > **Planned**
@@ -75,3 +87,5 @@ The default log stack writes to Laravel's configured channels. Development conta
 
 > **Planned**
 > Saved Shopping Lists are user-managed snapshots, not audit records. The MVP has no approved audit log, pricing data, pantry inventory, allergens, or cross-Family data sharing. Avoid designing operational controls that imply those capabilities exist.
+>
+> Applied Agent Change Set History is retained operational provenance, not a general-purpose audit log. Any Agent Credential with `content:read` may inspect its Family's history, no agent may delete it, and any Family member may delete it through the web interface. History deletion never reverses domain changes.

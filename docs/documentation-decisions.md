@@ -422,6 +422,17 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Rationale: The dispositions remove stale authorization language and avoid implying browser-level evidence that the current PHPUnit and source-contract Vitest suites do not provide.
 - Follow-up or review date: Add rendered-component and browser coverage when the project introduces the required DOM/browser harness; retain the separate live Komodo acceptance and Store Section deletion-policy gaps.
 
+### DOC-0043 — Define the API-first Agent Integration boundary
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Canonical glossary, Agent Integration architecture, Family authorization seam, credential security, persistence, frontend navigation, implementation roadmap, API documentation, ADRs 0008–0011 and 0034–0037, and the developer/operator guide
+- Evidence: User answers to Agent Integration grill questions Q1–Q66 and explicit shared-understanding confirmation at Q67 on 2026-08-10; official Laravel 13 Sanctum, authentication, and MCP documentation; current MCP authorization and transport specifications; OpenAPI specification; Scramble installation, authentication, multiple-document, caching, and export documentation; verified absence of an implemented API, Sanctum, Scramble, or MCP boundary in the repository
+- Decision: Use a versioned REST/JSON Agent API with a Scramble-generated OpenAPI 3.1 contract instead of MCP for v1. Authenticate manually configured trusted agents with expiring Sanctum Agent Credentials fixed to one issuer and Family. Derive an Authorized Family Context without using Current Family state, and reuse the same explicit Cookbook and Meal Planning actions as the web interface. Expose complete Catalog reads and atomic, digest-bound preview/apply Agent Change Sets for Stores, Store Sections, Ingredients, Recipe Tags, Recipes, and Calendar Entries after those entities are implemented. Keep source extraction, media, Simple Plans, Shopping Generation, Saved Shopping Lists, Family Access, credential management through the API, and MCP outside v1. Retain applied Change Set provenance until a Family member deletes it. Generate and cache the public runtime contract without committing an artifact. Implement the integration as the final planned slice after its domain dependencies.
+- Rationale: The API is simpler to authenticate, host, document, test, and consume than a first-class MCP server for this personal deployment. The preview/apply protocol preserves agent autonomy while making multi-record effects inspectable, idempotent, warning-aware, and atomic. The shared authorization and action seams prevent Current Family mutation and avoid a second set of domain rules.
+- Follow-up or review date: Implement only after the v1 Cookbook and Meal Planning aggregates and actions are complete; reconsider a thin MCP adapter only when a concrete MCP client need exists. The new substantial planned chapter would ordinarily justify a minor documentation version, but retain `0.3.0` until the User explicitly approves a version change.
+
 ### DOC-0044 — Establish Czech as the exclusive user-interface language
 
 - Date: 2026-08-10

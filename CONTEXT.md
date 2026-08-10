@@ -30,6 +30,18 @@ _Avoid_: Family user, collaborator
 The one family whose data a user is presently viewing and modifying. Operations never combine recipes, plans, or shopping lists across families.
 _Avoid_: Active account, selected tenant
 
+**Agent Credential**:
+A revocable, expiring secret issued by one user to an AI agent for exactly one family with an explicit set of permitted abilities. Every member of that family may inspect its non-secret metadata and revoke it; it also becomes invalid when its issuing user is deleted or leaves the family.
+_Avoid_: Family credential, user-wide token, API key
+
+**Agent Change Set**:
+An immutable, validated set of requested creates, updates, archives, restorations, and deletions that an AI agent may apply atomically to one family's cookbook and meal-planning data after previewing its effects. It cannot manage users, families, family memberships, or agent credentials.
+_Avoid_: Import batch, CRUD request
+
+**Agent Change Set History**:
+A read-only family-owned record containing an applied agent change set's canonical request, preview, acknowledgements, identifier mappings, final result, and provenance until a family member deletes it. AI agents cannot delete these records.
+_Avoid_: Audit log, rollback record
+
 **Cookbook**:
 A family's collection of saved recipes.
 _Avoid_: Recipe book, library

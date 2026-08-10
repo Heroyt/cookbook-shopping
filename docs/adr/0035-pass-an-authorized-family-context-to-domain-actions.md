@@ -1,0 +1,3 @@
+# Pass an authorized Family context to domain actions
+
+Family Access produces one immutable authorized Family context that contains the acting User and Family after verifying live membership. The interactive Current Family resolver and the Agent Credential resolver are separate adapters at this seam, while Cookbook and Meal Planning actions accept the resulting context instead of resolving `users.current_family_id` themselves. This lets web and Agent API callers reuse the same application actions without changing a User preference or duplicating behavior, at the cost of refactoring existing Current-Family-scoped action interfaces.

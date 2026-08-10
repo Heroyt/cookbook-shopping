@@ -1,0 +1,5 @@
+# Use a deep Agent Integration module
+
+One Agent Integration module presents a small preview-and-apply interface while hiding Change Set parsing, typed-operation dispatch, dependency resolution, idempotency, warning acknowledgement, staleness checks, transactionality, persistence, and response formatting. Explicit operation handlers construct side-effect-free proposed effects during preview and invoke existing Cookbook or Meal Planning actions during apply; controllers do not sequence models, and no generic Eloquent mutation engine is exposed.
+
+Valid previews are stored in one `agent_change_sets` record with indexed metadata and versioned JSON for the canonical request, preview, acknowledgements, identifier mappings, and result. Invalid previews return structured validation errors without persistence. A stale preview is replaced by submitting a new client request identifier with optional lineage to the superseded Change Set rather than revising an immutable preview. This design concentrates cross-resource complexity behind one test surface, at the cost of explicit handlers and preview logic for every supported operation.

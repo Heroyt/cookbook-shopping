@@ -1,0 +1,3 @@
+# Use updated_at for Agent API concurrency
+
+Agent Catalog records expose their ordinary `updated_at` timestamp, and update, archive, restore, and delete operations must provide that value as their optimistic-concurrency expectation. Preview and apply reject an operation when the current timestamp differs, but do not add version columns, microsecond requirements, or aggregate fingerprints. This deliberately favors personal-project simplicity over exact detection: multiple writes within the database timestamp resolution, or nested changes that do not touch their aggregate root, may escape the stale-preview check.

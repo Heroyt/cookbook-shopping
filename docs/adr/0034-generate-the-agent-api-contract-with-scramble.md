@@ -1,0 +1,7 @@
+# Generate the Agent API contract with Scramble
+
+The application uses `dedoc/scramble` to generate an OpenAPI 3.1 contract and interactive documentation from the implemented Laravel routes, request validation, response types, and `auth:sanctum` middleware. Scramble replaces a hand-maintained API description and exposes its UI and JSON document publicly at stable production URLs, while actual Agent API operations remain protected by Sanctum. The specification is generated at runtime and is neither exported nor committed; automated tests exercise the generated documentation route instead. This adds an API-documentation dependency and may require explicit schema customization where static inference is insufficient, but keeps the machine-readable contract aligned with executable code.
+
+Production exposes the public documentation UI at `/docs/agent-api/v1` and its OpenAPI JSON at `/docs/agent-api/v1/openapi.json`. It disables the renderer's interactive request feature so Users do not paste long-lived bearer secrets into the public UI. AI agents consume the public JSON contract and call the protected API directly. The generated document is cached in production and rebuilt during deployment without exporting or committing an artifact.
+
+Agent API routes begin at `/api/v1`. Additive changes remain within v1; breaking changes introduce a separately generated `/api/v2` contract and retain v1 for a 90-day migration window.

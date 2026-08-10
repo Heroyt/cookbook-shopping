@@ -81,6 +81,7 @@ sources = [
   "docs/developer-guide/frontend-navigation.md",
   "docs/developer-guide/infrastructure-deployment.md",
   "docs/developer-guide/security-observability.md",
+  "docs/developer-guide/agent-integrations.md",
   "docs/developer-guide/implementation-roadmap.md",
 ]
 landscape_sources = []

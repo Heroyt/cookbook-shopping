@@ -34,6 +34,7 @@ See [Architecture and system boundaries](architecture.md) for framework placemen
 - [Stores and shopping order](stores-shopping-order.md) — implemented Store creation, listing, renaming, and deletion plus planned reusable Sections, placement effects, and final grouping.
 - [Calendar planning](calendar-planning.md) — Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.
 - [Shopping List generation](shopping-generation.md) — generator input and output, calculation order, alternatives, grouping, and immutable history.
+- [Agent integrations](agent-integrations.md) — the planned Agent Credential, Family Catalog, atomic Agent Change Set, and OpenAPI boundary.
 
 The dependency-ordered delivery sequence is in the [Implementation roadmap](implementation-roadmap.md).
 

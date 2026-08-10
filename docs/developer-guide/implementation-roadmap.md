@@ -147,8 +147,23 @@ The verified Slice 2 tracer now provides:
 >
 > **Completion gate:** later edits or archival of Recipes and Ingredients, and edits or deletion of Stores and Sections, cannot change the rendered snapshot.
 
+## Slice 8: Agent Integration
+
+> **Planned**
+>
+> Deliver Agent Integration only after the Cookbook and Meal Planning entities in its v1 contract have complete application actions and tests.
+>
+> - Refactor web actions to accept a membership-validated Authorized Family Context without changing Current Family behavior.
+> - Add Sanctum-backed Agent Credentials scoped to one issuer and Family, with explicit abilities, expiry, rotation, revocation, issuer-membership invalidation, and the Current Family Agent Access screen.
+> - Add the read-only Family Catalog for Stores, Store Sections, Ingredients, Recipe Tags, Recipes, and Calendar Entries.
+> - Add the deep Agent Change Set module with explicit resource handlers, side-effect-free preview, digest-bound atomic apply through existing domain actions, idempotency, warnings, structured errors, staleness checks, limits, and expiry cleanup.
+> - Add immutable applied history and the Current Family Agent Change History screen.
+> - Add the Scramble-generated OpenAPI 3.1 contract and public documentation routes, with production caching and interactive requests disabled.
+>
+> **Completion gate:** a separately configured trusted agent can discover one Family's complete catalog, preview and atomically apply a mixed-resource Change Set, retry it idempotently, and inspect its immutable result without reading another Family or managing Family Access. Tests prove credential lifecycle, ability boundaries, two-Family isolation, stale and warning rejection, rollback, generated documentation, and responsive credential/history management. See [Agent integrations](agent-integrations.md).
+
 ## Deferred capabilities
 
 > **Planned**
 >
-> Do not fold pantry inventory, pricing, allergens, recurring calendar rules, cross-Family copying, checklist state, or external checklist integration into these slices. Each requires a separate domain review before implementation.
+> Do not fold pantry inventory, pricing, allergens, recurring calendar rules, cross-Family copying, checklist state, external checklist integration, server-side source extraction, media import, or an MCP server into these slices. Each requires a separate domain review before implementation.

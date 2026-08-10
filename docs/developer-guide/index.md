@@ -26,7 +26,8 @@ The canonical implementation-free vocabulary remains in [the domain glossary](..
 12. [Frontend architecture and navigation](frontend-navigation.md) — current shell and planned responsive workflows.
 13. [Infrastructure and deployment](infrastructure-deployment.md) — current Docker/Jenkins delivery path, selected external production profile, and remaining acceptance evidence.
 14. [Security and observability](security-observability.md) — implemented controls, Family authorization requirements, secrets, health, and telemetry.
-15. [Implementation roadmap](implementation-roadmap.md) — dependency-ordered vertical slices and completion gates.
+15. [Agent integrations](agent-integrations.md) — planned Agent Credentials, Catalog, atomic Change Sets, API contract, and implementation sequence.
+16. [Implementation roadmap](implementation-roadmap.md) — dependency-ordered vertical slices and completion gates.
 
 ## Evidence hierarchy
 

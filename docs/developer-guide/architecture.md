@@ -24,7 +24,7 @@ The physical modules now begin with `app/FamilyAccess` and `app/Cookbook`. Famil
 <!-- prettier-ignore -->
 > **Planned**
 >
-> Continue as one Laravel deployment and one logical database organized into four in-process domain modules. Family Access has begun; the remaining module boundaries and dependencies are the accepted direction in [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
+> Continue as one Laravel deployment and one logical database organized into four in-process domain modules plus one integration module. Family Access has begun; the remaining module boundaries and dependencies are the accepted direction in [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md) and the [Agent Integration decisions](agent-integrations.md#integration-choice-and-boundary).
 >
 > - **Family Access** owns Family, Family Membership, Current Family selection,
 >   and authorization context. It may depend on the existing User identity and
@@ -39,6 +39,11 @@ The physical modules now begin with `app/FamilyAccess` and `app/Cookbook`. Famil
 >   alternatives, Shopping List output, and Saved Shopping List snapshots. It
 >   may depend on Cookbook value objects and Family Access for snapshot
 >   ownership, but never on Meal Planning persistence.
+> - **Agent Integration** owns Agent Credentials, Catalog projections, Agent
+>   Change Sets, preview/apply coordination, API resources, and the OpenAPI
+>   boundary. It depends on Family Access for authorization context and invokes
+>   Cookbook and Meal Planning application actions; those modules do not depend
+>   on Agent Integration.
 >
 > The dependency direction protects the central calculation boundary. Meal Planning translates selected Calendar Entries into Recipe Selections. A Simple Plan creates the same input directly. Shopping Generation does not query dates, calendar tables, controllers, or UI state; [ADR 0002](../adr/0002-keep-shopping-list-generation-persistence-independent.md) records this trade-off.
 >
@@ -72,10 +77,16 @@ Store deletion reuses that dependency direction without widening its input. `DEL
 > Keep framework-specific concerns at the boundary:
 >
 > - HTTP requests and authorization policies validate the Current Family context.
+> - Family Access produces an immutable Authorized Family Context after live
+>   membership validation. The Current Family and Agent Credential adapters
+>   create that same context; domain actions do not inspect the adapter that
+>   produced it.
 > - Eloquent repositories or query services load aggregates and projections.
 > - Domain value objects represent serving counts, quantities, measurement dimensions, package equivalents, and nutrition profiles using decimal-safe arithmetic.
 > - The Shopping Generation service returns a result object and does not write to the database.
 > - Inertia pages receive presentation-ready resources; Vue components do not reproduce package or nutrition calculations.
+>
+> The Agent Integration module exposes a small Catalog, preview, apply, and history interface while hiding operation parsing, dependency resolution, idempotency, warnings, staleness, transactionality, and persistence. Preview handlers construct side-effect-free proposed effects. Apply handlers invoke the same explicit Cookbook and Meal Planning actions as the web interface; do not expose a generic Eloquent mutation engine. [ADR 0035](../adr/0035-pass-an-authorized-family-context-to-domain-actions.md) and [ADR 0036](../adr/0036-use-a-deep-agent-integration-module.md) record these seams.
 
 ## Frontend boundary
 
