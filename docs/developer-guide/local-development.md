@@ -5,7 +5,7 @@ Access workflow plus the Cookbook Store and Store Section tracers. Local setup
 and migrations create the Family, Store, Store Section, and ordered-association
 tables plus the Current Family preference; focused tests exercise provisioning, Family lifecycle, Store
 create/rename normalization and duplicate handling, Store deletion, Store
-Section creation/listing and colour validation, per-Store attach/removal/reorder,
+Section creation/listing/deletion and colour validation, per-Store attach/removal/reorder,
 optimistic stale-order rejection, equal rights, cross-Family isolation, and account-deletion
 protection. The rest of Cookbook,
 meal planning, and Shopping List generation do not exist yet. See

@@ -17,8 +17,8 @@ and the Family Access collaboration workflow. Its working surfaces are:
 - Family creation, Current Family switching, member addition and removal,
   leaving, and exact-name-confirmed Family deletion;
 - Current-Family-scoped Store creation, listing, renaming, and deletion, plus
-  reusable Store Section creation/listing with required colours and per-Store
-  association, removal, and optimistic contiguous ordering;
+  reusable Store Section creation/listing/deletion with required colours and
+  per-Store association, removal, and optimistic contiguous ordering;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -44,7 +44,7 @@ text.
 
 > **Planned**
 >
-> Store logos, Store Section deletion and optional icons, Ingredients, Recipes, meal
+> Store logos, optional Store Section icons, Ingredients, Recipes, meal
 > planning, nutrition, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
 > authorization, or persistence from the narrow Store and Store Section tracers. The canonical vocabulary is in

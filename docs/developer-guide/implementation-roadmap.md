@@ -74,11 +74,12 @@ The verified Slice 2 tracer now provides:
 
 - `stores`, `store_sections`, and ordered association persistence with explicit Family ownership, cascade deletion, contiguous positions, and a per-Store optimistic order version;
 - PHP-generated display/key normalization plus database-backed `(family_id, normalized_name)` uniqueness for both names across SQLite and MariaDB semantics;
-- authenticated Current-Family-scoped Store creation, listing, renaming, and deletion; Store Section creation and listing; and Store–Section association, removal, and reorder through the reusable Family Access scope;
+- authenticated Current-Family-scoped Store creation, listing, renaming, and deletion; Store Section creation, listing, and deletion; and Store–Section association, removal, and reorder through the reusable Family Access scope;
 - Store rename resolution that accepts only the authenticated User, Store identifier, and proposed name, then resolves ownership inside `CurrentFamilyScope` without accepting a Family identifier;
 - Store deletion resolution that accepts only the authenticated User and Store identifier, returns not found for another Family, and does not accept a Family identifier;
-- a responsive Inertia/Vue Stores page composed from shadcn-vue primitives and generated Wayfinder actions, including an accessible Store Section colour picker, non-colour-only list output, and accessible per-Store association/order controls; and
-- focused PHPUnit/Vitest coverage for equal member rights, cross-Family read/write isolation, validation, normalization, race-safe duplicate handling, success feedback, exact complete ordering, stale-version rejection, generated action wiring, and rendered Store Section output.
+- Store Section deletion that removes all Store associations, closes affected positions, advances affected order versions, releases the normalized name, and reports zero Ingredient placements while that persistence is absent;
+- a responsive Inertia/Vue Stores page composed from shadcn-vue primitives and generated Wayfinder actions, including an accessible Store Section colour picker, non-colour-only list output, consequence-stating Section deletion, and accessible per-Store association/order controls; and
+- focused PHPUnit/Vitest coverage for equal member rights, cross-Family read/write isolation, validation, normalization, race-safe duplicate handling, success feedback, deletion cleanup, exact complete ordering, stale-version rejection, generated action wiring, and rendered Store Section output.
 
 > **Planned**
 >
@@ -89,7 +90,7 @@ The verified Slice 2 tracer now provides:
 >
 > Exclude photos and logos from the first Slice 2 tracer. Their implementation is blocked on the concrete upload-validation policy named in [Security and observability](security-observability.md#planned-photos-and-files).
 >
-> **Completion gate (not yet met):** every Planned Slice 2 invariant is proven. In particular, a Family can describe a package such as `150 g = 6 ks`, place it only through a valid Store–Section association, archive/filter/restore it with restore-before-edit behavior, enforce direct symmetric Alternative edges and canonical-kind eligibility, block removal of a referenced quantity kind, and prove another Family cannot observe it. Tests also prove Store deletion clears complete placement, reusable Section deletion reports affected counts and retains Store placement while clearing Section, and the media replacement/archive/deletion lifecycle once its upload policy is approved. The Store, Store Section, and ordered-association tracers prove the isolation, association, contiguous-position, and stale-reorder portions only.
+> **Completion gate (not yet met):** every Planned Slice 2 invariant is proven. In particular, a Family can describe a package such as `150 g = 6 ks`, place it only through a valid Store–Section association, archive/filter/restore it with restore-before-edit behavior, enforce direct symmetric Alternative edges and canonical-kind eligibility, block removal of a referenced quantity kind, and prove another Family cannot observe it. Tests also prove Store deletion clears complete placement, reusable Section deletion retains Store placement while clearing Section, and the media replacement/archive/deletion lifecycle once its upload policy is approved. The Store, Store Section, deletion, and ordered-association tracers now prove isolation, association cleanup, affected counts, contiguous positions, and stale-reorder behavior; Ingredient placement and media evidence remain absent.
 
 ## Slice 3: Recipes and nutrition
 
