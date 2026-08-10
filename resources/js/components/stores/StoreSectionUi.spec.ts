@@ -29,6 +29,27 @@ describe('Store Section UI', () => {
         );
     });
 
+    it('wires destructive deletion through Wayfinder and discloses affected counts', () => {
+        const dialog = readFileSync(
+            new URL('./DeleteStoreSectionAlertDialog.vue', import.meta.url),
+            'utf8',
+        );
+        const list = readFileSync(
+            new URL('./StoreSectionList.vue', import.meta.url),
+            'utf8',
+        );
+
+        expect(dialog).toContain(
+            'StoreSectionController.destroy(storeSection.id).url',
+        );
+        expect(dialog).toContain('router.delete');
+        expect(dialog).toContain('Přiřazení k obchodům:');
+        expect(dialog).toContain('Umístění surovin: 0');
+        expect(dialog).toContain('Tuto akci nelze vrátit zpět.');
+        expect(list).toContain('<DeleteStoreSectionAlertDialog');
+        expect(list).toContain(':store-section="storeSection"');
+    });
+
     it('renders an accessible required colour picker with Czech guidance', async () => {
         const html = await render(StoreSectionFormFields);
 
@@ -43,7 +64,12 @@ describe('Store Section UI', () => {
     it('renders the colour as text as well as a visual swatch', async () => {
         const html = await render(StoreSectionList, {
             storeSections: [
-                { id: 1, name: 'Čerstvá zelenina', colour: '#2F855A' },
+                {
+                    id: 1,
+                    name: 'Čerstvá zelenina',
+                    colour: '#2F855A',
+                    associationCount: 2,
+                },
             ],
         });
 
