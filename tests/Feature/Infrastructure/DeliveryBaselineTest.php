@@ -100,7 +100,7 @@ SH);
         $this->assertStringContainsString("\n!.env.example\n", "\n{$dockerIgnore}\n");
     }
 
-    public function test_database_environment_contract_uses_sqlite_locally_and_mariadb_in_production(): void
+    public function test_environment_contract_uses_local_services_appropriate_for_each_runtime(): void
     {
         $localEnvironment = File::get(base_path('.env.example'));
         $productionEnvironment = File::get(base_path('.env.production.example'));
@@ -112,6 +112,8 @@ SH);
         $this->assertMatchesRegularExpression('/^APP_ENV=production$/m', $productionEnvironment);
         $this->assertMatchesRegularExpression('/^APP_DEBUG=false$/m', $productionEnvironment);
         $this->assertMatchesRegularExpression('/^DB_CONNECTION=mariadb$/m', $productionEnvironment);
+        $this->assertMatchesRegularExpression('/^FILESYSTEM_DISK=local$/m', $productionEnvironment);
+        $this->assertMatchesRegularExpression('/^QUEUE_CONNECTION=sync$/m', $productionEnvironment);
         $this->assertMatchesRegularExpression('/^MAIL_SCHEME=smtp$/m', $productionEnvironment);
         $this->assertStringContainsString("'mariadb' => [", $databaseConfiguration);
         $this->assertStringContainsString("'driver' => 'mariadb'", $databaseConfiguration);
