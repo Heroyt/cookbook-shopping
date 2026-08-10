@@ -17,6 +17,7 @@ final class StoreManagementTest extends TestCase
     {
         $this->get(route('stores.index'))->assertRedirect(route('login'));
         $this->post(route('stores.store'), ['name' => 'Market'])->assertRedirect(route('login'));
+        $this->patch(route('stores.update', 1), ['name' => 'Market'])->assertRedirect(route('login'));
     }
 
     public function test_each_member_can_create_and_list_stores_in_their_shared_family(): void
@@ -68,6 +69,40 @@ final class StoreManagementTest extends TestCase
                 ->where('stores.1.name', 'Weekend Market'));
     }
 
+    public function test_each_member_can_rename_a_store_in_their_shared_family(): void
+    {
+        $firstMember = User::factory()->create();
+        $secondMember = User::factory()->create();
+        $family = $this->createFamilyWithMembers($firstMember, $secondMember);
+        $this->selectCurrentFamily($firstMember, $family);
+        $this->selectCurrentFamily($secondMember, $family);
+        $store = Store::factory()->for($family)->create(['name' => 'Weekend Market']);
+
+        $this
+            ->actingAs($secondMember)
+            ->patch(route('stores.update', $store), ['name' => '  Daily   Market  '])
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Store renamed.',
+            ])
+            ->assertRedirect(route('stores.index'));
+
+        $store->refresh();
+
+        $this->assertSame('Daily Market', $store->name);
+        $this->assertSame('daily market', $store->normalized_name);
+
+        $this
+            ->actingAs($firstMember)
+            ->get(route('stores.index'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->has('stores', 1)
+                ->where('stores.0.id', $store->id)
+                ->where('stores.0.name', 'Daily Market'));
+    }
+
     public function test_store_reads_are_scoped_to_the_current_family(): void
     {
         $user = User::factory()->create();
@@ -112,6 +147,41 @@ final class StoreManagementTest extends TestCase
         ]);
     }
 
+    public function test_store_renames_are_scoped_to_the_current_family(): void
+    {
+        $user = User::factory()->create();
+        $currentFamily = $this->createFamilyWithMembers($user);
+        $otherFamily = $this->createFamilyWithMembers(User::factory()->create());
+        $this->selectCurrentFamily($user, $currentFamily);
+        $currentStore = Store::factory()->for($currentFamily)->create(['name' => 'Current Store']);
+        $otherStore = Store::factory()->for($otherFamily)->create(['name' => 'Other Store']);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('stores.update', $currentStore), [
+                'name' => 'Renamed Store',
+                'family_id' => $otherFamily->id,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('stores', [
+            'id' => $currentStore->id,
+            'family_id' => $currentFamily->id,
+            'name' => 'Renamed Store',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('stores.update', $otherStore), ['name' => 'Leaked Store'])
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('stores', [
+            'id' => $otherStore->id,
+            'family_id' => $otherFamily->id,
+            'name' => 'Other Store',
+        ]);
+    }
+
     public function test_normalized_store_name_is_unique_within_a_family(): void
     {
         $user = User::factory()->create();
@@ -125,6 +195,26 @@ final class StoreManagementTest extends TestCase
             ->assertSessionHasErrors('name');
 
         $this->assertDatabaseCount('stores', 1);
+    }
+
+    public function test_store_cannot_be_renamed_to_an_existing_normalized_name_in_its_family(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $store = Store::factory()->for($family)->create(['name' => 'Weekend Market']);
+        Store::factory()->for($family)->create(['name' => 'Daily Market']);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('stores.update', $store), ['name' => '  DAILY   market '])
+            ->assertSessionHasErrors('name');
+
+        $store->refresh();
+
+        $this->assertSame('Weekend Market', $store->name);
+        $this->assertSame('weekend market', $store->normalized_name);
+        $this->assertDatabaseCount('stores', 2);
     }
 
     public function test_same_normalized_store_name_is_allowed_in_another_family(): void
@@ -173,12 +263,29 @@ final class StoreManagementTest extends TestCase
         $this->assertDatabaseCount('stores', 0);
     }
 
+    public function test_renamed_store_name_is_required_and_cannot_exceed_the_database_limit(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $store = Store::factory()->for($family)->create(['name' => 'Weekend Market']);
+
+        $this->actingAs($user)->patch(route('stores.update', $store), ['name' => '   '])->assertSessionHasErrors('name');
+        $this->actingAs($user)->patch(route('stores.update', $store), ['name' => str_repeat('a', 256)])->assertSessionHasErrors('name');
+
+        $store->refresh();
+
+        $this->assertSame('Weekend Market', $store->name);
+        $this->assertSame('weekend market', $store->normalized_name);
+    }
+
     public function test_store_routes_require_a_current_family(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)->get(route('stores.index'))->assertNotFound();
         $this->actingAs($user)->post(route('stores.store'), ['name' => 'No Family'])->assertNotFound();
+        $this->actingAs($user)->patch(route('stores.update', 1), ['name' => 'No Family'])->assertNotFound();
 
         $this->assertDatabaseCount('stores', 0);
     }

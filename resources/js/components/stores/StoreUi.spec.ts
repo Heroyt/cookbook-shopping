@@ -24,6 +24,20 @@ describe('Store UI contract', () => {
         expect(page).toContain('<StoreList :stores="stores" />');
     });
 
+    it('wires each Store rename dialog to its typed update action', () => {
+        const dialog = readSource('./RenameStoreDialog.vue');
+        const list = readSource('./StoreList.vue');
+
+        expect(dialog).toContain('StoreController.update.form(store.id)');
+        expect(dialog).toContain('name="name"');
+        expect(dialog).toContain(':default-value="store.name"');
+        expect(dialog).toContain('maxlength="255"');
+        expect(dialog).toContain(':aria-invalid="Boolean(errors.name)"');
+        expect(dialog).toContain('<FieldError :errors="[errors.name]" />');
+        expect(dialog).toContain('@success="open = false"');
+        expect(list).toContain('<RenameStoreDialog :store="store" />');
+    });
+
     it('adds Stores to primary navigation through a generated route', () => {
         const sidebar = readSource('../AppSidebar.vue');
 
