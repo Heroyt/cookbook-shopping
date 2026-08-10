@@ -1,47 +1,43 @@
 # Family access
 
-Family Access has a narrow implemented tracer. An authenticated User can open the Family creation page and create a named Family. The transaction also creates that User's first ordinary, roleless Family Membership. The database rejects a duplicate membership for the same User and Family. Current Family selection, member management, Family deletion, and Family-owned authorization are not implemented. See [Current application](current-application.md) for current behavior and [`CONTEXT.md`](../../CONTEXT.md) for canonical terms.
+Family Access now implements the complete collaboration workflow needed before Family-owned domain records are introduced. An authenticated User can create a Family, switch among their Families, add an existing User by email, leave or remove a member, and delete the Current Family after exact-name confirmation. Every Family Membership is ordinary and roleless. See [Current application](current-application.md) for the wider implemented boundary and [`CONTEXT.md`](../../CONTEXT.md) for canonical terms.
 
-The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-to-families.md). The planned relational constraints are described in [Data structure](data-structure.md), and Slice 1 of the [Implementation roadmap](implementation-roadmap.md) orders the work.
+The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-to-families.md). The relational constraints are described in [Data structure](data-structure.md), and the first Store tracer now closes the Slice 1 Family-owned authorization gate in the [Implementation roadmap](implementation-roadmap.md).
 
-## Ownership boundary
+## Account provisioning
 
-> **Planned**
->
-> A Family is the exclusive owner of its Cookbook, Recipe Tags, Ingredients, Stores, Store Sections, Calendar Entries, and Saved Shopping Lists. Each owned query and command resolves one Current Family and rejects identifiers belonging to any other Family. Shopping List generation and cross-record relationships never span Families.
->
-> A User may belong to multiple Families through roleless Family Memberships. Membership grants equal rights to all Family data; there is no Owner or administrator role in the MVP. Creating a Family creates its first ordinary membership automatically.
+Public self-registration remains disabled. An operator creates an account interactively from the application environment:
+
+```bash
+php artisan user:create user@example.com "Example User"
+```
+
+The command prompts for a password and confirmation without placing the password in shell history, normalizes the email and name, applies the same password rules as the application, and rejects an existing email case-insensitively. Its output never includes the password. The development seeder remains test-fixture convenience rather than an account-provisioning workflow.
 
 ## Membership workflow
 
-Family creation accepts a required name of at most 255 characters and normalizes repeated whitespace before persistence. It creates the Family and initial Family Membership atomically, then returns the User to the dashboard with success feedback. The current sidebar's Families entry opens this creation workflow; it is not yet a Family list or switcher.
+Family creation accepts a required name of at most 255 characters and normalizes repeated whitespace. In one transaction it locks the User, creates the Family and first Family Membership, and selects the new Family as Current Family. The Families page lists only the Current Family's members and provides the creation and management controls.
 
-> **Planned**
->
-> Any Family member can add an already registered User by email, remove another membership, or leave the Family. Add-by-email creates membership immediately and has no invitation, pending, or email-delivery state. An unknown email returns a neutral not-found result.
->
-> A Family must retain at least one member. Removing or leaving the final membership is rejected; the member must explicitly delete the Family instead. Any member may delete the Family and its owned data after strong confirmation by entering the Family name.
+Any member can add an already registered User by email, remove another membership, or leave. Add-by-email is immediate; there is no invitation, pending, or email-delivery state. An unknown email or an email already belonging to the Current Family returns a validation error and does not create a User.
+
+A Family must retain at least one member. Removing or leaving the final membership is rejected; the member must explicitly delete the Family instead. Any member may delete the Current Family after entering its exact, case-sensitive name. Database cascades remove its memberships, while each affected User's Current Family preference becomes null; the acting User then falls back to another membership when one exists. Future Family-owned tables must add matching cascade behavior before their deletion workflow is complete.
+
+Membership mutations resolve the target Family from the authenticated User's validated Current Family rather than accepting a Family identifier in the route. They lock affected User rows in identifier order before the Family row. This ordering coordinates add, remove, leave, delete, Family creation, and account deletion without granting special rights to the creator.
 
 ## Current Family
 
-> **Planned**
->
-> A User works inside one explicitly selected Current Family at a time. A family switcher exposes only the User's memberships and remembers the last valid selection. Switching changes query and command scope; it does not transfer, merge, or copy records.
->
-> Current Family is a preference rather than an ownership field. If its membership disappears, the application clears it or selects another valid membership before accepting Family-owned requests. Authorization must derive from current membership on every request rather than trusting a route parameter, client-provided identifier, cookie, or stale preference alone.
+`users.current_family_id` stores the last selected Family as a nullable preference. The sidebar switcher shows only the authenticated User's memberships. Selection is accepted only when the User is currently a member.
+
+The server validates the preference on every authenticated Inertia request. A stale selection is replaced with the lowest-identifier remaining membership or cleared when none remains. Removing a membership and deleting a Family apply the same fallback rule. The preference is not an ownership field and is never sufficient authorization by itself.
+
+`CurrentFamilyScope` is the reusable authorization interface for Family-owned modules. It requires the membership-validated Current Family and applies it to Eloquent queries through the owned model's `family` relationship. The first Cookbook Store tracer uses it for listing and creation; route parameters, client-provided Family identifiers, cookies, and stale preferences do not select Store ownership.
 
 ## Account lifecycle
 
-Account deletion is blocked while the User is the final member of any Family. The validation response leaves the User authenticated and preserves every affected Family and membership. If every Family has another member, deletion succeeds and the database removes only the departing User's memberships while retaining the Families and their other members.
-
-> **Planned**
->
-> Define how additional Users become registered. Adding a member by email intentionally accepts existing Users only, while the current application has no self-registration workflow. Account provisioning may be resolved separately, but Family onboarding must not imply that entering an unknown email creates an account.
+Account deletion is blocked while the User is the final member of any Family. The validation response leaves the User authenticated and preserves every affected Family and membership. The management UI tells the User to add another member or delete the Family first. If every Family has another member, deletion succeeds and the database removes only the departing User's memberships while retaining the Families and their other members.
 
 ## Authorization verification
 
-Focused feature tests cover authentication on both Family-creation endpoints, creation of exactly one initial membership, name validation and normalization, duplicate-membership database enforcement, final-member account-deletion rejection, successful deletion when every Family retains another member, and atomic rejection across multiple Families.
+Focused PHPUnit tests cover operator provisioning, hidden-password handling, case-insensitive duplicate email rejection, authentication, atomic Family creation, name validation, Current Family selection and stale fallback, add-by-email, duplicate and unknown member rejection, Current-Family-only listing, leave and removal fallback, final-member protection, exact destructive confirmation, cross-Family membership isolation, and account-deletion behavior. A focused Vitest contract verifies that the Vue forms and switcher call generated Wayfinder actions and that the sidebar exposes the Current Family selector.
 
-> **Planned**
->
-> Test every Family-owned aggregate with at least two Users and two Families. Cover allowed access by each equal member, rejected cross-Family reads and writes, stale Current Family selection, duplicate membership, member removal, final-member protection, and destructive Family confirmation. The [Security and observability](security-observability.md) chapter provides the wider control baseline.
+Store feature tests use two Users and two Families to prove equal member access, Current-Family-only reads, and that a client-supplied cross-Family ownership identifier is ignored rather than redirecting the write. This meets the Slice 1 authorization gate. Every later Family-owned aggregate must reuse the same scope and add record-specific cross-Family tests. The [Security and observability](security-observability.md) chapter provides the wider control baseline.

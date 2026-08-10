@@ -11,22 +11,31 @@ Relevant controls and defaults include:
 - HTTP-only, same-site `lax` session cookies by default in [session configuration](../../config/session.php).
 - JSON session serialization and disabled cache object unserialization in [session configuration](../../config/session.php) and [cache configuration](../../config/cache.php).
 - JSON exception responses for API-style requests in [application bootstrap](../../bootstrap/app.php).
+- Operator-only User provisioning with hidden password prompts and application
+  password validation; public registration remains disabled.
 
 Production must set `APP_DEBUG=false`, use HTTPS, set secure session-cookie behavior appropriately, and provide a stable `APP_URL`; passkey relying-party configuration is derived from that URL.
 
-## Planned Family authorization
+## Family access and planned record authorization
+
+Implemented Family Access routes require authentication. Current Family
+selection is checked against live membership, membership mutations derive their
+scope from that validated server-side selection, every member has equal rights,
+final-membership removal is blocked, and Family deletion requires the exact
+Family name. Focused tests reject selecting or removing membership through a
+different Family. `CurrentFamilyScope` applies the same membership-validated
+context to Store queries and creation. Store tests use two Users and two
+Families to prove equal rights, scoped reads, and ownership that cannot be
+redirected by a client-supplied Family identifier.
 
 > **Planned**
 >
-> Authentication establishes User identity; it does not by itself authorize Family data. Every Family-owned query and mutation must be scoped through the authenticated User's Family Membership and the selected Current Family. No request-supplied Family or record identifier may bypass that membership check.
+> Authentication establishes User identity; it does not by itself authorize Family data. Every later Family-owned query and mutation must reuse the authenticated User's Family Membership and selected Current Family scope. No request-supplied Family or record identifier may bypass that membership check.
 >
-> The roleless model gives every Family member equal authority, including membership changes and Family deletion. Required controls include:
+> The roleless model gives every Family member equal authority. Controls still required for Family-owned records include:
 >
-> - A membership check before selecting or reusing a Current Family.
 > - Family-scoped route model binding or equivalent query constraints for every owned record.
 > - Database constraints that prevent cross-Family relationships.
-> - Explicit confirmation using the Family name before deletion.
-> - Protection against removing the final Family Membership without deleting the Family.
 > - Tests that use at least two Families and prove reads and writes cannot cross the boundary.
 
 ## Planned photos and files

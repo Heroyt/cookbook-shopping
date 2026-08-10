@@ -355,3 +355,36 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Publish the version 0.2.0 developer/operator guide with the implemented Family creation tracer and final-member account-deletion rule. Keep Slice 0 incomplete, its live Komodo/MariaDB recreation check external and unverified, and the remaining Slice 1 workflows explicitly planned.
 - Rationale: The guide now follows verified repository behavior, the approved version, and the User's development-sequencing direction without inventing production evidence or unresolved provisioning and Current Family decisions.
 - Follow-up or review date: Collect the Slice 0 external acceptance evidence and refresh the guide as later Slice 1 increments become verified.
+
+### DOC-0032 — Implement operator provisioning and persisted Current Family selection
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Family Access implementation, documentation specification, and developer/operator guide
+- Evidence: User selection `A1 + B1` on 2026-08-10; `user:create` command and tests; Current Family migration, resolver, HTTP/Inertia workflow, membership and Family lifecycle actions, and focused PHPUnit/Vitest coverage
+- Decision: Keep public registration disabled and provision existing Users through an operator-only interactive Artisan command. Persist the nullable `users.current_family_id` preference, validate it against live membership on each authenticated Inertia request, and clear or replace it when membership disappears. Document member management and Family deletion as implemented while keeping reusable authorization for Family-owned records planned.
+- Rationale: The selected paths provide a narrow onboarding mechanism and stable multi-Family context without inventing invitation behavior or treating a preference as authorization. They preserve roleless membership, Current-Family-scoped commands, the modular monolith, and the persistence-independent Shopping Generation boundary.
+- Follow-up or review date: Complete the first Family-owned tracer and cross-Family isolation gate in Slice 2; collect Slice 0 external acceptance evidence separately.
+
+### DOC-0033 — Use normalized keys for Family-scoped name uniqueness
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Store persistence, later Family-scoped names, ADR 0007, and developer/operator data guidance
+- Evidence: User selection `C1` on 2026-08-10; Store model normalization; composite database constraint; focused duplicate and cross-Family tests passing on SQLite; successful full migration and nine-test/71-assertion Store suite against an ephemeral MariaDB 11.8 database
+- Decision: Generate a squished display name and lowercase normalized key in PHP, and enforce `(family_id, normalized_name)` with a database unique constraint. Reuse this strategy for later case-insensitively unique Family-owned names.
+- Rationale: The explicit key gives SQLite and MariaDB the same application semantics without relying on their different collation defaults, while the database constraint remains race-safe.
+- Follow-up or review date: Repeat against the selected live MariaDB server version before the applicable production migration ships; the local MariaDB check does not close the separate Slice 0 acceptance gap.
+
+### DOC-0034 — Release the Store authorization tracer as version 0.3.0
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Documentation specification, developer/operator guide, and renderer version metadata
+- Evidence: User approval of version `0.3.0` and direction to continue into the next slice on 2026-08-10; reusable Current Family scope; Store migration, backend/UI tracer, and focused PHPUnit/Vitest coverage
+- Decision: Publish the Family Access completion gate and first Slice 2 Store tracer as documentation version `0.3.0`, while keeping the rest of Slice 2 and the external Slice 0 evidence explicitly incomplete.
+- Rationale: Store creation/listing is a new user-facing workflow and establishes the reusable cross-module authorization interface, so it is a backward-compatible minor release under the approved semantic-version policy.
+- Follow-up or review date: Complete publication gates before calling version 0.3.0 publish-ready; collect live Komodo/MariaDB recreation evidence separately.

@@ -1,0 +1,3 @@
+# Use application-normalized keys for scoped name uniqueness
+
+Family-scoped names that are unique without regard to case use an application-generated normalized key and a database unique constraint over `(family_id, normalized_name)`. The application squishes display-name whitespace and lowercases the key consistently before persistence, while the key is stored as bytes so SQLite and MariaDB compare that representation exactly without relying on text collations or expression indexes. This duplicates a derived value and requires every write path to use the same normalizer, but keeps the constraint portable and race-safe.

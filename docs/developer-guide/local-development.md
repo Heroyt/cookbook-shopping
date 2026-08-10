@@ -1,9 +1,11 @@
 # Local Development
 
 This chapter covers the current authenticated Laravel/Inertia shell and Family
-Access tracer. Local setup and migrations create the Family tables; focused
-tests exercise Family creation and account-deletion protection. Cookbook,
-meal-planning, and Shopping List features do not exist yet. See
+Access workflow plus the first Cookbook Store tracer. Local setup and migrations
+create the Family and Store tables and Current Family preference; focused tests
+exercise provisioning, Family lifecycle, Store normalization, equal rights,
+cross-Family isolation, and account-deletion protection. The rest of Cookbook,
+meal planning, and Shopping List generation do not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.
 
 ## Choose a runtime
@@ -62,6 +64,17 @@ php artisan db:seed
 The current seeder creates one test User. Inspect
 [DatabaseSeeder.php](../../database/seeders/DatabaseSeeder.php) before using it
 in any shared environment.
+
+For an ordinary local or deployed account, use the operator-only interactive
+command instead of the development seeder:
+
+```bash
+php artisan user:create user@example.com "Example User"
+```
+
+The command prompts for a password and confirmation without echoing them.
+Public self-registration remains disabled, and adding a Family member by email
+does not create a User.
 
 ## Start the native application
 

@@ -8,13 +8,15 @@ the unrelated database currently connected through Laravel Boost.
 ## Product boundary
 
 The repository currently implements an authenticated Laravel application shell
-and the first narrow Family Access workflow. Its working surfaces are:
+and the Family Access collaboration workflow. Its working surfaces are:
 
 - a public welcome page;
 - login, logout, password reset, and passkey authentication;
 - an authenticated dashboard whose content is still placeholder panels;
-- Family creation, which creates the first roleless Family Membership for the
-  authenticated User;
+- operator-only interactive User provisioning;
+- Family creation, Current Family switching, member addition and removal,
+  leaving, and exact-name-confirmed Family deletion;
+- Current-Family-scoped Store creation and listing;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -30,11 +32,10 @@ Fortify's package routes; inspect them with `php artisan route:list`. See
 
 > **Planned**
 >
-> Membership management beyond the initial membership, Current Family
-> selection, Ingredients, Stores, Recipes, meal planning, nutrition, and
-> Shopping List generation remain approved domain design rather than available
-> behavior. Do not infer their models, authorization, or persistence from the
-> Family-creation tracer. The canonical vocabulary is in
+> Store editing, deletion, logos, Store Sections, Ingredients, Recipes, meal
+> planning, nutrition, and Shopping List generation remain approved domain
+> design rather than available behavior. Do not infer their models,
+> authorization, or persistence from the narrow Store tracer. The canonical vocabulary is in
 > [CONTEXT.md](../../CONTEXT.md), and the architectural direction is recorded in
 > [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
@@ -75,8 +76,9 @@ layouts by page name:
 - every other page uses the application layout.
 
 The application layout provides a responsive sidebar, breadcrumb header, and
-toast host. The sidebar links to the placeholder dashboard and the Family
-creation page; settings are reached through the user menu. See
+toast host. The sidebar links to the placeholder dashboard, Families
+management, and Stores pages, and exposes a Current Family switcher populated
+only from the authenticated User's memberships. Settings are reached through the user menu. See
 [the sidebar](../../resources/js/components/AppSidebar.vue) and
 [settings layout](../../resources/js/layouts/settings/Layout.vue).
 
@@ -106,6 +108,11 @@ registration or login. See
 [FortifyServiceProvider](../../app/Providers/FortifyServiceProvider.php) and
 [Fortify configuration](../../config/fortify.php).
 
+Public registration remains disabled. Operators create Users with
+`php artisan user:create user@example.com "Example User"`; the command prompts
+for the password without echoing it, applies application password rules, and
+normalizes the name and email before persistence.
+
 The `User` model implements Fortify's passkey contract. Its password is hashed
 through an Eloquent cast, and credential secrets are hidden from serialization.
 Profile email changes clear `email_verified_at`. Account deletion is rejected
@@ -116,8 +123,10 @@ and logs out the session. Evidence is in [User.php](../../app/Models/User.php),
 [DeleteUser.php](../../app/FamilyAccess/Actions/DeleteUser.php),
 and [the passkey migration](../../database/migrations/2024_01_01_000000_create_passkeys_table.php).
 
-`HandleInertiaRequests` shares the application name, authenticated User, and
-sidebar state with every Inertia page. `HandleAppearance` shares the appearance
+`HandleInertiaRequests` validates the persisted Current Family preference on
+each authenticated Inertia request and shares explicit `id`/`name` summaries
+for the Current Family and all available memberships, alongside the application
+name, authenticated User, and sidebar state. `HandleAppearance` shares the appearance
 cookie with the root view. The appearance and sidebar cookies are deliberately
 excluded from cookie encryption; neither is an authorization source. See
 [application bootstrap](../../bootstrap/app.php),
@@ -126,17 +135,20 @@ and [HandleAppearance](../../app/Http/Middleware/HandleAppearance.php).
 
 ## Current persistence
 
-Infrastructure, account data, and the first Family Access records are migrated.
+Infrastructure, account data, and Family Access records are migrated.
 The current schema contains:
 
 - Users, password-reset tokens, and sessions;
 - passkey credentials;
-- Families and unique roleless Family Memberships;
+- Families, unique roleless Family Memberships, and the nullable Current Family
+  preference on each User;
+- Stores with explicit Family ownership and normalized Family-scoped unique
+  names;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Current Family preference, Recipe, Ingredient, Store, Calendar
-Entry, nutrition, or Shopping List tables. See the
+There are no Recipe, Ingredient, Store Section, Calendar Entry, nutrition, or
+Shopping List tables. See the
 [migration directory](../../database/migrations/).
 
 The default environment uses SQLite and database-backed sessions, cache, and
@@ -148,7 +160,7 @@ rather than delivered. These defaults come from
 [mail configuration](../../config/mail.php).
 
 The included seeder creates a single development User. It is test fixture
-convenience, not an account-provisioning workflow; see
+convenience; operators should use the `user:create` command instead. See
 [DatabaseSeeder.php](../../database/seeders/DatabaseSeeder.php).
 
 ## Infrastructure already present
@@ -191,8 +203,8 @@ operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 - Runtime configuration is injected rather than baked into the production
   image, but the deployment platform's secret definitions and validated
   production values are not committed here.
-- Family-owned cookbook authorization, cross-Family isolation helpers, and
-  media-upload workflows are not implemented. The selected personal profile
+- Reusable Current Family authorization now scopes the Store tracer, but later
+  Family-owned records and media-upload workflows are not implemented. The selected personal profile
   uses the private local filesystem and intentionally requires no automated
   backup, recovery, or centralized observability; the persistent mount remains
   external and unverified.

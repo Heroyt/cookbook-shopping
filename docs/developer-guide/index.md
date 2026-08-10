@@ -1,6 +1,6 @@
 # Developer and Operator Guide
 
-Documentation version: **0.2.0**
+Documentation version: **0.3.0**
 
 This guide is the main technical entry point for developing and operating the cookbook and shopping-planning application. It describes the application that exists in the repository today and the approved domain design that has not yet been implemented.
 
@@ -16,10 +16,10 @@ The canonical implementation-free vocabulary remains in [the domain glossary](..
 2. [Architecture and system boundaries](architecture.md) — current request flow and planned modular-monolith boundaries.
 3. [Local development](local-development.md) — workstation and Docker workflows, generated route bindings, and verification.
 4. [Domain model](domain-model.md) — module boundaries, ADR map, and capability navigation.
-5. [Family access](family-access.md) — implemented creation and account-deletion protection plus planned membership and Current Family workflows.
+5. [Family access](family-access.md) — implemented provisioning, creation, Current Family, membership, deletion, and account-lifecycle workflows.
 6. [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, alternatives, composition, search, and archival.
 7. [Nutrition](nutrition.md) — Ingredient bases, per-serving calculation, overrides, incomplete profiles, and daily totals.
-8. [Stores and shopping order](stores-shopping-order.md) — reusable Sections, placement, removal, and grouping.
+8. [Stores and shopping order](stores-shopping-order.md) — implemented Store tracer plus planned Sections, placement, removal, and grouping.
 9. [Calendar planning](calendar-planning.md) — Calendar Entries, derived days, Meal Labels, weekly planning, and Simple Plans.
 10. [Shopping-list generation](shopping-generation.md) — service boundary, conversions, aggregation, alternatives, and output.
 11. [Data structure](data-structure.md) — implemented Family persistence plus the planned relational model, ownership keys, constraints, and snapshots.
@@ -44,6 +44,6 @@ The connected Laravel Boost database is explicitly excluded as evidence because 
 The Markdown guide is the source of truth. The repository uses the official
 managed documentation tooling recorded in
 [DOC-0024](../documentation-decisions.md#doc-0024--upgrade-managed-documentation-tooling-to-065).
-Its doctor, validation, PDF build, and visual inspection gates pass for this
+Run its doctor, validation, PDF build, and visual inspection gates for each
 revision. The generated PDF remains an ignored build artifact and must be
 regenerated from the Markdown sources for publication.

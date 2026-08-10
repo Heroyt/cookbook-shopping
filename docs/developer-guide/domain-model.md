@@ -1,6 +1,6 @@
 # Domain model
 
-The repository implements the authenticated `User` and account-security shell plus the first Family Access tracer. The [`User` model](../../app/Models/User.php) exposes Family Membership and Family relationships, while the `app/FamilyAccess` module persists Families, creates the first membership, and protects final-member account deletion. Current Family selection and the Cookbook, Meal Planning, and Shopping Generation modules remain unimplemented. See [Current application](current-application.md) for the implemented surface.
+The repository implements the authenticated `User` and account-security shell, Family Access, and a narrow Cookbook Store tracer. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns only Store creation and listing; the rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
 
 [`CONTEXT.md`](../../CONTEXT.md) is the canonical implementation-free glossary. These developer chapters explain relationships, invariants, and implementation consequences without replacing that vocabulary.
 
@@ -14,6 +14,7 @@ The approved design is governed by:
 - [ADR 0004: Build a Laravel modular monolith](../adr/0004-build-a-laravel-modular-monolith.md)
 - [ADR 0005: Use MariaDB in production and SQLite locally](../adr/0005-use-mariadb-in-production-and-sqlite-locally.md)
 - [ADR 0006: Use a single-host personal production profile](../adr/0006-use-a-single-host-personal-production-profile.md)
+- [ADR 0007: Use application-normalized keys for scoped name uniqueness](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md)
 
 ## Planned boundaries
 
@@ -27,10 +28,10 @@ See [Architecture and system boundaries](architecture.md) for framework placemen
 
 ## Capability chapters
 
-- [Family access](family-access.md) — implemented creation and account-deletion protection plus planned membership, Current Family selection, isolation, and destructive operations.
+- [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores; later aggregates must reuse it.
 - [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, conversions, alternatives, Recipe composition, search, and archival.
 - [Nutrition](nutrition.md) — Ingredient bases, calculated per-serving values, overrides, incomplete profiles, and daily totals.
-- [Stores and shopping order](stores-shopping-order.md) — reusable Sections, Ingredient placement, deletion behavior, and final grouping.
+- [Stores and shopping order](stores-shopping-order.md) — implemented Store creation and listing plus planned reusable Sections, placement, deletion behavior, and final grouping.
 - [Calendar planning](calendar-planning.md) — Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.
 - [Shopping List generation](shopping-generation.md) — generator input and output, calculation order, alternatives, grouping, and immutable history.
 

@@ -52,34 +52,41 @@ On 2026-08-10 the User explicitly directed implementation to proceed into Slice 
 
 ## Slice 1: Family access
 
-The verified tracer increment now provides:
+The verified Family Access increments now provide:
 
 - `families` and unique roleless `family_memberships` persistence with factories and Eloquent relationships;
 - authenticated Family creation through a validated Inertia form, including the first membership in one transaction;
+- operator-only `user:create` provisioning while public registration remains disabled;
+- persisted, membership-validated Current Family selection with automatic fallback;
+- Current-Family-scoped member listing, add-by-email, leave, removal, and exact-name-confirmed Family deletion;
 - a Family Access module boundary under `app/FamilyAccess` without changing the pure Shopping Generation boundary;
 - an account-deletion guard that rejects deletion if the User is the final member of any Family and otherwise preserves every Family; and
-- focused PHPUnit coverage for authentication, validation, atomic creation, duplicate membership, and the selected deletion policy.
+- focused PHPUnit coverage for provisioning, authentication, validation, atomic creation, Current Family fallback, member lifecycle, cross-Family membership isolation, destructive confirmation, and the selected account-deletion policy; and
+- a responsive Inertia/Vue management screen composed from shadcn-vue primitives and generated Wayfinder actions.
 
-> **Planned**
->
-> - Decide how Users are provisioned while self-registration is disabled; add-by-email can attach only an already registered User.
-> - Let a User add a registered User by email, leave, remove another member, switch Current Family, and delete a Family with explicit confirmation.
-> - Persist the last valid Current Family selection without making it an ownership field.
-> - Establish reusable Family-scoped authorization and cross-Family test helpers.
->
-> **Completion gate (not yet met):** tests with two Users and two Families demonstrate equal membership rights and prove complete isolation of Family-owned records.
+The reusable `CurrentFamilyScope` and the first Family-owned Store tracer complete the Slice 1 authorization gate. Tests with two Users and two Families prove equal member rights, Current-Family-only Store reads, and that a client-supplied Family identifier cannot redirect a Store write.
+
+**Completion gate met:** Family Access supplies validated Current Family context to another module without reversing the modular dependency or changing Shopping Generation.
 
 ## Slice 2: Stores and packaged Ingredients
 
+The verified Slice 2 tracer now provides:
+
+- `stores` persistence with explicit Family ownership and cascade deletion;
+- PHP-generated display/key normalization plus database-backed `(family_id, normalized_name)` uniqueness across SQLite and MariaDB semantics;
+- authenticated Current-Family-scoped Store creation and listing through the reusable Family Access scope;
+- a responsive Inertia/Vue Stores page composed from shadcn-vue primitives and generated Wayfinder actions; and
+- focused PHPUnit/Vitest coverage for equal member rights, cross-Family read/write isolation, validation, normalization, duplicate handling, success feedback, and frontend wiring.
+
 > **Planned**
 >
-> - Add case-insensitively unique Store and reusable Store Section entities within a Family.
+> - Add Store editing, deletion, optional logos, and reusable Store Section entities within a Family.
 > - Maintain each Store's ordered section associations.
 > - Add Ingredients as concrete purchasable packages with at least one positive unit quantity, optional Store Placement, media, description, nutrition, and direct symmetric/non-transitive alternatives.
 > - Support metric weight and volume units plus Ingredient-specific count units.
 > - Archive Ingredients and guard removal of units referenced by Recipe Ingredients.
 >
-> **Completion gate:** a Family can describe a package such as `150 g = 6 pieces`, place it in a Store Section, reorder Store sections, archive it, and prove that another Family cannot observe it.
+> **Completion gate (not yet met):** a Family can describe a package such as `150 g = 6 pieces`, place it in a Store Section, reorder Store sections, archive it, and prove that another Family cannot observe it. The Store tracer proves the isolation portion only.
 
 ## Slice 3: Recipes and nutrition
 

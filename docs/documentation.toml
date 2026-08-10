@@ -1,5 +1,5 @@
 schema_version = 1
-documentation_version = "0.2.0"
+documentation_version = "0.3.0"
 primary_language = "en"
 output_dir = "docs/pdf"
 work_dir = "docs/.documentation-work"
@@ -60,7 +60,7 @@ allowed_hosts = []
 id = "developer-guide"
 title = "Cookbook and Shopping Planning — Developer and Operator Guide"
 output = "developer-guide-en.pdf"
-document_version = "0.2.0"
+document_version = "0.3.0"
 cross_document_links = "notice"
 invalid_links = "notice"
 link_notice_style = "plain"

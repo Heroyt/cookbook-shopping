@@ -4,7 +4,7 @@
 
 The application is a Laravel 13 server-driven single-page application using Inertia 3 and Vue 3. Laravel owns routing, authentication, validation, persistence, and Inertia responses. Vue pages and shared components render the browser interface, while Vite builds the client assets. Wayfinder generates typed frontend bindings for Laravel routes.
 
-The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, and a narrow Family Access tracer. The tracer persists Families and roleless Family Memberships inside `app/FamilyAccess`, lets an authenticated User create a Family with its first membership, and protects the no-orphan invariant during account deletion. Current Family selection and Family-owned cookbook modules are not implemented. See [Current application](current-application.md) for the implemented surface.
+The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, Family Access inside `app/FamilyAccess`, and the first Cookbook tracer inside `app/Cookbook`. Family Access persists Families, roleless Family Memberships, and the nullable Current Family preference; it implements operator provisioning, creation, selection, member lifecycle, exact-name-confirmed deletion, the no-orphan account-deletion guard, and a reusable Current Family query scope. The Cookbook tracer creates and lists Family-owned Stores. See [Current application](current-application.md) for the implemented surface.
 
 Current architectural evidence:
 
@@ -12,13 +12,14 @@ Current architectural evidence:
 - [Web routes](../../routes/web.php) expose the public welcome page and authenticated dashboard; the attached `verified` middleware is currently inert as explained in [Security and observability](security-observability.md#implemented-authentication-controls).
 - [Settings routes](../../routes/settings.php) expose authenticated profile, security, password, and appearance operations.
 - [Family Access routes](../../routes/family-access.php) expose authenticated Family creation.
+- [Cookbook routes](../../routes/cookbook.php) expose Current-Family-scoped Store listing and creation.
 - [Family creation action](../../app/FamilyAccess/Actions/CreateFamily.php) and its sibling module files contain the models, application actions, controller, and request validation.
 - [Frontend entry point](../../resources/js/app.ts) resolves Inertia pages and initializes Vue.
 - [Composer dependencies](../../composer.json) and [frontend dependencies](../../package.json) define the framework stack.
 
 ## Modular monolith direction
 
-The first physical module is `app/FamilyAccess`. It owns Family persistence and application behavior without moving the existing `User` identity or authentication into the module. This is a tracer through the accepted modular-monolith boundary; it does not yet establish Current Family selection or reusable authorization for later modules.
+The physical modules now begin with `app/FamilyAccess` and `app/Cookbook`. Family Access owns Family persistence and application behavior without moving the existing `User` identity or authentication into the module. Its reusable `CurrentFamilyScope` resolves membership-validated context and applies that context through a Family-owned model's `family` relationship. Cookbook depends on this interface for Store reads and writes; Family Access does not depend on Cookbook.
 
 <!-- prettier-ignore -->
 > **Planned**
@@ -74,7 +75,7 @@ The implemented Family-creation path keeps HTTP validation in a Form Request and
 
 ## Frontend boundary
 
-The current frontend uses Vue single-file components, TypeScript, Inertia page resolution, Tailwind CSS, and shadcn-vue components. The Family creation page composes an Inertia form with generated Wayfinder actions and installed shadcn-vue form primitives. Generated Wayfinder modules live under ignored/generated paths in `resources/js/actions`, `resources/js/routes`, and `resources/js/wayfinder`; regenerate them rather than hand-editing them.
+The current frontend uses Vue single-file components, TypeScript, Inertia page resolution, Tailwind CSS, and shadcn-vue components. Family and Store management compose Inertia forms and visits with generated Wayfinder actions and installed shadcn-vue form, card, table, empty-state, dialog, and alert-dialog primitives. Generated Wayfinder modules live under ignored/generated paths in `resources/js/actions`, `resources/js/routes`, and `resources/js/wayfinder`; regenerate them rather than hand-editing them.
 
 > **Planned**
 > Desktop layouts should optimize Recipe, Ingredient, Store, and Store Section maintenance. Mobile layouts should give equal support to the weekly planner and generated Shopping List. Both remain the same Inertia application rather than separate clients.
