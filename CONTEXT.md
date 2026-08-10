@@ -8,6 +8,10 @@ This context describes a family's cookbook and the shopping plans generated from
 - Write the Gitmoji as its colon-wrapped code, not as a Unicode emoji. For example: `:bug: [shopping-list] fix package rounding`.
 - Keep commits focused on one logical change. Split unrelated implementation, tests, documentation, and tooling changes into separate commits when that improves reviewability.
 
+## User-facing language
+
+The application interface is exclusively Czech. This includes visible copy, page metadata, navigation, forms, dialogs, validation and authentication feedback, toasts, loading and empty states, and accessible names that may be announced by assistive technology. Source-code identifiers and developer/operator documentation remain English, while backend and package messages are translated through `lang/cs` with Czech configured as both the application and fallback locale.
+
 ## Language
 
 **User**:

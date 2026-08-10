@@ -13,6 +13,8 @@
 
 The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, a placeholder authenticated dashboard, operator-only User provisioning, complete Family Access collaboration workflows, reusable Current Family record scoping, and a narrow Store create/list/rename/delete tracer. Store logos and the remaining cookbook, recipe, ingredient, section, meal-calendar, nutrition, and shopping-list workflows remain intended functionality that is not yet implemented.
 
+All user-facing application copy is Czech, including visible interface text, page titles, placeholders, validation and authentication errors, flash messages and toasts, loading and empty states, and accessible-only labels. Source-code identifiers and the developer/operator guide remain English. Backend and package messages use the Czech resources under `lang/cs`; Czech is both the application and fallback locale so an English fallback is not an acceptable user-facing state.
+
 ### Source authority
 
 Use evidence in this order:
@@ -45,7 +47,7 @@ Nontechnical Users who participate in one or more Families and manage the Curren
 
 The user guide excludes developer setup, architecture, deployment, internal domain design, and unimplemented workflows.
 
-Write the user guide in Czech and preserve exact interface labels when they differ from the surrounding Czech prose.
+Write the user guide in Czech and preserve the exact Czech interface labels. If observed interface copy is English, treat it as an application defect rather than preserving it in the guide.
 
 ### Developer/operator guide
 

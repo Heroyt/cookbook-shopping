@@ -421,3 +421,14 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Expand current authorization inventories to include Store deletion, document missing/obsolete Store and missing Current Family failure outcomes, and distinguish direct endpoint coverage from source-only AlertDialog inspection. Keep confirmation, cancellation, processing, failure, focus, keyboard, and toast-announcement behavior in the planned rendered/browser test list until such tests exist.
 - Rationale: The dispositions remove stale authorization language and avoid implying browser-level evidence that the current PHPUnit and source-contract Vitest suites do not provide.
 - Follow-up or review date: Add rendered-component and browser coverage when the project introduces the required DOM/browser harness; retain the separate live Komodo acceptance and Store Section deletion-policy gaps.
+
+### DOC-0044 — Establish Czech as the exclusive user-interface language
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Application locale, frontend copy, backend and package messages, accessibility labels, documentation specification, developer/operator guide, and future implementation rules
+- Evidence: User direction on 2026-08-10 to make all user-facing UI Czech and require the same convention for future development; repository-wide UI string audit; focused PHPUnit and Vitest localization coverage
+- Decision: Use Czech for every user-facing application string, including page metadata, visible copy, forms, dialogs, validation and authentication errors, flash messages and toasts, loading and empty states, and accessible-only labels. Configure `cs` as both the Laravel locale and fallback locale, maintain backend and package translations under `lang/cs`, and keep code identifiers and developer/operator documentation in English. Treat newly introduced English interface copy as a defect that requires test coverage.
+- Rationale: One explicit language boundary prevents mixed-language workflows and makes both visual and assistive-technology output predictable while preserving English as the implementation and operator-documentation language.
+- Follow-up or review date: Apply the rule to every new user-facing workflow and extend translation resources and localization coverage when new framework or package messages become reachable; retain documentation version `0.3.0` until the User explicitly approves a version change.

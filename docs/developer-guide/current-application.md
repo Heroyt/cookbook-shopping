@@ -30,6 +30,16 @@ Fortify's package routes; inspect them with `php artisan route:list`. See
 [settings routes](../../routes/settings.php), and
 [Fortify configuration](../../config/fortify.php).
 
+The complete user-facing interface is Czech. That boundary includes visible
+copy, page metadata, forms, dialogs, feedback, loading and empty states, and
+accessible-only labels. Laravel uses `cs` as both its locale and fallback
+locale, with application and package translations in
+[`lang/cs.json`](../../lang/cs.json) and the
+[`lang/cs` PHP resources](../../lang/cs/validation.php). Code identifiers and
+this developer/operator guide remain English. New user-facing work must add
+Czech copy and localization coverage rather than relying on English fallback
+text.
+
 > **Planned**
 >
 > Store logos, Store Sections, Ingredients, Recipes, meal

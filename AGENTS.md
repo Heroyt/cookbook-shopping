@@ -30,6 +30,13 @@ These requirements are mandatory for every implementation task and take preceden
 - Frontend tests use Vitest.
 - Do not delete tests without explicit user approval.
 
+## User-Facing Language
+
+- All user-facing application copy must be Czech. This includes visible text, page titles, navigation, form labels, placeholders, validation and authentication errors, flash messages, toasts, empty and loading states, dialog text, and screen-reader-only or other accessible labels.
+- Keep source-code identifiers, translation keys, domain terms in `CONTEXT.md`, and developer/operator documentation in English unless an established project convention requires otherwise.
+- Put backend and package translations in `lang/cs` and keep `cs` as both the application locale and fallback locale. Do not introduce English fallback copy into a user-facing path.
+- Add or update the narrowest PHPUnit or Vitest coverage whenever user-facing copy or localization behavior changes.
+
 ## Git Commits
 
 - When committing changes, use the subject format `:emoji: [optional context] message`.

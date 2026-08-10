@@ -10,6 +10,8 @@ An alternative header layout is also present. It renders desktop navigation, a m
 
 Navigation uses Inertia `Link` components and generated Wayfinder route functions. Active-link behavior comes from the shared URL composable. Family and Store creation and management use Inertia forms or router visits with generated Wayfinder actions. The pages compose shadcn-vue Cards, Fields, Inputs, Tables, Empty states, AlertDialog, and Dialog primitives. Validation errors remain associated with inputs, and forms preserve user input on recoverable validation failures. Generated modules under `resources/js/actions`, `resources/js/routes`, and `resources/js/wayfinder` are build artifacts and must be regenerated rather than edited by hand.
 
+Every user-facing string is Czech, including page titles, navigation, form copy, placeholders, dialogs, toasts, loading and empty states, and screen-reader-only labels. Backend validation, authentication, and package feedback is supplied through `lang/cs`. Keep TypeScript and Vue identifiers in English, but treat newly introduced English interface copy as a defect and extend the localization source-contract coverage when adding a workflow.
+
 The Stores page is the only Cookbook navigation and currently supports creation, listing, renaming through a Dialog, and deletion through a consequence-stating AlertDialog. No Store Section maintenance, Ingredient maintenance, Recipe search, weekly planner, Simple Plan, or Shopping List interface exists yet. Those workflows described below are approved intent from the [domain glossary](../../CONTEXT.md), not current behavior.
 
 ## Planned application navigation
