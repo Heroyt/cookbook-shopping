@@ -4,7 +4,7 @@
 
 - Mode: Create
 - Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1, 0.1.2, 0.2.0, and 0.3.0 approved on 2026-08-10
-- Primary languages: Czech for the user guide; English for the developer/operator guide
+- Primary languages: Czech for the deferred user guide; English for the configured developer/operator guide
 - Documentation version: 0.3.0
 
 ## Application and evidence
@@ -42,6 +42,8 @@ Family persistence, operator User provisioning, Family collaboration, reusable C
 ## Audiences
 
 ### User guide
+
+The Czech User guide remains an approved future deliverable, but it is deferred and not configured in the current documentation release. The repository does not yet contain its required `docs/user-guide/index.md` source or a User-guide PDF target. The requirements below govern its eventual authoring; they are not a claim that the guide or PDF currently exists.
 
 Nontechnical Users who participate in one or more Families and manage the Current Family's Cookbook and shopping plans. Readers are assumed to know how to use a modern web browser but are not expected to understand the application's implementation. The guide helps them access the application, manage personal and security settings, select and collaborate within a Family, and complete every implemented cookbook and shopping-planning workflow.
 
@@ -97,7 +99,7 @@ Developer/operator guide:
 
 ### User guide
 
-Use a multi-page guide rooted at `docs/user-guide/index.md` with focused chapters for:
+When the deferred User guide is resumed, use a multi-page guide rooted at `docs/user-guide/index.md` with focused chapters for:
 
 - Účel, rozsah a přístup
 - Přihlášení a obnovení přístupu
@@ -160,11 +162,12 @@ Use Mermaid diagrams selectively in the developer/operator guide when they mater
 ## Publication contract
 
 - Commit the portable Markdown sources and their approved publication images.
-- Generate a separate Czech User-guide PDF and English developer/operator-guide PDF under ignored `docs/pdf/`.
+- The current configured publication target generates the English developer/operator-guide PDF under ignored `docs/pdf/`.
+- When the deferred Czech User guide is authored and added to `documentation.toml`, generate its separate Czech PDF under ignored `docs/pdf/` and run the same publication gates before calling it publish-ready.
 - Use the neutral `default` PDF theme rather than eSoul client branding.
 - Do not commit generated PDFs unless a later project decision explicitly changes the publication policy.
 - Treat the Markdown sources as authoritative when generated artifacts disagree.
-- Require specification approval, traceable decisions, Markdown and asset validation, successful Dockerized PDF builds, structural PDF checks, every-page visual inspection, privacy and source-level accessibility review, and correctness and completeness reviews before calling either guide publish-ready.
+- Require specification approval, traceable decisions, Markdown and asset validation, successful Dockerized PDF builds, structural PDF checks, every-page visual inspection, privacy and source-level accessibility review, and correctness and completeness reviews before calling any configured guide publish-ready.
 
 Version documentation independently using semantic versioning, beginning at `0.1.0`. During refreshes, propose patch versions for corrections, minor versions for new workflows or substantial sections, and major versions for materially incompatible audience or scope changes. Never apply a version change without explicit approval.
 
@@ -173,6 +176,7 @@ Version documentation independently using semantic versioning, beginning at `0.1
 - [x] Specification approved before substantial authoring.
 - [x] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
 - [x] All material claims have evidence or explicit user attestation.
-- [x] Every published screenshot is manifested and approved; this revision publishes no screenshots.
-- [x] Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
-- [x] Correctness and completeness review findings are resolved or explicitly accepted.
+- [x] Every published screenshot is manifested and approved; the configured developer guide publishes no screenshots.
+- [x] Configured developer-guide Markdown and PDF pass mechanical, visual, privacy, and accessibility checks.
+- [x] Configured developer-guide correctness and completeness review findings are resolved or explicitly accepted.
+- [ ] The deferred Czech User guide has authoritative Markdown, a configured PDF target, and completed publication gates.

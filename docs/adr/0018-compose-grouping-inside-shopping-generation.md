@@ -1,0 +1,3 @@
+# Compose grouping inside Shopping Generation
+
+Store and Store Section grouping and ordering remain domain behavior inside the persistence-independent Shopping Generation module. A dedicated pure grouping collaborator receives calculated lines and placement metadata, while the public generator facade composes calculation and grouping and returns the complete grouped Shopping List. Store and Ingredient name comparators use the application-normalized UTF-8 byte key with stable identity as a tie-breaker rather than database or platform collation. This keeps traversal concerns out of quantity arithmetic without moving approved shopping-order semantics into Inertia or another presentation adapter, and keeps output deterministic across input order and persistence engines.

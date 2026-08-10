@@ -1,0 +1,3 @@
+# Use exact rational quantity calculation
+
+Normalized Serving Counts, Recipe Ingredient quantities, package quantities, nutrition bases, and macro values are persisted as fixed `DECIMAL(20,6)` values and normalized inputs with greater scale are rejected rather than silently rounded. Domain calculations convert those finite decimals into exact rational values so serving ratios, package-fraction calculation, aggregation, and package ceiling never accumulate intermediate rounding error; metric input conversion occurs before persistence and display quantization occurs only at an explicit presentation or export boundary. This adds a rational-number abstraction but preserves the generator's calculation order and makes whole-package decisions deterministic.

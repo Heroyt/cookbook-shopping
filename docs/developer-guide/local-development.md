@@ -159,8 +159,8 @@ See [docker-compose.yml](../../docker-compose.yml),
 
 - **`APP_URL`** defaults to `http://localhost:8000` and must match the browser
   origin for passkeys.
-- **`APP_LOCALE`** defaults to `en`; the current UI is English while the planned
-  product language is Czech.
+- **`APP_LOCALE`** and **`APP_FALLBACK_LOCALE`** both default to `cs`; the
+  implemented interface and reachable backend/package feedback are Czech.
 - **`DB_CONNECTION`** defaults to `sqlite` and uses
   `database/database.sqlite` when `DB_DATABASE` is omitted in native Laravel.
 - **`SESSION_DRIVER`** defaults to `database` and requires the migrated

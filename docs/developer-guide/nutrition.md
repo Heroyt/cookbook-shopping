@@ -6,9 +6,9 @@ Nutrition profiles and calculations are not implemented. The canonical concepts 
 
 > **Planned**
 >
-> An Ingredient may define one Nutrition Profile containing energy in kilocalories and fat, protein, and carbohydrates for an explicit positive basis quantity and unit. Valid examples include per `100 g`, `100 ml`, one piece, or one package. A number without its basis is not usable nutrition data.
+> An Ingredient may define one Nutrition Profile containing energy in kilocalories and fat, protein, and carbohydrates for an explicit positive basis quantity normalized as grams, millilitres, piece count, or one whole package. Valid Czech displays include per `100 g`, `100 ml`, `1 ks`, or one package. A number without its basis is not usable nutrition data.
 >
-> Calculation uses standard metric conversion within weight or volume and the Ingredient's own package equivalents for count or cross-dimension conversion. It never assumes grams and millilitres are interchangeable globally.
+> Input adapters normalize explicit metric units before persistence without retaining the input-unit preference. Display derives grams/kilograms or millilitres/litres using the same 1000 threshold as shopping quantities. Calculation uses the Ingredient's own package equivalence between its mutually exclusive metric quantity and optional piece count; it never treats grams and millilitres as interchangeable.
 
 ## Recipe calculation
 

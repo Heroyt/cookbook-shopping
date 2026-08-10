@@ -422,6 +422,61 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Rationale: The dispositions remove stale authorization language and avoid implying browser-level evidence that the current PHPUnit and source-contract Vitest suites do not provide.
 - Follow-up or review date: Add rendered-component and browser coverage when the project introduces the required DOM/browser harness; retain the separate live Komodo acceptance and Store Section deletion-policy gaps.
 
+### DOC-0038 — Resolve the first Cookbook design frontier
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Canonical glossary, Cookbook and Shopping Generation plans, Store Section lifecycle, media lifecycle, quantity arithmetic, Measurement Units, Alternative Ingredients, ADRs 0012–0014, and the developer/operator guide
+- Evidence: User answers to grill round one on 2026-08-10 (`Q1 A`, `Q2 B` with a UI colour picker, `Q3 A`, `Q4 A`, clarified `Q5 A`, and `Q6 A`)
+- Decision: Delete a reusable Store Section by transactionally removing all of its Store associations and clearing the Section from affected Ingredient placements while retaining their Store assignments. Give Sections a User-selected validated six-digit hexadecimal colour and optional allowlisted icon. Keep one original entity-owned private media file, remove superseded files after commit, retain files on archive, and remove them on hard or Family deletion. Persist finite quantities as `DECIMAL(20,6)`, reject greater input scale, and calculate with exact rational intermediates. Use one universal `piece` unit with Ingredient-package-specific piece counts; any alternate wording is presentation only. Persist each direct Alternative Ingredient relationship once as a canonical ordered, unique, same-Family self-referential many-to-many edge.
+- Rationale: These choices close the immediate lifecycle and representation blockers without adding custom unit identities, media variants, or persistence dependencies to Shopping Generation. They preserve Store placement when only a Section disappears, make package rounding deterministic, and keep symmetric alternatives structurally unambiguous.
+- Follow-up or review date: Resolve the newly unblocked placement-integrity, alternative-eligibility and conversion, generator-result, grouping, Calendar uniqueness, presentation-quantization, and snapshot-storage decisions before implementing the affected slices. All behavior in this decision remains planned until verified in code; the separate Slice 0 Komodo/MariaDB recreation gate remains incomplete.
+
+### DOC-0039 — Resolve the persistence and calculation frontier
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Store Placement integrity, Alternative eligibility and replacement, Shopping Generation contracts and grouping, Calendar uniqueness, quantity presentation, Saved Shopping List encoding, ADRs 0015–0020, and the developer/operator guide
+- Evidence: User answers to grill round two on 2026-08-10 (`Q7 A`, strict exact-unit Q8 with no automatic conversion, `Q9 A`, `Q10 A`, `Q11 A`, `Q12 A`, `Q13 A` limited to two fractional digits, and `Q14 A`)
+- Decision: Constrain an Ingredient's optional Store–Section pair through the Store–Section association. Preserve Alternative edges on archive but offer only active Ingredients for new choices; automatically replace only when the Alternative package defines every exact Recipe contribution unit, without metric or package-equivalence conversion. Return either a complete grouped Shopping List or typed structured Calculation Problems, with grouping performed by a dedicated pure collaborator behind the persistence-independent generator facade. Persist absent Meal Labels using the internal non-null `unlabeled` key. Render secondary quantities with at most two fractional digits using half-up rounding and mark changed values approximate. Store Saved Shopping Lists using relational headers plus one immutable versioned JSON payload containing lossless exact values and frozen display values.
+- Rationale: These choices make placement and Calendar uniqueness database-backed across SQLite and MariaDB, keep substitutions explicit, prevent partial purchase plans from appearing valid, retain grouping as domain behavior without coupling it to arithmetic, and keep immutable history simple and reproducible.
+- Follow-up or review date: Resolve only the remaining dependent lifecycle, input, and concurrency questions exposed by these decisions before implementing the affected slices. All behavior remains planned until verified in code; documentation version remains `0.3.0` pending explicit approval, and the live Slice 0 Komodo/MariaDB recreation gate remains incomplete.
+
+### DOC-0040 — Resolve Cookbook lifecycle and interaction semantics
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Alternative eligibility and provenance, Recipe and Ingredient lifecycle, Store Section ordering, Store-group presentation, Calendar duplicate creation, Saved Shopping List creation, ADRs 0016 and 0021–0025, and the developer/operator guide
+- Evidence: User clarification of grill round three on 2026-08-10: Q15 confirms that no manual replacement quantity exists and permits only Alternatives with every required exact unit; `Q16 A`, `Q17 A`, `Q18 A`, `Q19 A`, `Q20 C` with explicit UI notice, and `Q21 B`
+- Decision: Clarify DOC-0039's Alternative eligibility boundary: an ineligible Alternative is not selectable, there is no manual quantity fallback, and every accepted Alternative uses the normal package-count calculation. Keep replacement single-hop per originally generated Ingredient and retain independently reversible provenance after merged results. Make Recipe and Ingredient archival reversible and omit individual hard deletion in the MVP. Persist contiguous per-Store Section positions and rewrite the complete order under a transactional lock. Sort Store groups by normalized name with stable identity as a tie-breaker. Atomically add a duplicate Calendar create's Serving Count to the existing entry and explicitly disclose the resulting total. Create a separate Saved Shopping List for every accepted save, including retries and identical content.
+- Rationale: The clarified Alternative workflow avoids introducing a second quantity-entry model. The remaining decisions favor reversible content lifecycle, simple household-scale ordering, deterministic output, visible additive Calendar behavior, and literal save-event history over deduplication.
+- Follow-up or review date: Resolve the final Recipe, package-definition, Calendar-edit, and concurrent interaction frontier before declaring the design grill complete. All behavior remains planned until verified in code; documentation version remains `0.3.0` pending explicit approval, and the live Slice 0 Komodo/MariaDB recreation gate remains incomplete.
+
+### DOC-0041 — Normalize package quantities and settle concurrent interactions
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Ingredient and Recipe Ingredient quantity representation, Alternative eligibility, Calendar collision and archived-entry behavior, Store Section reorder concurrency, ADRs 0014, 0016, 0024, and 0026–0029, and the developer/operator guide
+- Evidence: User answers to grill round four on 2026-08-10: Q22 requires persisted and calculated grams, millilitres, and unitless piece counts with other metric units limited to input/display; Q23 selects one mutually exclusive metric quantity plus a separate optional piece count; `Q24 A`, `Q25 A`, `Q26 A`, and `Q27 B` with an explicit preference against over-engineering
+- Decision: Normalize weight to grams and volume to millilitres before persistence and calculation. Let an Ingredient define weight or volume, never both, and optionally piece count, while requiring at least one quantity; treat `piece` as a canonical display marker rather than a selectable stored unit. Compare canonical quantity kinds for Alternative eligibility. Merge a collision-producing Calendar edit into its target and remove the source with an explicit resulting-total notice. Limit archived-Recipe Calendar Entry changes to Serving Count or deletion. Reject stale Store Section reorders using optimistic versioning. Apply every accepted Calendar accumulation request, including a retry, without idempotency infrastructure.
+- Rationale: Canonical quantities eliminate metric-unit identity and density ambiguity while retaining convenient explicit input/display units. The interaction choices keep additive Calendar and ordering behavior visible and predictable without introducing retry infrastructure the User does not value.
+- Follow-up or review date: Verify that no unresolved product decision remains in the approved MVP frontier, then run the documentation correctness, completeness, mechanical, and PDF publication gates. All behavior remains planned until verified in code; documentation version remains `0.3.0` pending explicit approval, and the live Slice 0 Komodo/MariaDB recreation gate remains incomplete.
+
+### DOC-0042 — Close the aggregate and display decision frontier
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Metric display derivation, Simple Plan duplicate behavior, Recipe aggregate persistence and concurrency, Recipe Tag deletion, ADRs 0026 and 0030–0033, and the developer/operator guide
+- Evidence: User answers to grill round five on 2026-08-10: Q28 rejects stored display preferences and derives the higher metric unit from canonical values at 1000; `Q29 A`, `Q30 A`, and `Q31 A`
+- Decision: Store only canonical grams and millilitres, never an input-unit preference. Display values below 1000 as `g` or `ml` and values from 1000 as `kg` or `l`, then apply the approved two-fractional-digit formatting. Accumulate a duplicate Simple Plan Recipe addition into its existing transient Serving Count with a notice. Save complete Recipe aggregates with contiguous child positions, transactional validation, and optimistic version rejection for stale edits. Hard-delete Recipe Tags after consequence confirmation, detach their assignments, preserve Recipes, and release normalized names for reuse.
+- Rationale: Derived display units keep canonical values authoritative and predictable. The aggregate choices align transient planning with additive interactions, protect collaborative Recipe edits without automatic merging, and treat Tags as removable classification metadata rather than historical entities.
+- Follow-up or review date: User confirmation was recorded in DOC-0045 on 2026-08-10. Revalidate each Planned behavior during implementation; documentation version remains `0.3.0` pending explicit approval, and the live Slice 0 Komodo/MariaDB recreation gate remains incomplete.
+
 ### DOC-0043 — Define the API-first Agent Integration boundary
 
 - Date: 2026-08-10
@@ -443,3 +498,14 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Use Czech for every user-facing application string, including page metadata, visible copy, forms, dialogs, validation and authentication errors, flash messages and toasts, loading and empty states, and accessible-only labels. Configure `cs` as both the Laravel locale and fallback locale, maintain backend and package translations under `lang/cs`, and keep code identifiers and developer/operator documentation in English. Treat newly introduced English interface copy as a defect that requires test coverage.
 - Rationale: One explicit language boundary prevents mixed-language workflows and makes both visual and assistive-technology output predictable while preserving English as the implementation and operator-documentation language.
 - Follow-up or review date: Apply the rule to every new user-facing workflow and extend translation resources and localization coverage when new framework or package messages become reachable; retain documentation version `0.3.0` until the User explicitly approves a version change.
+
+### DOC-0045 — Confirm the Cookbook design and close publication review
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: DOC-0038 through DOC-0042, ADRs 0012–0033, canonical quantity presentation, Calendar collision wording, archive workflow, deterministic Shopping List ordering, roadmap gates, the documentation publication contract, and the developer/operator guide
+- Evidence: User statement `Confirmed. Commit all your work.` on 2026-08-10 after reviewing the complete Q1–Q31 decision summary; independent correctness and completeness reviews of the resulting documentation; repository Czech locale, Store UI, translation, and localization-test evidence; successful configured documentation validation and 86-page developer-guide PDF publication checks
+- Decision: Accept the recorded Cookbook design as the implementation baseline while keeping every unimplemented capability marked **Planned**. Clarify that `piece` is an internal canonical quantity kind rendered as `ks` in the Czech interface; snapshots retain both the internal kind and frozen localized presentation. Use the edited entry's submitted Serving Count for Calendar edit collisions. Use normalized UTF-8 name bytes plus stable identity for deterministic Store and Ingredient output ordering rather than database or platform collation. Expose archived Recipes and Ingredients through list status filters, require restoration before ordinary editing, and provide visible archive/restore feedback. Treat concrete media upload limits as a named prerequisite and exclude media from the first Slice 2/3 tracers. Defer the Czech User-guide source and PDF target explicitly; the currently configured and verified publication artifact is the English developer/operator guide.
+- Rationale: These corrections make the confirmed semantics implementable without changing their substance, prevent English presentation or collation-dependent behavior from leaking into the Czech product, and ensure completion gates cannot pass while approved high-risk invariants remain unproved. The User-guide deferral aligns the specification with the actual configured release instead of claiming a nonexistent artifact.
+- Follow-up or review date: Resolve the MIME allowlist, upload byte and dimension limits, corrupt/decode behavior, and temporary-file cleanup before media implementation. Revalidate every Planned behavior through TDD before converting it to current documentation. The live Slice 0 Komodo/MariaDB recreation gate remains incomplete, and documentation version remains `0.3.0` pending explicit User approval.

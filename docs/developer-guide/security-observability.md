@@ -56,7 +56,9 @@ that cannot be redirected by client input.
 ## Planned photos and files
 
 > **Planned**
-> Recipe cover photos, Ingredient photos, and Store logos are Family-owned data. The selected backend is Laravel's private local disk persisted through the Komodo mount at `/var/www/storage/app`; S3 remains a future migration option. No upload workflow exists yet. Validate MIME type and size, generate server-controlled filenames, and authorize every non-public retrieval when uploads are implemented.
+> Recipe cover photos, Ingredient photos, and Store logos are entity-owned Family data. The selected backend is Laravel's private local disk persisted through the Komodo mount at `/var/www/storage/app`; S3 remains a future migration option. The first implementation retains one original file without generated variants. Replacement supersedes and removes the previous file after the database change commits; archiving retains the attachment; hard deletion and Family deletion remove it. No upload workflow exists yet. Validate MIME type and size, generate server-controlled filenames, and authorize every non-public retrieval when uploads are implemented.
+>
+> Media is excluded from the first Store/Ingredient and Recipe tracers. Before any upload implementation begins, approve and document the exact MIME allowlist, maximum byte size and image dimensions, corrupt/decode rejection behavior, and temporary-file cleanup. The lifecycle above does not supply those missing validation limits and must not be treated as an implementable upload policy.
 >
 > Do not place sensitive Family media on an unauthenticated public disk by default. File deletion must be coordinated with record replacement, archiving, and Family deletion. Feature tests should use Laravel filesystem fakes.
 

@@ -84,23 +84,25 @@ The verified Slice 2 tracer now provides:
 >
 > - Add optional Store logos and reusable Store Section entities within a Family.
 > - Maintain each Store's ordered section associations.
-> - Add Ingredients as concrete purchasable packages with at least one positive unit quantity, optional Store Placement, media, description, nutrition, and direct symmetric/non-transitive alternatives.
-> - Support metric weight and volume units plus Ingredient-specific count units.
-> - Archive Ingredients and guard removal of units referenced by Recipe Ingredients.
+> - Add Ingredients as concrete purchasable packages with either positive grams or positive millilitres, never both, plus an optional positive piece count; require at least one quantity and support optional Store Placement, media, description, nutrition, and direct symmetric/non-transitive alternatives.
+> - Normalize explicit metric input units to persisted grams or millilitres and store pieces as a count without a selectable unit identity.
+> - Reversibly archive and restore Ingredients without individual hard deletion, and guard removal of units referenced by Recipe Ingredients.
 >
-> **Completion gate (not yet met):** a Family can describe a package such as `150 g = 6 pieces`, place it in a Store Section, reorder Store sections, archive it, and prove that another Family cannot observe it. The Store tracer proves the isolation portion only.
+> Exclude photos and logos from the first Slice 2 tracer. Their implementation is blocked on the concrete upload-validation policy named in [Security and observability](security-observability.md#planned-photos-and-files).
+>
+> **Completion gate (not yet met):** every Planned Slice 2 invariant is proven. In particular, a Family can describe a package such as `150 g = 6 ks`, place it only through a valid Store–Section association, reject a stale complete reorder, archive/filter/restore it with restore-before-edit behavior, enforce direct symmetric Alternative edges and canonical-kind eligibility, block removal of a referenced quantity kind, and prove another Family cannot observe it. Tests also prove Store deletion clears complete placement, reusable Section deletion reports affected counts and retains Store placement while clearing Section, positions remain contiguous, and the media replacement/archive/deletion lifecycle once its upload policy is approved. The Store tracer proves the isolation portion only.
 
 ## Slice 3: Recipes and nutrition
 
 > **Planned**
 >
-> - Add uniquely named Recipes with base Serving Count, one ordered ingredient list, optional ordered Recipe Steps and approved metadata.
+> - Add uniquely named Recipes with base Serving Count, one ordered ingredient list, optional ordered Recipe Steps and approved metadata, saved as complete versioned aggregates that reject stale edits.
 > - Permit repeated Ingredient lines and fractional count amounts.
-> - Scale quantities by `requested servings / base servings` using decimal-safe value objects.
+> - Scale quantities by `requested servings / base servings` using exact rational value objects created from validated `DECIMAL(20,6)` inputs.
 > - Calculate complete or explicitly incomplete per-serving nutrition, with complete Recipe Nutrition Overrides taking precedence.
-> - Add Recipe Tags, search result layers, and Recipe archiving.
+> - Add Recipe Tags with assignment-clearing hard deletion, search result layers, and reversible Recipe archival/restoration without individual hard deletion.
 >
-> **Completion gate:** automated tests cover mixed units, repeated lines, fractional servings, missing nutrition, overrides, archive behavior, and Family isolation.
+> **Completion gate:** every Planned Slice 3 invariant is proven. Automated tests cover mixed units, repeated lines, fractional servings, missing nutrition, overrides, Family isolation, active/archived filtering and restore-before-edit behavior, stale complete-aggregate rejection without partial writes, Tag deletion with assignment cleanup and name reuse, and layered Recipe search that deduplicates results while retaining every match reason. Media remains gated by the approved upload policy.
 
 ## Slice 4: pure Shopping Generation
 
@@ -110,20 +112,21 @@ The verified Slice 2 tracer now provides:
 > - Aggregate by final Ingredient before ceiling package counts.
 > - Express required, purchased, and Surplus quantities in every configured unit.
 > - Retain contribution breakdowns by source Recipe.
-> - Apply manual Alternative Ingredient choices, regroup by the final Store Placement, and globally re-aggregate.
-> - Order output by Store, Store Section traversal order, and Ingredient name, with unassigned groups last.
+> - Offer one single-hop active direct Alternative Ingredient choice only when every canonical Recipe quantity kind exists on its package, with no cross-kind conversion or manual-quantity fallback, then globally re-aggregate while preserving per-choice provenance.
+> - Compose a pure grouping collaborator behind the public generator facade to deterministically order Stores by normalized name, then output Store Section traversal order and Ingredient name, with unassigned groups last.
+> - Return either a complete grouped Shopping List or typed Calculation Problems; never return partial purchase output.
 >
-> **Completion gate:** domain tests exercise the examples and invariants in [Shopping-list generation](shopping-generation.md) without HTTP, database, calendar, or Inertia dependencies.
+> **Completion gate:** domain tests exercise every Planned Slice 4 bullet plus the examples and invariants in [Shopping-list generation](shopping-generation.md) without HTTP, database, calendar, or Inertia dependencies. They prove all-or-nothing problem collection, exact arithmetic and global pre-round aggregation, single-hop canonical-kind Alternative behavior, deterministic normalized-name/stable-identity grouping across input orders, and complete provenance.
 
 ## Slice 5: Simple Plan
 
 > **Planned**
 >
-> - Build an unordered, temporary set with one Recipe Selection per Recipe.
+> - Build an unordered, temporary set with one Recipe Selection per Recipe and accumulate repeated additions into that row with an explicit resulting-total notice.
 > - Generate the list through the same service used by Calendar planning.
 > - Present responsive desktop and mobile output suitable for copying into another checklist tool.
 >
-> **Completion gate:** a browser-level test proves that Recipe selection and fractional servings produce the expected package counts without persisting the Simple Plan.
+> **Completion gate:** a browser-level test proves that Recipe selection and fractional servings produce the expected package counts without persisting the Simple Plan, and that adding the same Recipe again accumulates its submitted Serving Count into one row with an explicit resulting-total notice.
 
 ## Slice 6: weekly Calendar
 
@@ -131,21 +134,21 @@ The verified Slice 2 tracer now provides:
 >
 > - Persist Calendar Entries only; derive Calendar Days at read time.
 > - Support the five fixed Czech Meal Labels plus unlabeled entries.
-> - Prevent duplicate `(Family, date, Meal Label, Recipe)` combinations, including the unlabeled case.
+> - Prevent duplicate `(Family, date, Meal Label, Recipe)` rows by persisting a non-null internal key for the unlabeled case, while atomically accumulating duplicate creates and collision-producing edits with an explicit UI notice for every accepted request.
 > - Provide a responsive weekly planner and arbitrary multi-date Calendar Selection with range-selection convenience.
 > - Show calculated Recipe and daily nutrition, including incomplete-state warnings.
 >
-> **Completion gate:** selecting non-contiguous dates produces the same generator input and output as an equivalent Simple Plan.
+> **Completion gate:** every Planned Slice 6 invariant is proven. Selecting non-contiguous dates produces the same generator input and output as an equivalent Simple Plan; tests also cover duplicate create, collision-producing edit using the submitted edited Serving Count, concurrent collision, repeated transport request, explicit resulting-total notice, the internal unlabeled key, and restore-required restrictions on archived-Recipe entries.
 
 ## Slice 7: generation history
 
 > **Planned**
 >
-> - Let a member explicitly save a read-only Shopping List snapshot identified by generation timestamp.
-> - Copy display data, calculated output, applied alternatives, and immutable source provenance into the snapshot.
+> - Let a member explicitly save a new read-only Shopping List snapshot for every accepted request, identified to the User by generation timestamp.
+> - Store relational ownership/provenance headers and a versioned immutable JSON payload containing display data, lossless calculated output, applied alternatives, and source provenance.
 > - Permit any Family member to delete history entries.
 >
-> **Completion gate:** later edits or archival of Recipes and Ingredients, and edits or deletion of Stores and Sections, cannot change the rendered snapshot.
+> **Completion gate:** every Planned Slice 7 invariant is proven. Later edits or archival of Recipes and Ingredients, and edits or deletion of Stores and Sections, cannot change the rendered snapshot. Tests also prove that every accepted save—including identical content and a repeated request—creates a distinct row; the schema version is readable; exact values and provenance round-trip losslessly; and frozen localized display values render without consulting live records.
 
 ## Slice 8: Agent Integration
 

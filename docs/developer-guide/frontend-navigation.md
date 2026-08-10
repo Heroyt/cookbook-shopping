@@ -30,9 +30,11 @@ The Stores page is the only Cookbook navigation and currently supports creation,
 >
 > Recipe, Ingredient, Store, and Store Section screens should favor desktop density while remaining fully operable on smaller screens. List pages need clear create and edit paths, visible archived state where relevant, and Family-scoped empty states. Forms must preserve the domain's validation rules rather than allowing incomplete records that later fail generation.
 >
-> Ingredient maintenance presents one concrete purchasable package. It must allow at least one positive configured unit quantity, optional description and photo, optional Store Placement, optional Nutrition Profile, and direct Alternative Ingredients. Store Placement can select at most one Store and optionally one Section associated with that Store. Section order is edited in the context of a Store; deleting a Store or removing a Section association must make the resulting placement change explicit before confirmation.
+> Ingredient maintenance presents one concrete purchasable package. It accepts either positive weight input or positive volume input, never both, may additionally accept a positive piece count, and requires at least one quantity. Explicit input units normalize to persisted grams or millilitres without retaining a preference; display selects `g`/`kg` or `ml`/`l` using the 1000 threshold. Pieces have no selectable unit and render as `ks` in the Czech interface. The form also supports optional description and photo, optional Store Placement, optional Nutrition Profile, and direct Alternative Ingredients. Store Placement can select at most one Store and optionally one Section associated with that Store. Section order is edited in the context of a Store; deleting a Store or removing a Section association must make the resulting placement change explicit before confirmation.
 >
-> Recipe maintenance supports its unique name, positive base Serving Count, one ordered ingredient list, ordered Recipe Steps, Recipe Notes, tags, optional cover photo and source URL, preparation and cooking durations, and an optional complete per-serving Nutrition Override. Recipe Ingredient rows may repeat the same Ingredient and use fractional quantities, but they do not add preparation-note or ingredient-group fields. Preparation detail belongs in Recipe Step text.
+> Recipe maintenance supports its unique name, positive base Serving Count, one ordered ingredient list, ordered Recipe Steps, Recipe Notes, tags, optional cover photo and source URL, preparation and cooking durations, and an optional complete per-serving Nutrition Override. Recipe Ingredient rows may repeat the same Ingredient and use fractional quantities, but they do not add preparation-note or ingredient-group fields. Preparation detail belongs in Recipe Step text. The form submits the complete aggregate with its version; a stale edit is rejected with fresh state for review rather than overwriting another member's changes.
+>
+> Recipe Tag deletion requires consequence confirmation, detaches the Tag from every Recipe, leaves Recipes otherwise unchanged, and releases the Tag name for reuse.
 
 ## Planned Recipe discovery
 
@@ -42,7 +44,7 @@ The Stores page is the only Cookbook navigation and currently supports creation,
 >
 > A Recipe that matches more than one layer appears only once, in its strongest matching layer. Show reason indicators for every match, such as a name match, matching Recipe Tag, or matching Ingredient, rather than duplicating the Recipe card. The interface must not imply a match source that the server did not return.
 >
-> Search and filtering remain Family-scoped and exclude archived Recipes from new planning selections. Archived Recipes may still be discoverable in an explicitly historical or maintenance context, but the approved model does not require a separate global archive destination.
+> Search and filtering remain Family-scoped and exclude archived Recipes from new planning selections. Recipe and Ingredient lists provide `Active`, `Archived`, and `All` status filters rather than a separate global archive destination. Archived rows are read-only apart from **Restore**; editing requires restoration first. Archive actions state the consequence before confirmation, while restoration needs no destructive confirmation and returns visible success feedback.
 
 ## Planned weekly planner
 
@@ -50,7 +52,7 @@ The Stores page is the only Cookbook navigation and currently supports creation,
 >
 > The primary Calendar interface is weekly. It derives each Calendar Day from persisted Calendar Entries and must not create records for empty dates. Within each day, show the five fixed Meal Labels in their conventional order—`snídaně`, `dopolední svačina`, `oběd`, `odpolední svačina`, and `večeře`—followed by unlabeled entries. Each label may contain any number of Recipes, and order within a label has no meaning.
 >
-> Adding or editing an entry selects a saved Recipe and positive fractional Serving Count plus an optional Meal Label. Prevent a duplicate Recipe for the same date and label combination by updating or rejecting the existing entry rather than rendering indistinguishable duplicates. Archived Recipes remain visible in existing Calendar Entries but are unavailable for new entries.
+> Adding or editing an entry selects a saved Recipe and positive fractional Serving Count plus an optional Meal Label. Creating a duplicate Recipe for the same date and label combination atomically adds the submitted Serving Count to the existing entry and shows an explicit notice with the resulting total rather than rendering another row. Editing an entry onto another existing combination adds the edited entry's submitted Serving Count to the target and removes the source with the same notice. Every accepted request applies, including a repeated transport request. Archived Recipes remain visible in existing Calendar Entries; their existing entries may change Serving Count or be deleted, but date, Meal Label, or Recipe changes require restoration first.
 >
 > Desktop presentation may use the available width to compare days. Mobile presentation must preserve readable day and Meal Label groupings instead of compressing seven columns beyond use. Both presentations expose the same week navigation, entry management, per-Recipe nutrition, and daily nutrition totals, including Incomplete Nutrition Profile warnings.
 >
@@ -60,7 +62,7 @@ The Stores page is the only Cookbook navigation and currently supports creation,
 
 > **Planned**
 >
-> Simple Plan is a temporary, unordered collection with at most one Recipe Selection per Recipe. It allows a positive fractional Serving Count and generates through the same Shopping Generation service used by Calendar selection. Leaving or completing the flow must not imply that the Simple Plan was saved.
+> Simple Plan is a temporary, unordered collection with at most one Recipe Selection per Recipe. Adding an existing Recipe increases its Serving Count and shows the resulting total. It allows positive fractional Serving Counts and generates through the same Shopping Generation service used by Calendar selection. Leaving or completing the flow must not imply that the Simple Plan was saved.
 >
 > Both Calendar and Simple Plan flows resolve their selections inside the Current Family, then navigate to the same generated Shopping List presentation. The frontend sends intent and displays the result; it must not reproduce serving scaling, unit conversion, aggregation, package rounding, nutrition, or alternative-substitution calculations.
 
@@ -68,13 +70,17 @@ The Stores page is the only Cookbook navigation and currently supports creation,
 
 > **Planned**
 >
-> Show each Shopping List Line's whole package Purchase Quantity as the primary instruction. Secondary details show Required Quantity, purchased quantity, and Surplus in every unit configured for the final Ingredient. A collapsible contribution breakdown identifies the source Recipes without overwhelming the primary list.
+> Show each Shopping List Line's whole package Purchase Quantity as the primary instruction. Secondary details show Required Quantity, purchased quantity, and Surplus in every canonical quantity kind configured for the final Ingredient, rendered using explicit display units where helpful. A collapsible contribution breakdown identifies the source Recipes without overwhelming the primary list.
 >
-> Group lines by Store and then by the Store's Section traversal order. Put Store-assigned lines without a Section after that Store's Sections and Ingredients without Store Placement after all Store groups. Ingredient names sort alphabetically within a Section; the interface must not imply that Store group order has domain meaning.
+> Group lines by Store and then by the Store's Section traversal order. Put Store-assigned lines without a Section after that Store's Sections and Ingredients without Store Placement after all Store groups. Ingredient names use the application-normalized UTF-8 byte key and stable identity comparator within a Section; the interface must not imply locale-aware dictionary sorting or that Store group order has domain meaning.
 >
-> Alternative selection offers only direct Alternative Ingredients. A compatible choice recalculates and globally re-aggregates the result and moves the line to the alternative's Store Placement. An incompatible choice requires an explicit manual replacement quantity rather than silently guessing a conversion.
+> Alternative selection offers only direct active Alternative Ingredients whose package configures every canonical quantity kind used by the replaced Recipe contributions. Explicit metric input and display units have already normalized to grams or millilitres, while pieces remain a count; an Alternative missing any required kind is not selectable, and there is no manual quantity fallback. Permit one choice per originally generated Ingredient rather than chaining substitutions from merged output. A valid choice recalculates and globally re-aggregates the result, moves the line to the Alternative's Store Placement, and preserves separately editable or reversible source-choice provenance.
 >
-> Generation is transient. Provide an explicit save action for the read-only timestamped history snapshot, and distinguish the transient result from a successfully saved snapshot. The generated page is intended to be copied or rewritten into another checklist application; do not add checked-item state or imply external synchronization in the MVP.
+> Derive weight display as grams below 1000 and kilograms from 1000, and volume as millilitres below 1000 and litres from 1000, without retaining the User's input-unit preference. Present required, purchased, and Surplus amounts with at most two fractional digits, strip trailing zeroes, and visibly distinguish a rounded approximation from an exact value. Purchase package counts remain whole numbers. The frontend renders the grouping and display values returned by Shopping Generation rather than recalculating them.
+>
+> If Shopping Generation returns Calculation Problems, show no Shopping List Lines. Present every affected Recipe, Ingredient, quantity, unit, and reason in one accessible problem state, link each item to the relevant Recipe or Ingredient editor, preserve the Calendar Selection or Simple Plan input, and announce that corrections are required before retrying. Returning from a correction must allow the preserved selection to be regenerated explicitly; the frontend must not silently retry or hide later problems.
+>
+> Generation is transient. Provide an explicit save action for the read-only timestamped history snapshot, distinguish the transient result from a successfully saved snapshot, and disable the control while its current request is processing. Every accepted request creates a new snapshot, including a later retry or an identical save. The generated page is intended to be copied or rewritten into another checklist application; do not add checked-item state or imply external synchronization in the MVP.
 
 ## Planned accessibility and state behavior
 
@@ -94,6 +100,6 @@ Laravel feature tests cover the Family and Store HTTP/Inertia boundaries, valida
 
 > **Planned**
 >
-> Add rendered-component Vitest coverage when the frontend gains a DOM test harness, plus focused browser-level coverage for complete navigation workflows. At minimum, verify Current Family switching and member-management dialog behavior; Store rename success and validation; Store deletion confirmation text, cancellation without deletion, processing lock, success and failure outcomes, focus restoration, keyboard operation, and toast announcement; layered search deduplication and reasons; responsive access to all primary destinations; Calendar duplicate prevention and arbitrary-date selection; Simple Plan transience; generated grouping and contribution disclosure; saved-state feedback; and accessible names.
+> Add rendered-component Vitest coverage when the frontend gains a DOM test harness, plus focused browser-level coverage for complete navigation workflows. At minimum, verify Current Family switching and member-management dialog behavior; Store rename success and validation; Store deletion confirmation text, cancellation without deletion, processing lock, success and failure outcomes, focus restoration, keyboard operation, and toast announcement; layered search deduplication and reasons; responsive access to all primary destinations; Calendar duplicate accumulation and arbitrary-date selection; Simple Plan transience; generated grouping and contribution disclosure; saved-state feedback; and accessible names.
 >
 > Keep package and nutrition arithmetic out of Vue tests. Those values come from the backend's tested domain and application services; frontend tests verify that the supplied states and quantities are represented accurately.

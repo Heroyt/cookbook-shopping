@@ -1,0 +1,3 @@
+# Delete Store Sections with placement-preserving cleanup
+
+Deleting a reusable Store Section removes all of its Store associations and clears that Section from every affected Ingredient placement in one transaction, while retaining each Ingredient's Store assignment and leaving Ingredients and Recipes intact. The destructive confirmation must disclose the affected association and placement counts, and the deleted Section's name becomes available again. This favors a complete, understandable lifecycle over blocking deletion until every reference is removed manually or introducing archival for a presentation-oriented classification.

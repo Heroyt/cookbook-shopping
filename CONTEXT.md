@@ -59,15 +59,15 @@ Optional free-form information about a recipe that is not part of its ordered pr
 _Avoid_: Recipe step, description
 
 **Recipe Tag**:
-A family-defined label with a case-insensitively unique name that may classify many recipes, while each recipe may have multiple tags.
+A family-defined label with a case-insensitively unique name that may classify many recipes, while each recipe may have multiple tags. Deleting it removes those assignments without changing the Recipes and releases its name for reuse.
 _Avoid_: Recipe category, folder
 
 **Archived Recipe**:
-A recipe no longer available for new calendar entries or simple plans but retained for existing calendar entries and saved shopping-list snapshots.
+A recipe temporarily unavailable for new calendar entries or simple plans but retained for existing calendar entries and saved shopping-list snapshots; restoring it makes it available again.
 _Avoid_: Deleted recipe, inactive meal
 
 **Ingredient**:
-A concrete purchasable package with a case-insensitively unique name across active and archived ingredients in its family. It must define at least one positive unit quantity; each configured quantity, such as 150 g and 6 pieces, describes the full contents of one package.
+A concrete purchasable package with a case-insensitively unique name across active and archived ingredients in its family. It defines either a positive canonical weight in grams or a positive canonical volume in millilitres, never both, and may additionally define a positive piece count; at least one quantity is required and every value describes the full contents of one package.
 _Avoid_: Generic ingredient, product
 
 **Store**:
@@ -75,31 +75,31 @@ An editable place where ingredients are bought, identified by a case-insensitive
 _Avoid_: Shop, retailer
 
 **Store Section**:
-A reusable shopping-area classification with a case-insensitively unique name, colour, and optional icon, such as vegetables, fruit, or pasta. Different stores may include the same section at different positions in their traversal order.
+A reusable shopping-area classification with a case-insensitively unique name, user-chosen colour, and optional icon, such as vegetables, fruit, or pasta. Different stores may include the same section at different positions in their traversal order.
 _Avoid_: Category, aisle
 
 **Store Placement**:
-An ingredient's optional assignment to at most one store and one of that store's sections. Removing a section clears that section from affected ingredients, while deleting a store clears their entire placement; unplaced ingredients remain valid and appear after placed ingredients.
+An ingredient's optional assignment to at most one store and one of that store's sections. Removing a section from one store clears it only from placements in that store; deleting the reusable section clears it from every affected placement; both retain Store assignment, while deleting a store clears the entire placement.
 _Avoid_: Ingredient category, store availability
 
 **Alternative Ingredient**:
-Another concrete ingredient connected through a symmetric, non-transitive relationship that the user may manually choose for a shopping-list line. Replacement uses the alternative's store placement, recalculates and globally re-aggregates compatible lines, otherwise requires a manual quantity, and does not modify source recipes.
+Another active concrete ingredient connected through a symmetric, non-transitive relationship that the user may manually choose once for an originally generated shopping-list ingredient. It is selectable only when its package defines every canonical quantity kind used by the replaced recipe contributions; replacement uses already normalized grams, millilitres, or piece counts, adopts the alternative's store placement, recalculates and globally re-aggregates compatible lines, and does not modify source recipes.
 _Avoid_: Automatic substitute, product variant
 
 **Ingredient Conversion**:
-A conversion derived from the equivalent quantities that describe one ingredient package. Weight and volume remain distinct unless that ingredient explicitly describes its package in both units.
+A conversion derived from the metric quantity and optional piece count that describe one Ingredient package. Weight and volume are mutually exclusive; only a package's weight-to-piece or volume-to-piece equivalence can bridge its metric and count quantities.
 _Avoid_: Global unit conversion, assumed density
 
 **Measurement Unit**:
-A supported metric weight unit (mg, g, kg), metric volume unit (ml, cl, l), or an ingredient-specific count unit such as piece or slice. Metric units convert within their dimension; count-unit conversion depends on the ingredient package.
+A user input unit for weight or volume. Canonical weight uses grams and canonical volume uses millilitres for calculation; display uses grams or millilitres below 1000 and kilograms or litres from 1000. Pieces are a universal unitless count called `piece` in the domain and `ks` in the Czech interface; other wording never creates a distinct unit identity.
 _Avoid_: Free-form amount, cup, spoon
 
 **Archived Ingredient**:
-An ingredient no longer available for new recipe lines but retained for existing recipes and saved shopping-list snapshots.
+An ingredient temporarily unavailable for new recipe lines or Alternative choices but retained for existing recipes and saved shopping-list snapshots; restoring it makes it available again.
 _Avoid_: Deleted ingredient, inactive product
 
 **Recipe Ingredient**:
-An ingredient and positive decimal culinary quantity at a defined position in a recipe's single ingredient list. Count units may be fractional; generation combines repeated occurrences using the current package definition.
+An ingredient and positive decimal culinary quantity at a defined position in a recipe's single ingredient list. Its quantity is expressed as canonical grams, millilitres, or piece count according to the Ingredient package; piece counts may be fractional, and generation combines repeated occurrences using the current package definition.
 _Avoid_: Ingredient, shopping-list line
 
 **Recipe Selection**:
@@ -111,8 +111,12 @@ A positive decimal number of servings produced by a recipe or requested in a rec
 _Avoid_: Portion count, people count
 
 **Shopping List**:
-The transient combined ingredient requirements calculated from a set of recipe selections, assuming no pantry stock and no price data. Lines are grouped by store and section order, sorted alphabetically by ingredient within each section, and not retained unless explicitly saved.
+The transient combined ingredient requirements calculated from a set of recipe selections, assuming no pantry stock and no price data. Lines are grouped by store and section order, sorted deterministically by ingredient within each section, and not retained unless explicitly saved.
 _Avoid_: Item list, grocery plan
+
+**Calculation Problem**:
+A recoverable issue that prevents Shopping Generation from producing any Shopping List, identifying the affected recipe, ingredient, quantity, unit, and reason so the source definition can be corrected before retrying.
+_Avoid_: Partial shopping list, warning-only line
 
 **Saved Shopping List**:
 A read-only generation-history snapshot deliberately retained by the user and identified only by its generation timestamp. It preserves output and provenance without recalculation, but any family member may delete it because it is reference data rather than an audit record.

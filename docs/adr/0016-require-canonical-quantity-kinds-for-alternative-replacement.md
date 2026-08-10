@@ -1,0 +1,3 @@
+# Require canonical quantity kinds for Alternative replacement
+
+An Alternative Ingredient is selectable for a Shopping List line only when its package defines every canonical quantity kind used by the contributing Recipe Ingredients being replaced: grams, millilitres, or piece count. User-entered metric units are normalized before persistence and generation, so `kg` and `g` both become grams and do not require conversion inside Shopping Generation. There is no cross-kind conversion or manual replacement-quantity fallback; every accepted substitution follows the ordinary package-count calculation using already normalized values.

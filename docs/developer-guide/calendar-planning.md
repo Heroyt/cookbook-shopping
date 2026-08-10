@@ -8,7 +8,7 @@ Calendar planning and Simple Plans are not implemented. [`CONTEXT.md`](../../CON
 >
 > Persist Calendar Entries only. Each entry belongs to one Family and contains a live Recipe reference from that Family, a concrete date, a positive decimal Serving Count, and an optional Meal Label. It has no recurrence rule and no meaningful display position.
 >
-> A Recipe may appear at most once for the same date and Meal Label. The uniqueness rule also permits only one unlabeled occurrence of that Recipe on the date. The persistence design must account explicitly for nullable Meal Labels rather than relying on ordinary SQL `NULL` uniqueness behavior; see [Data structure](data-structure.md#recipe-and-calendar-integrity).
+> A Recipe may appear at most once for the same date and Meal Label. Persist an absent Meal Label as the non-null internal `unlabeled` key so the same composite unique constraint permits only one unlabeled occurrence of that Recipe on the date in both SQLite and MariaDB. Creating an existing combination atomically adds the submitted positive Serving Count to its existing count and leaves one row; editing onto an existing combination adds the edited entry's submitted Serving Count to the target and removes the source. Concurrent unique-key collisions must converge on the same update. Every accepted command applies, including a repeated transport request, and returns an explicit UI notice showing the new total. Domain and UI adapters continue to expose Meal Label as optional. See [ADR 0019](../adr/0019-persist-an-unlabeled-calendar-key.md), [ADR 0024](../adr/0024-accumulate-duplicate-calendar-serving-counts.md), [ADR 0029](../adr/0029-apply-every-calendar-accumulation-request.md), and [Data structure](data-structure.md#recipe-and-calendar-integrity).
 
 ## Meal Labels and Calendar Days
 
@@ -24,7 +24,7 @@ Calendar planning and Simple Plans are not implemented. [`CONTEXT.md`](../../CON
 >
 > The primary Calendar interface is a responsive weekly planner. Desktop may present the week spatially, while mobile uses a layout that remains practical without compressing seven columns. Both expose the same date, Meal Label, Recipe, and fractional Serving Count behavior.
 >
-> Calendar Entries are live references. Editing a Recipe or its Ingredients changes later Calendar display, nutrition, and Shopping List generation. Archived Recipes remain valid in existing entries but cannot be selected for new ones.
+> Calendar Entries are live references. Editing a Recipe or its Ingredients changes later Calendar display, nutrition, and Shopping List generation. Archived Recipes remain valid in existing entries but cannot be selected for new ones. An entry backed by an archived Recipe may change only Serving Count or be deleted; changing its date, Meal Label, or Recipe requires restoration first. [ADR 0027](../adr/0027-restrict-edits-for-archived-recipe-calendar-entries.md) records this boundary.
 
 ## Calendar Selection
 
@@ -38,7 +38,7 @@ Calendar planning and Simple Plans are not implemented. [`CONTEXT.md`](../../CON
 
 > **Planned**
 >
-> A Simple Plan is a transient, unordered set containing at most one Recipe Selection per Recipe. Adding the same Recipe again updates or increases its positive decimal Serving Count rather than creating a duplicate row. It is not saved after generation.
+> A Simple Plan is a transient, unordered set containing at most one Recipe Selection per Recipe. Adding the same Recipe again increases the existing row by the submitted positive decimal Serving Count and shows the resulting total rather than replacing, rejecting, or creating a duplicate row. It is not saved after generation. [ADR 0031](../adr/0031-accumulate-duplicate-simple-plan-selections.md) records the interaction.
 >
 > The Simple Plan adapter produces the same generator input as the Calendar adapter. It cannot include archived Recipes when creating new selections. Equivalent Calendar and Simple Plan inputs must produce equivalent Shopping List output.
 
