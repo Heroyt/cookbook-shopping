@@ -399,3 +399,25 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Describe Store rename as implemented behavior after the tested tracer resolves the Store through `CurrentFamilyScope`, reuses ADR 0007 normalization, converts database uniqueness collisions to field validation errors, and exposes the operation through an Inertia/shadcn-vue Dialog. Keep Store deletion, logos, Sections, Ingredients, ordering, and all later Slice 2 capabilities planned. Keep Slice 0's external Komodo/MariaDB recreation gate incomplete and unverified. Retain documentation version `0.3.0` until the User explicitly approves a version change.
 - Rationale: The refresh follows verified repository behavior without broadening the tracer, inventing lifecycle decisions, or converting local database checks into production evidence. The approved documentation policy prohibits an unapproved version bump.
 - Follow-up or review date: Propose the next documentation version for explicit approval; collect Slice 0 external acceptance evidence separately.
+
+### DOC-0036 — Document Current-Family-scoped Store deletion
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Documentation specification and developer/operator guide Store, architecture, frontend, data, and roadmap chapters
+- Evidence: User direction to continue implementation on 2026-08-10; `DeleteStore`; Store destroy request, route, controller, and generated Wayfinder binding; shadcn-vue AlertDialog composition; deletion-inclusive 15-test/132-assertion PHPUnit Store suite and five-test Vitest Store UI contract
+- Decision: Describe Store deletion as implemented after the tested tracer resolves the Store exclusively through `CurrentFamilyScope`, ignores a client-supplied Family identifier, returns not found for a foreign-Family Store, hard-deletes the resolved Store, and exposes a consequence-stating confirmation AlertDialog. Keep logos, Store Sections, Ingredients, ordering, and future Ingredient placement-clearing behavior planned. Do not invent the reusable Store Section deletion policy. Keep Slice 0's external Komodo/MariaDB recreation gate incomplete and unverified. A new user-facing workflow would ordinarily justify documentation version `0.4.0`; retain `0.3.0` until the User explicitly approves a version change.
+- Rationale: The refresh follows verified repository behavior while distinguishing the currently executable Store deletion from placement effects that cannot exist before Ingredients and Store Sections are persisted. It preserves the Family-scoped modular dependency and the pure Shopping Generation boundary.
+- Follow-up or review date: Ask for explicit approval before changing the documentation version; collect Slice 0 external acceptance evidence separately; resolve the reusable Store Section deletion policy only when that entity is designed.
+
+### DOC-0037 — Close Store deletion documentation review findings
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Developer/operator guide security, Family Access, Store workflow, and frontend-verification guidance
+- Evidence: Independent correctness and completeness reviews of the Store deletion refresh; `CurrentFamilyScope`, `DeleteStore`, `StoreController`, Store feature tests, Store UI source-contract tests, and the configured guide
+- Decision: Expand current authorization inventories to include Store deletion, document missing/obsolete Store and missing Current Family failure outcomes, and distinguish direct endpoint coverage from source-only AlertDialog inspection. Keep confirmation, cancellation, processing, failure, focus, keyboard, and toast-announcement behavior in the planned rendered/browser test list until such tests exist.
+- Rationale: The dispositions remove stale authorization language and avoid implying browser-level evidence that the current PHPUnit and source-contract Vitest suites do not provide.
+- Follow-up or review date: Add rendered-component and browser coverage when the project introduces the required DOM/browser harness; retain the separate live Komodo acceptance and Store Section deletion-policy gaps.

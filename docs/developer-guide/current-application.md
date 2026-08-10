@@ -16,7 +16,7 @@ and the Family Access collaboration workflow. Its working surfaces are:
 - operator-only interactive User provisioning;
 - Family creation, Current Family switching, member addition and removal,
   leaving, and exact-name-confirmed Family deletion;
-- Current-Family-scoped Store creation, listing, and renaming;
+- Current-Family-scoped Store creation, listing, renaming, and deletion;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -32,7 +32,7 @@ Fortify's package routes; inspect them with `php artisan route:list`. See
 
 > **Planned**
 >
-> Store deletion, logos, Store Sections, Ingredients, Recipes, meal
+> Store logos, Store Sections, Ingredients, Recipes, meal
 > planning, nutrition, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
 > authorization, or persistence from the narrow Store tracer. The canonical vocabulary is in

@@ -1,8 +1,8 @@
 # Stores and shopping order
 
-The first Store tracer is implemented: authenticated members can list, create, and rename Stores in the Current Family from the responsive Stores page. Creation and rename squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)`, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Rename resolves the Store through `CurrentFamilyScope`, so a Store from another Family returns not found and a client-supplied Family identifier cannot redirect the write. Database unique-key collisions become field validation errors. Tests prove equal create/rename rights, cross-Family read/write isolation, normalization, duplicate handling, and that accent-distinct names remain distinct. A full migration and the rename-inclusive Store suite of 13 tests and 109 assertions pass against a disposable MariaDB 11.8 database. This local compatibility check is not evidence about the external Komodo deployment.
+The first Store tracer is implemented: authenticated members can list, create, rename, and delete Stores in the Current Family from the responsive Stores page. Creation and rename squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)`, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Rename and deletion resolve the Store through `CurrentFamilyScope`, so a Store from another Family returns not found and a client-supplied Family identifier cannot redirect either write. Database unique-key collisions become field validation errors. Tests prove equal create/rename/delete rights, cross-Family read/write isolation, normalization, duplicate handling, and that accent-distinct names remain distinct. The current deletion-inclusive Store suite passes 15 tests and 132 assertions on the default SQLite test connection. Separately, a full migration and the earlier rename-inclusive suite of 13 tests and 109 assertions passed against a disposable MariaDB 11.8 database. That local compatibility check is not evidence about the external Komodo deployment.
 
-Store deletion, logos, Store Sections, Store Placements, and Shopping List grouping are not implemented. Canonical terms are in [`CONTEXT.md`](../../CONTEXT.md). The ownership model follows [ADR 0003](../adr/0003-scope-domain-data-to-families.md), while [Shopping List generation](shopping-generation.md) defines the calculated lines that placement will organize.
+Store logos, Store Sections, Store Placements, and Shopping List grouping are not implemented. Canonical terms are in [`CONTEXT.md`](../../CONTEXT.md). The ownership model follows [ADR 0003](../adr/0003-scope-domain-data-to-families.md), while [Shopping List generation](shopping-generation.md) defines the calculated lines that placement will organize.
 
 ## Rename a Store
 
@@ -12,11 +12,19 @@ The submitted name is required after repeated whitespace is squished and must co
 
 After a successful rename, the Dialog closes, the Stores page shows the persisted display name, and the application flashes **Store renamed.**
 
+## Delete a Store
+
+The User must be authenticated, belong to the selected Current Family, and choose an existing Store in that Family. On the Stores page, choose **Delete**, review the permanent-deletion warning in the confirmation AlertDialog, and choose **Delete Store**. Choosing **Cancel** closes the AlertDialog without deleting anything.
+
+The request supplies only the Store identifier. The backend derives Family context from the authenticated User and returns not found for a Store in another Family; a submitted Family identifier cannot redirect the operation. A missing or already-deleted Store also returns not found, as does deletion without a valid Current Family. In those cases the success redirect and flash do not run: refresh a stale Stores page, or select a valid Current Family before retrying. The current implementation hard-deletes the Store. No Ingredient or Store Section persistence exists yet, so there are no placement references to clear in this tracer.
+
+After a successful deletion, the Stores page no longer lists the Store and the application flashes **Store deleted.**
+
 ## Stores and reusable Sections
 
 > **Planned**
 >
-> Store deletion and optional logos remain to be added. A Store Section belongs to one Family and has a case-insensitively unique name, colour, and optional icon. Sections are reusable: several Stores may associate with the same Section entity.
+> Optional Store logos remain to be added. A Store Section belongs to one Family and has a case-insensitively unique name, colour, and optional icon. Sections are reusable: several Stores may associate with the same Section entity.
 >
 > Each Store maintains its own ordered list of associated Store Sections. The traversal position belongs to the Store-to-Section association, so a shared Section can appear at different positions in different Stores.
 
@@ -34,7 +42,7 @@ After a successful rename, the Dialog closes, the Stores page shows the persiste
 >
 > Removing a Store Section from one Store clears that Section from Ingredient placements in that Store and leaves their Store assignment intact. Those Ingredients move to the Store's unsectioned group.
 >
-> Deleting a Store clears both Store and Store Section placement on affected Ingredients. It does not delete the Ingredients or alter Recipe composition; they move to the globally unplaced group.
+> When Ingredients and Store Placements are implemented, deleting a Store must clear both Store and Store Section placement on affected Ingredients. It must not delete the Ingredients or alter Recipe composition; they move to the globally unplaced group.
 >
 > Deleting a reusable Store Section entity from the Family, rather than removing it from one Store, still needs an explicit persistence policy before implementation. The result must preserve valid Ingredients and cannot leave dangling placements.
 

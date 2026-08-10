@@ -4,7 +4,7 @@
 
 The application is a Laravel 13 server-driven single-page application using Inertia 3 and Vue 3. Laravel owns routing, authentication, validation, persistence, and Inertia responses. Vue pages and shared components render the browser interface, while Vite builds the client assets. Wayfinder generates typed frontend bindings for Laravel routes.
 
-The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, Family Access inside `app/FamilyAccess`, and the first Cookbook tracer inside `app/Cookbook`. Family Access persists Families, roleless Family Memberships, and the nullable Current Family preference; it implements operator provisioning, creation, selection, member lifecycle, exact-name-confirmed deletion, the no-orphan account-deletion guard, and a reusable Current Family query scope. The Cookbook tracer creates, lists, and renames Family-owned Stores. See [Current application](current-application.md) for the implemented surface.
+The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, Family Access inside `app/FamilyAccess`, and the first Cookbook tracer inside `app/Cookbook`. Family Access persists Families, roleless Family Memberships, and the nullable Current Family preference; it implements operator provisioning, creation, selection, member lifecycle, exact-name-confirmed deletion, the no-orphan account-deletion guard, and a reusable Current Family query scope. The Cookbook tracer creates, lists, renames, and deletes Family-owned Stores. See [Current application](current-application.md) for the implemented surface.
 
 Current architectural evidence:
 
@@ -12,7 +12,7 @@ Current architectural evidence:
 - [Web routes](../../routes/web.php) expose the public welcome page and authenticated dashboard; the attached `verified` middleware is currently inert as explained in [Security and observability](security-observability.md#implemented-authentication-controls).
 - [Settings routes](../../routes/settings.php) expose authenticated profile, security, password, and appearance operations.
 - [Family Access routes](../../routes/family-access.php) expose authenticated Family creation.
-- [Cookbook routes](../../routes/cookbook.php) expose Current-Family-scoped Store listing, creation, and renaming.
+- [Cookbook routes](../../routes/cookbook.php) expose Current-Family-scoped Store listing, creation, renaming, and deletion.
 - [Family creation action](../../app/FamilyAccess/Actions/CreateFamily.php) and its sibling module files contain the models, application actions, controller, and request validation.
 - [Frontend entry point](../../resources/js/app.ts) resolves Inertia pages and initializes Vue.
 - [Composer dependencies](../../composer.json) and [frontend dependencies](../../package.json) define the framework stack.
@@ -62,6 +62,8 @@ The physical modules now begin with `app/FamilyAccess` and `app/Cookbook`. Famil
 The implemented Family-creation path keeps HTTP validation in a Form Request and delegates the transactional creation of the Family and its first membership to an application action. Account deletion delegates the no-orphan check and deletion transaction to a Family Access action. This establishes the controller-to-action seam without introducing a repository abstraction before one is needed.
 
 Store rename follows the same explicit seam. `PATCH stores/{store}` enters `StoreUpdateRequest`, which normalizes and validates the proposed name without accepting a Family identifier. `StoreController::update` passes the authenticated User, Store identifier, and name to `RenameStore`. The action resolves the Store through `CurrentFamilyScope`, assigns the name so the Store model derives its normalized key, converts a database uniqueness collision to a field validation error, and saves. The controller then redirects to the Stores index with the `Store renamed.` success flash. Cookbook depends on Family Access for this ownership boundary; Family Access does not depend on Cookbook.
+
+Store deletion reuses that dependency direction without widening its input. `DELETE stores/{store}` enters `StoreDestroyRequest`; `StoreController::destroy` passes only the authenticated User and route Store identifier to `DeleteStore`. The action resolves the Store inside `CurrentFamilyScope`, returns not found for another Family, and hard-deletes the resolved Store. The controller redirects to the Stores index with the `Store deleted.` success flash. No Ingredient or Store Section persistence exists, so future placement-clearing behavior remains planned rather than simulated by this tracer.
 
 > **Planned**
 >

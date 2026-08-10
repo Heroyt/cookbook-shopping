@@ -4,7 +4,7 @@ This chapter covers the current authenticated Laravel/Inertia shell and Family
 Access workflow plus the first Cookbook Store tracer. Local setup and migrations
 create the Family and Store tables and Current Family preference; focused tests
 exercise provisioning, Family lifecycle, Store create/rename normalization and
-duplicate handling, equal rights, cross-Family isolation, and account-deletion
+duplicate handling, Store deletion, equal rights, cross-Family isolation, and account-deletion
 protection. The rest of Cookbook,
 meal planning, and Shopping List generation do not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.

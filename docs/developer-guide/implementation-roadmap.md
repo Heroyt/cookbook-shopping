@@ -74,14 +74,15 @@ The verified Slice 2 tracer now provides:
 
 - `stores` persistence with explicit Family ownership and cascade deletion;
 - PHP-generated display/key normalization plus database-backed `(family_id, normalized_name)` uniqueness across SQLite and MariaDB semantics;
-- authenticated Current-Family-scoped Store creation, listing, and renaming through the reusable Family Access scope;
+- authenticated Current-Family-scoped Store creation, listing, renaming, and deletion through the reusable Family Access scope;
 - Store rename resolution that accepts only the authenticated User, Store identifier, and proposed name, then resolves ownership inside `CurrentFamilyScope` without accepting a Family identifier;
+- Store deletion resolution that accepts only the authenticated User and Store identifier, returns not found for another Family, and does not accept a Family identifier;
 - a responsive Inertia/Vue Stores page composed from shadcn-vue primitives and generated Wayfinder actions; and
-- focused PHPUnit/Vitest coverage for equal member create/rename rights, cross-Family read/write isolation, validation, normalization, race-safe duplicate handling, success feedback, and frontend wiring.
+- focused PHPUnit/Vitest coverage for equal member create/rename/delete rights, cross-Family read/write isolation, validation, normalization, race-safe duplicate handling, success feedback, and frontend wiring.
 
 > **Planned**
 >
-> - Add Store deletion, optional logos, and reusable Store Section entities within a Family.
+> - Add optional Store logos and reusable Store Section entities within a Family.
 > - Maintain each Store's ordered section associations.
 > - Add Ingredients as concrete purchasable packages with at least one positive unit quantity, optional Store Placement, media, description, nutrition, and direct symmetric/non-transitive alternatives.
 > - Support metric weight and volume units plus Ingredient-specific count units.

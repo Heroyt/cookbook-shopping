@@ -11,7 +11,7 @@
 
 ### Product boundary
 
-The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, a placeholder authenticated dashboard, operator-only User provisioning, complete Family Access collaboration workflows, reusable Current Family record scoping, and a narrow Store create/list/rename tracer. Store deletion and the remaining cookbook, recipe, ingredient, section, meal-calendar, nutrition, and shopping-list workflows remain intended functionality that is not yet implemented.
+The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, a placeholder authenticated dashboard, operator-only User provisioning, complete Family Access collaboration workflows, reusable Current Family record scoping, and a narrow Store create/list/rename/delete tracer. Store logos and the remaining cookbook, recipe, ingredient, section, meal-calendar, nutrition, and shopping-list workflows remain intended functionality that is not yet implemented.
 
 ### Source authority
 
@@ -32,7 +32,7 @@ Do not use the currently connected Laravel Boost database as evidence because it
 
 ### Intended-versus-implemented mismatches
 
-Family persistence, operator User provisioning, Family collaboration, reusable Current Family scoping, and Store creation/listing/renaming are implemented. Store deletion and the remaining Recipe, Ingredient, Store Section, meal-calendar, nutrition, and Shopping List domain described in `CONTEXT.md` are not implemented in the current application.
+Family persistence, operator User provisioning, Family collaboration, reusable Current Family scoping, and Store creation/listing/renaming/deletion are implemented. Store logos and the remaining Recipe, Ingredient, Store Section, meal-calendar, nutrition, and Shopping List domain described in `CONTEXT.md` are not implemented in the current application.
 
 - Omit unimplemented behavior from the user guide.
 - The developer/operator guide may describe intended design only in visually distinct **Planned** callouts, separated from current setup and operational instructions.
