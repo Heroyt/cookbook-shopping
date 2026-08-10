@@ -21,7 +21,9 @@ describe('Store UI contract', () => {
         const page = readSource('../../pages/stores/Index.vue');
 
         expect(page).toContain('<CreateStoreForm />');
-        expect(page).toContain('<StoreList :stores="stores" />');
+        expect(page).toContain('<StoreList');
+        expect(page).toContain(':stores="stores"');
+        expect(page).toContain(':store-sections="storeSections"');
     });
 
     it('wires each Store rename dialog to its typed update action', () => {
