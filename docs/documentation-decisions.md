@@ -388,3 +388,14 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Publish the Family Access completion gate and first Slice 2 Store tracer as documentation version `0.3.0`, while keeping the rest of Slice 2 and the external Slice 0 evidence explicitly incomplete.
 - Rationale: Store creation/listing is a new user-facing workflow and establishes the reusable cross-module authorization interface, so it is a backward-compatible minor release under the approved semantic-version policy.
 - Follow-up or review date: Complete publication gates before calling version 0.3.0 publish-ready; collect live Komodo/MariaDB recreation evidence separately.
+
+### DOC-0035 — Document Current-Family-scoped Store renaming
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Documentation specification and developer/operator guide Store, architecture, frontend, data, and roadmap chapters
+- Evidence: User direction on 2026-08-10; `UpdateStore`; Store update request, route, controller, and Wayfinder binding; focused PHPUnit/Vitest coverage
+- Decision: Describe Store rename as implemented behavior after the tested tracer resolves the Store through `CurrentFamilyScope`, reuses ADR 0007 normalization, converts database uniqueness collisions to field validation errors, and exposes the operation through an Inertia/shadcn-vue Dialog. Keep Store deletion, logos, Sections, Ingredients, ordering, and all later Slice 2 capabilities planned. Keep Slice 0's external Komodo/MariaDB recreation gate incomplete and unverified. Retain documentation version `0.3.0` until the User explicitly approves a version change.
+- Rationale: The refresh follows verified repository behavior without broadening the tracer, inventing lifecycle decisions, or converting local database checks into production evidence. The approved documentation policy prohibits an unapproved version bump.
+- Follow-up or review date: Propose the next documentation version for explicit approval; collect Slice 0 external acceptance evidence separately.

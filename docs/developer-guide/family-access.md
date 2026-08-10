@@ -30,7 +30,7 @@ Membership mutations resolve the target Family from the authenticated User's val
 
 The server validates the preference on every authenticated Inertia request. A stale selection is replaced with the lowest-identifier remaining membership or cleared when none remains. Removing a membership and deleting a Family apply the same fallback rule. The preference is not an ownership field and is never sufficient authorization by itself.
 
-`CurrentFamilyScope` is the reusable authorization interface for Family-owned modules. It requires the membership-validated Current Family and applies it to Eloquent queries through the owned model's `family` relationship. The first Cookbook Store tracer uses it for listing and creation; route parameters, client-provided Family identifiers, cookies, and stale preferences do not select Store ownership.
+`CurrentFamilyScope` is the reusable authorization interface for Family-owned modules. It requires the membership-validated Current Family and applies it to Eloquent queries through the owned model's `family` relationship. The first Cookbook Store tracer uses it for listing, creation, and rename resolution; route parameters, client-provided Family identifiers, cookies, and stale preferences do not select Store ownership.
 
 ## Account lifecycle
 

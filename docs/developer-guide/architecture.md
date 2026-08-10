@@ -4,7 +4,7 @@
 
 The application is a Laravel 13 server-driven single-page application using Inertia 3 and Vue 3. Laravel owns routing, authentication, validation, persistence, and Inertia responses. Vue pages and shared components render the browser interface, while Vite builds the client assets. Wayfinder generates typed frontend bindings for Laravel routes.
 
-The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, Family Access inside `app/FamilyAccess`, and the first Cookbook tracer inside `app/Cookbook`. Family Access persists Families, roleless Family Memberships, and the nullable Current Family preference; it implements operator provisioning, creation, selection, member lifecycle, exact-name-confirmed deletion, the no-orphan account-deletion guard, and a reusable Current Family query scope. The Cookbook tracer creates and lists Family-owned Stores. See [Current application](current-application.md) for the implemented surface.
+The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, Family Access inside `app/FamilyAccess`, and the first Cookbook tracer inside `app/Cookbook`. Family Access persists Families, roleless Family Memberships, and the nullable Current Family preference; it implements operator provisioning, creation, selection, member lifecycle, exact-name-confirmed deletion, the no-orphan account-deletion guard, and a reusable Current Family query scope. The Cookbook tracer creates, lists, and renames Family-owned Stores. See [Current application](current-application.md) for the implemented surface.
 
 Current architectural evidence:
 
@@ -12,7 +12,7 @@ Current architectural evidence:
 - [Web routes](../../routes/web.php) expose the public welcome page and authenticated dashboard; the attached `verified` middleware is currently inert as explained in [Security and observability](security-observability.md#implemented-authentication-controls).
 - [Settings routes](../../routes/settings.php) expose authenticated profile, security, password, and appearance operations.
 - [Family Access routes](../../routes/family-access.php) expose authenticated Family creation.
-- [Cookbook routes](../../routes/cookbook.php) expose Current-Family-scoped Store listing and creation.
+- [Cookbook routes](../../routes/cookbook.php) expose Current-Family-scoped Store listing, creation, and renaming.
 - [Family creation action](../../app/FamilyAccess/Actions/CreateFamily.php) and its sibling module files contain the models, application actions, controller, and request validation.
 - [Frontend entry point](../../resources/js/app.ts) resolves Inertia pages and initializes Vue.
 - [Composer dependencies](../../composer.json) and [frontend dependencies](../../package.json) define the framework stack.

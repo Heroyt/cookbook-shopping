@@ -10,7 +10,7 @@ An alternative header layout is also present. It renders desktop navigation, a m
 
 Navigation uses Inertia `Link` components and generated Wayfinder route functions. Active-link behavior comes from the shared URL composable. Family and Store creation and management use Inertia forms or router visits with generated Wayfinder actions. The pages compose shadcn-vue Cards, Fields, Inputs, Tables, Empty states, AlertDialog, and Dialog primitives. Validation errors remain associated with inputs, and forms preserve user input on recoverable validation failures. Generated modules under `resources/js/actions`, `resources/js/routes`, and `resources/js/wayfinder` are build artifacts and must be regenerated rather than edited by hand.
 
-The Stores page is the only Cookbook navigation and currently supports creation and listing. No Store editing, Store Section maintenance, Ingredient maintenance, Recipe search, weekly planner, Simple Plan, or Shopping List interface exists yet. Those workflows described below are approved intent from the [domain glossary](../../CONTEXT.md), not current behavior.
+The Stores page is the only Cookbook navigation and currently supports creation, listing, and renaming through an accessible Dialog. No Store deletion, Store Section maintenance, Ingredient maintenance, Recipe search, weekly planner, Simple Plan, or Shopping List interface exists yet. Those workflows described below are approved intent from the [domain glossary](../../CONTEXT.md), not current behavior.
 
 ## Planned application navigation
 
@@ -88,7 +88,7 @@ The Stores page is the only Cookbook navigation and currently supports creation 
 
 ## Frontend verification expectations
 
-Laravel feature tests cover the Family and Store HTTP/Inertia boundaries, validation, transaction behavior, Current Family fallback, member lifecycle, destructive confirmation, success feedback, persisted results, equal Store rights, and cross-Family Store isolation. Focused Vitest source-contract tests verify typed Family and Store action wiring, page composition, navigation, and account-resolution messaging without adding a browser DOM dependency. The full frontend suite and production build verify that the composed Vue components type-check and bundle. There is not yet a browser workflow test.
+Laravel feature tests cover the Family and Store HTTP/Inertia boundaries, validation, transaction behavior, Current Family fallback, member lifecycle, destructive confirmation, success feedback, persisted results, equal Store create/rename rights, and cross-Family Store isolation. Focused Vitest source-contract tests verify typed Family and Store create/rename action wiring, page composition, navigation, and account-resolution messaging without adding a browser DOM dependency. The full frontend suite and production build verify that the composed Vue components type-check and bundle. There is not yet a browser workflow test.
 
 > **Planned**
 >

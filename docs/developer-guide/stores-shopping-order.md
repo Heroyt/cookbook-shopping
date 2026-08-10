@@ -1,14 +1,14 @@
 # Stores and shopping order
 
-The first Store tracer is implemented: authenticated members can list and create Stores in the Current Family from the responsive Stores page. Creation squishes repeated whitespace and enforces a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)`, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Tests prove equal rights, cross-Family read/write isolation, and that accent-distinct names remain distinct. The migration and focused Store suite also pass against an ephemeral MariaDB 11.8 database; this local check is not evidence about the external Komodo deployment.
+The first Store tracer is implemented: authenticated members can list, create, and rename Stores in the Current Family from the responsive Stores page. Creation and rename squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)`, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Rename resolves the Store through `CurrentFamilyScope`, so a Store from another Family returns not found and a client-supplied Family identifier cannot redirect the write. Database unique-key collisions become field validation errors. Tests prove equal create/rename rights, cross-Family read/write isolation, normalization, duplicate handling, and that accent-distinct names remain distinct. The migration and focused Store suite also pass against an ephemeral MariaDB 11.8 database; this local check is not evidence about the external Komodo deployment.
 
-Store editing, deletion, logos, Store Sections, Store Placements, and Shopping List grouping are not implemented. Canonical terms are in [`CONTEXT.md`](../../CONTEXT.md). The ownership model follows [ADR 0003](../adr/0003-scope-domain-data-to-families.md), while [Shopping List generation](shopping-generation.md) defines the calculated lines that placement will organize.
+Store deletion, logos, Store Sections, Store Placements, and Shopping List grouping are not implemented. Canonical terms are in [`CONTEXT.md`](../../CONTEXT.md). The ownership model follows [ADR 0003](../adr/0003-scope-domain-data-to-families.md), while [Shopping List generation](shopping-generation.md) defines the calculated lines that placement will organize.
 
 ## Stores and reusable Sections
 
 > **Planned**
 >
-> Store editing and optional logos remain to be added. A Store Section belongs to one Family and has a case-insensitively unique name, colour, and optional icon. Sections are reusable: several Stores may associate with the same Section entity.
+> Store deletion and optional logos remain to be added. A Store Section belongs to one Family and has a case-insensitively unique name, colour, and optional icon. Sections are reusable: several Stores may associate with the same Section entity.
 >
 > Each Store maintains its own ordered list of associated Store Sections. The traversal position belongs to the Store-to-Section association, so a shared Section can appear at different positions in different Stores.
 
