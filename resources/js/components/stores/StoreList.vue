@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { StoreIcon } from '@lucide/vue';
+import DeleteStoreAlertDialog from '@/components/stores/DeleteStoreAlertDialog.vue';
 import RenameStoreDialog from '@/components/stores/RenameStoreDialog.vue';
 import {
     Empty,
@@ -45,7 +46,10 @@ defineProps<{ stores: StoreSummary[] }>();
             <TableRow v-for="store in stores" :key="store.id">
                 <TableCell>{{ store.name }}</TableCell>
                 <TableCell class="text-right">
-                    <RenameStoreDialog :store="store" />
+                    <div class="flex justify-end gap-2">
+                        <RenameStoreDialog :store="store" />
+                        <DeleteStoreAlertDialog :store="store" />
+                    </div>
                 </TableCell>
             </TableRow>
         </TableBody>
