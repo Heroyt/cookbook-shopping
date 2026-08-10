@@ -24,15 +24,18 @@ scope from that validated server-side selection, every member has equal rights,
 final-membership removal is blocked, and Family deletion requires the exact
 Family name. Focused tests reject selecting or removing membership through a
 different Family. `CurrentFamilyScope` applies the same membership-validated
-context to Store reads, creation, rename, and deletion and to Store Section
-reads and creation. Every member has equal Cookbook-management rights. Store
+context to Store reads, creation, rename, and deletion; Store Section reads and
+creation; and both-record resolution for association, removal, and reorder.
+Every member has equal Cookbook-management rights. Store
 rename and deletion resolve the route Store identifier
 inside that scope, ignore a client-supplied Family identifier, and return not
 found for a Store owned by another Family. Store and Store Section tests use
 multiple Users and two Families to prove those equal rights, scoped reads and
 writes, and ownership that cannot be redirected by client input. Store Section
 tests also prove that normalized duplicate races become field validation
-errors rather than unhandled database exceptions.
+errors rather than unhandled database exceptions. Association tests reject a
+foreign-Family Store or Section, incomplete orders, duplicate identifiers, and
+stale order versions without changing persisted traversal order.
 
 > **Planned**
 >

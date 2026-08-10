@@ -17,7 +17,8 @@ and the Family Access collaboration workflow. Its working surfaces are:
 - Family creation, Current Family switching, member addition and removal,
   leaving, and exact-name-confirmed Family deletion;
 - Current-Family-scoped Store creation, listing, renaming, and deletion, plus
-  reusable Store Section creation and listing with required colours;
+  reusable Store Section creation/listing with required colours and per-Store
+  association, removal, and optimistic contiguous ordering;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -43,8 +44,7 @@ text.
 
 > **Planned**
 >
-> Store logos, Store–Section association and ordering, Store Section deletion
-> and optional icons, Ingredients, Recipes, meal
+> Store logos, Store Section deletion and optional icons, Ingredients, Recipes, meal
 > planning, nutrition, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
 > authorization, or persistence from the narrow Store and Store Section tracers. The canonical vocabulary is in
@@ -158,10 +158,12 @@ The current schema contains:
   names;
 - Store Sections with explicit Family ownership, normalized Family-scoped
   unique names, and required six-digit hexadecimal colours;
+- Store–Section associations with a position unique within each Store and an
+  optimistic Section-order version on the Store;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Recipe, Ingredient, Store–Section association, Calendar Entry, nutrition, or
+There are no Recipe, Ingredient, Calendar Entry, nutrition, or
 Shopping List tables. See the
 [migration directory](../../database/migrations/).
 
