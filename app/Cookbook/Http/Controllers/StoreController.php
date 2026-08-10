@@ -16,6 +16,7 @@ use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -64,12 +65,16 @@ final class StoreController extends Controller
                 'storeSections' => StoreSection::query()
                     ->whereBelongsTo($family)
                     ->select(['id', 'name', 'colour'])
+                    ->withCount([
+                        'stores' => fn (Builder $stores): Builder => $stores->whereBelongsTo($family),
+                    ])
                     ->orderBy('name')
                     ->get()
                     ->map(fn (StoreSection $storeSection): array => [
                         'id' => $storeSection->id,
                         'name' => $storeSection->name,
                         'colour' => $storeSection->colour,
+                        'associationCount' => $storeSection->stores_count,
                     ]),
             ],
         );

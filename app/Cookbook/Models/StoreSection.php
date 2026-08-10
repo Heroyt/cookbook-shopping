@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -20,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $normalized_name
  * @property string $colour
+ * @property-read int $stores_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -33,6 +35,13 @@ final class StoreSection extends Model
     public function family(): BelongsTo
     {
         return $this->belongsTo(Family::class);
+    }
+
+    /** @return BelongsToMany<Store, $this> */
+    public function stores(): BelongsToMany
+    {
+        return $this->belongsToMany(Store::class)
+            ->withPivot('position');
     }
 
     protected static function newFactory(): StoreSectionFactory

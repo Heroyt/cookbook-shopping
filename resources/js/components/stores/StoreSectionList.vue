@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PaletteIcon } from '@lucide/vue';
+import DeleteStoreSectionAlertDialog from '@/components/stores/DeleteStoreSectionAlertDialog.vue';
 import {
     Empty,
     EmptyDescription,
@@ -38,6 +39,7 @@ defineProps<{ storeSections: StoreSectionSummary[] }>();
             <TableRow>
                 <TableHead>Název</TableHead>
                 <TableHead>Barva</TableHead>
+                <TableHead class="text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
@@ -59,6 +61,11 @@ defineProps<{ storeSections: StoreSectionSummary[] }>();
                             {{ storeSection.colour }}
                         </span>
                     </div>
+                </TableCell>
+                <TableCell class="text-right">
+                    <DeleteStoreSectionAlertDialog
+                        :store-section="storeSection"
+                    />
                 </TableCell>
             </TableRow>
         </TableBody>

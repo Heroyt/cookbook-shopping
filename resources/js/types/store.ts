@@ -9,8 +9,12 @@ export type StoreSectionSummary = {
     id: number;
     name: string;
     colour: string;
+    associationCount: number;
 };
 
-export type StoreSectionAssociationSummary = StoreSectionSummary & {
+export type StoreSectionAssociationSummary = Omit<
+    StoreSectionSummary,
+    'associationCount'
+> & {
     position: number;
 };

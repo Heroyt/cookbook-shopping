@@ -44,6 +44,23 @@ final class Store extends Model
             ->orderByPivot('position');
     }
 
+    public function removeStoreSectionAssociation(StoreSection $storeSection): void
+    {
+        $this->storeSections()->detach($storeSection);
+
+        $this->storeSections()->get()->each(
+            function (StoreSection $remainingSection, int $position): void {
+                $this->storeSections()->updateExistingPivot(
+                    $remainingSection->id,
+                    ['position' => $position],
+                );
+            },
+        );
+
+        $this->section_order_version++;
+        $this->save();
+    }
+
     protected static function newFactory(): StoreFactory
     {
         return StoreFactory::new();

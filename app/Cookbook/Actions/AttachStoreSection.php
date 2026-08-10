@@ -19,14 +19,15 @@ final readonly class AttachStoreSection
     public function handle(User $user, int $storeId, int $storeSectionId): void
     {
         $this->currentFamilyScope->within($user, function (Family $family) use ($storeId, $storeSectionId): void {
+            $storeSection = StoreSection::query()
+                ->whereBelongsTo($family)
+                ->whereKey($storeSectionId)
+                ->lockForUpdate()
+                ->firstOrFail();
             $store = Store::query()
                 ->whereBelongsTo($family)
                 ->whereKey($storeId)
                 ->lockForUpdate()
-                ->firstOrFail();
-            $storeSection = StoreSection::query()
-                ->whereBelongsTo($family)
-                ->whereKey($storeSectionId)
                 ->firstOrFail();
             $nextPosition = $store->storeSections()->newPivotQuery()->count();
 
