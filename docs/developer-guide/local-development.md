@@ -1,10 +1,11 @@
 # Local Development
 
 This chapter covers the current authenticated Laravel/Inertia shell and Family
-Access workflow plus the first Cookbook Store tracer. Local setup and migrations
-create the Family and Store tables and Current Family preference; focused tests
-exercise provisioning, Family lifecycle, Store create/rename normalization and
-duplicate handling, Store deletion, equal rights, cross-Family isolation, and account-deletion
+Access workflow plus the Cookbook Store and Store Section tracers. Local setup
+and migrations create the Family, Store, and Store Section tables and Current
+Family preference; focused tests exercise provisioning, Family lifecycle, Store
+create/rename normalization and duplicate handling, Store deletion, Store
+Section creation/listing and colour validation, equal rights, cross-Family isolation, and account-deletion
 protection. The rest of Cookbook,
 meal planning, and Shopping List generation do not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.
@@ -205,6 +206,7 @@ Run a narrow PHP test while developing:
 php artisan test --compact tests/Feature/Auth/AuthenticationTest.php
 php artisan test --compact --filter=test_users_can_authenticate_using_the_login_screen
 php artisan test --compact tests/Feature/Cookbook/StoreManagementTest.php
+php artisan test --compact tests/Feature/Cookbook/StoreSectionManagementTest.php
 ```
 
 Before finalizing PHP changes, run the project-required checks:
@@ -226,6 +228,7 @@ Run a narrow test while developing:
 ```bash
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/composables/useInitials.spec.ts
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreUi.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreSectionUi.spec.ts
 ```
 
 Replace the example path with an existing affected test. Before finalizing

@@ -16,7 +16,8 @@ and the Family Access collaboration workflow. Its working surfaces are:
 - operator-only interactive User provisioning;
 - Family creation, Current Family switching, member addition and removal,
   leaving, and exact-name-confirmed Family deletion;
-- Current-Family-scoped Store creation, listing, renaming, and deletion;
+- Current-Family-scoped Store creation, listing, renaming, and deletion, plus
+  reusable Store Section creation and listing with required colours;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -42,10 +43,11 @@ text.
 
 > **Planned**
 >
-> Store logos, Store Sections, Ingredients, Recipes, meal
+> Store logos, Store–Section association and ordering, Store Section deletion
+> and optional icons, Ingredients, Recipes, meal
 > planning, nutrition, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
-> authorization, or persistence from the narrow Store tracer. The canonical vocabulary is in
+> authorization, or persistence from the narrow Store and Store Section tracers. The canonical vocabulary is in
 > the final Domain Glossary chapter, and the architectural direction is recorded in
 > [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
@@ -154,10 +156,12 @@ The current schema contains:
   preference on each User;
 - Stores with explicit Family ownership and normalized Family-scoped unique
   names;
+- Store Sections with explicit Family ownership, normalized Family-scoped
+  unique names, and required six-digit hexadecimal colours;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Recipe, Ingredient, Store Section, Calendar Entry, nutrition, or
+There are no Recipe, Ingredient, Store–Section association, Calendar Entry, nutrition, or
 Shopping List tables. See the
 [migration directory](../../database/migrations/).
 
@@ -213,7 +217,8 @@ operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 - Runtime configuration is injected rather than baked into the production
   image, but the deployment platform's secret definitions and validated
   production values are not committed here.
-- Reusable Current Family authorization now scopes the Store tracer, but later
+- Reusable Current Family authorization now scopes the Store and Store Section
+  tracers, but later
   Family-owned records and media-upload workflows are not implemented. The selected personal profile
   uses the private local filesystem and intentionally requires no automated
   backup, recovery, or centralized observability; the persistent mount remains

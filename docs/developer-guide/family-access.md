@@ -2,7 +2,7 @@
 
 Family Access now implements the complete collaboration workflow needed before Family-owned domain records are introduced. An authenticated User can create a Family, switch among their Families, add an existing User by email, leave or remove a member, and delete the Current Family after exact-name confirmation. Every Family Membership is ordinary and roleless. See [Current application](current-application.md) for the wider implemented boundary and the final Domain Glossary chapter for canonical terms.
 
-The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-to-families.md). The relational constraints are described in [Data structure](data-structure.md), and the first Store tracer now closes the Slice 1 Family-owned authorization gate in the [Implementation roadmap](implementation-roadmap.md).
+The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-to-families.md). The relational constraints are described in [Data structure](data-structure.md), and the Store and Store Section tracers prove the reusable Family-owned authorization boundary in the [Implementation roadmap](implementation-roadmap.md).
 
 ## Account provisioning
 
@@ -30,7 +30,7 @@ Membership mutations resolve the target Family from the authenticated User's val
 
 The server validates the preference on every authenticated Inertia request. A stale selection is replaced with the lowest-identifier remaining membership or cleared when none remains. Removing a membership and deleting a Family apply the same fallback rule. The preference is not an ownership field and is never sufficient authorization by itself.
 
-`CurrentFamilyScope` is the reusable authorization interface for Family-owned modules. It requires the membership-validated Current Family and applies it to Eloquent queries through the owned model's `family` relationship. The first Cookbook Store tracer uses it for listing, creation, rename resolution, and deletion resolution; route parameters, client-provided Family identifiers, cookies, and stale preferences do not select Store ownership.
+`CurrentFamilyScope` is the reusable authorization interface for Family-owned modules. It requires the membership-validated Current Family and applies it to Eloquent queries through the owned model's `family` relationship. Cookbook uses it for Store listing, creation, rename resolution, and deletion resolution and for Store Section listing and creation; route parameters, client-provided Family identifiers, cookies, and stale preferences do not select ownership.
 
 ## Account lifecycle
 
@@ -40,4 +40,4 @@ Account deletion is blocked while the User is the final member of any Family. Th
 
 Focused PHPUnit tests cover operator provisioning, hidden-password handling, case-insensitive duplicate email rejection, authentication, atomic Family creation, name validation, Current Family selection and stale fallback, add-by-email, duplicate and unknown member rejection, Current-Family-only listing, leave and removal fallback, final-member protection, exact destructive confirmation, cross-Family membership isolation, and account-deletion behavior. A focused Vitest contract verifies that the Vue forms and switcher call generated Wayfinder actions and that the sidebar exposes the Current Family selector.
 
-Store feature tests use two Users and two Families to prove equal member access, Current-Family-only reads and writes, foreign-Family rename/deletion rejection, and that a client-supplied cross-Family ownership identifier is ignored rather than redirecting a write. This meets the Slice 1 authorization gate. Every later Family-owned aggregate must reuse the same scope and add record-specific cross-Family tests. The [Security and observability](security-observability.md) chapter provides the wider control baseline.
+Store and Store Section feature tests use multiple Users and two Families to prove equal member access, Current-Family-only reads and writes, foreign-Family isolation, and that a client-supplied cross-Family ownership identifier is ignored rather than redirecting a write. The Store Section tests additionally prove scoped normalized uniqueness and database-race conversion to a field error. Every later Family-owned aggregate must reuse the same scope and add record-specific cross-Family tests. The [Security and observability](security-observability.md) chapter provides the wider control baseline.

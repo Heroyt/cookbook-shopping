@@ -19,7 +19,7 @@ The canonical implementation-free vocabulary is published as the final Domain Gl
 5. [Family access](family-access.md) — implemented provisioning, creation, Current Family, membership, deletion, and account-lifecycle workflows.
 6. [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, alternatives, composition, search, and archival.
 7. [Nutrition](nutrition.md) — Ingredient bases, per-serving calculation, overrides, incomplete profiles, and daily totals.
-8. [Stores and shopping order](stores-shopping-order.md) — implemented Store create/list/rename/delete tracer plus planned Sections, placement, and grouping.
+8. [Stores and shopping order](stores-shopping-order.md) — implemented Store management and reusable Store Section create/list tracers plus planned association, placement, and grouping.
 9. [Calendar planning](calendar-planning.md) — Calendar Entries, derived days, Meal Labels, weekly planning, and Simple Plans.
 10. [Shopping-list generation](shopping-generation.md) — service boundary, conversions, aggregation, alternatives, and output.
 11. [Data structure](data-structure.md) — implemented Family persistence plus the planned relational model, ownership keys, constraints, and snapshots.

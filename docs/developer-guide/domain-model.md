@@ -1,6 +1,6 @@
 # Domain model
 
-The repository implements the authenticated `User` and account-security shell, Family Access, and a narrow Cookbook Store tracer. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns Store creation, listing, renaming, and deletion; the rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
+The repository implements the authenticated `User` and account-security shell, Family Access, and narrow Cookbook Store and Store Section tracers. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns Store creation, listing, renaming, and deletion plus reusable Store Section creation and listing; the rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
 
 The final Domain Glossary chapter is the canonical implementation-free vocabulary. These developer chapters explain relationships, invariants, and implementation consequences without replacing it.
 
@@ -50,10 +50,10 @@ See [Architecture and system boundaries](architecture.md) for framework placemen
 
 ## Capability chapters
 
-- [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores; later aggregates must reuse it.
+- [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores and Store Sections; later aggregates must reuse it.
 - [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, conversions, alternatives, Recipe composition, search, and archival.
 - [Nutrition](nutrition.md) — Ingredient bases, calculated per-serving values, overrides, incomplete profiles, and daily totals.
-- [Stores and shopping order](stores-shopping-order.md) — implemented Store creation, listing, renaming, and deletion plus planned reusable Sections, placement effects, and final grouping.
+- [Stores and shopping order](stores-shopping-order.md) — implemented Store lifecycle and reusable Store Section creation/listing plus planned association, ordering, Section deletion, placement effects, and final grouping.
 - [Calendar planning](calendar-planning.md) — Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.
 - [Shopping List generation](shopping-generation.md) — generator input and output, calculation order, alternatives, grouping, and immutable history.
 - [Agent integrations](agent-integrations.md) — the planned Agent Credential, Family Catalog, atomic Agent Change Set, and OpenAPI boundary.
