@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { StoreIcon } from '@lucide/vue';
+import RenameStoreDialog from '@/components/stores/RenameStoreDialog.vue';
 import {
     Empty,
     EmptyDescription,
@@ -37,11 +38,15 @@ defineProps<{ stores: StoreSummary[] }>();
         <TableHeader>
             <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead class="text-right">Actions</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
             <TableRow v-for="store in stores" :key="store.id">
                 <TableCell>{{ store.name }}</TableCell>
+                <TableCell class="text-right">
+                    <RenameStoreDialog :store="store" />
+                </TableCell>
             </TableRow>
         </TableBody>
     </Table>
