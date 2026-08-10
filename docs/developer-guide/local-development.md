@@ -204,6 +204,7 @@ Run a narrow PHP test while developing:
 ```bash
 php artisan test --compact tests/Feature/Auth/AuthenticationTest.php
 php artisan test --compact --filter=test_users_can_authenticate_using_the_login_screen
+php artisan test --compact tests/Feature/Cookbook/StoreManagementTest.php
 ```
 
 Before finalizing PHP changes, run the project-required checks:
@@ -224,6 +225,7 @@ Run a narrow test while developing:
 
 ```bash
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/composables/useInitials.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreUi.spec.ts
 ```
 
 Replace the example path with an existing affected test. Before finalizing

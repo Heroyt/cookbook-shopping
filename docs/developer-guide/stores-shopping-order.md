@@ -1,8 +1,16 @@
 # Stores and shopping order
 
-The first Store tracer is implemented: authenticated members can list, create, and rename Stores in the Current Family from the responsive Stores page. Creation and rename squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)`, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Rename resolves the Store through `CurrentFamilyScope`, so a Store from another Family returns not found and a client-supplied Family identifier cannot redirect the write. Database unique-key collisions become field validation errors. Tests prove equal create/rename rights, cross-Family read/write isolation, normalization, duplicate handling, and that accent-distinct names remain distinct. The migration and focused Store suite also pass against an ephemeral MariaDB 11.8 database; this local check is not evidence about the external Komodo deployment.
+The first Store tracer is implemented: authenticated members can list, create, and rename Stores in the Current Family from the responsive Stores page. Creation and rename squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)`, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Rename resolves the Store through `CurrentFamilyScope`, so a Store from another Family returns not found and a client-supplied Family identifier cannot redirect the write. Database unique-key collisions become field validation errors. Tests prove equal create/rename rights, cross-Family read/write isolation, normalization, duplicate handling, and that accent-distinct names remain distinct. A full migration and the rename-inclusive Store suite of 13 tests and 109 assertions pass against a disposable MariaDB 11.8 database. This local compatibility check is not evidence about the external Komodo deployment.
 
 Store deletion, logos, Store Sections, Store Placements, and Shopping List grouping are not implemented. Canonical terms are in [`CONTEXT.md`](../../CONTEXT.md). The ownership model follows [ADR 0003](../adr/0003-scope-domain-data-to-families.md), while [Shopping List generation](shopping-generation.md) defines the calculated lines that placement will organize.
+
+## Rename a Store
+
+The User must be authenticated, belong to the selected Current Family, and already have a Store in that Family. On the Stores page, choose **Rename** for the Store, edit its pre-filled name in the Dialog, and choose **Rename Store**. Cancel closes the Dialog without submitting.
+
+The submitted name is required after repeated whitespace is squished and must contain at most 255 characters. A normalized duplicate of another Store name in the Current Family appears as an inline name error and leaves the existing Store unchanged. A Store identifier owned by another Family is not found; a submitted Family identifier cannot redirect the write.
+
+After a successful rename, the Dialog closes, the Stores page shows the persisted display name, and the application flashes **Store renamed.**
 
 ## Stores and reusable Sections
 
