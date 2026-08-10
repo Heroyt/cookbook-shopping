@@ -9,4 +9,5 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
     Route::post('stores', [StoreController::class, 'store'])->name('stores.store');
     Route::patch('stores/{store}', [StoreController::class, 'update'])->name('stores.update');
+    Route::delete('stores/{store}', [StoreController::class, 'destroy'])->name('stores.destroy');
 });

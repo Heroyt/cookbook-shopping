@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Cookbook\Http\Controllers;
 
 use App\Cookbook\Actions\CreateStore;
+use App\Cookbook\Actions\DeleteStore;
 use App\Cookbook\Actions\RenameStore;
+use App\Cookbook\Http\Requests\StoreDestroyRequest;
 use App\Cookbook\Http\Requests\StoreIndexRequest;
 use App\Cookbook\Http\Requests\StoreStoreRequest;
 use App\Cookbook\Http\Requests\StoreUpdateRequest;
@@ -23,6 +25,7 @@ final class StoreController extends Controller
         private readonly CurrentFamilyScope $currentFamilyScope,
         private readonly CreateStore $createStore,
         private readonly RenameStore $renameStore,
+        private readonly DeleteStore $deleteStore,
     ) {}
 
     public function index(StoreIndexRequest $request): Response
@@ -57,6 +60,15 @@ final class StoreController extends Controller
         $this->renameStore->handle($request->authenticatedUser(), $store, $request->storeName());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store renamed.')]);
+
+        return to_route('stores.index');
+    }
+
+    public function destroy(StoreDestroyRequest $request, int $store): RedirectResponse
+    {
+        $this->deleteStore->handle($request->authenticatedUser(), $store);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Store deleted.')]);
 
         return to_route('stores.index');
     }
