@@ -54,7 +54,7 @@ final class CreateFamilyTest extends TestCase
                 'type' => 'success',
                 'message' => 'Family created.',
             ])
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('families.index'));
 
         $family = $user->families()->sole();
 

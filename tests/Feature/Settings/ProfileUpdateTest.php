@@ -42,6 +42,40 @@ final class ProfileUpdateTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_profile_normalizes_name_and_email(): void
+    {
+        $user = User::factory()->create();
+
+        $this
+            ->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => '  Test   User  ',
+                'email' => '  TEST@example.com ',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $user->refresh();
+
+        $this->assertSame('Test User', $user->name);
+        $this->assertSame('test@example.com', $user->email);
+    }
+
+    public function test_profile_email_must_be_unique_case_insensitively(): void
+    {
+        User::factory()->create(['email' => 'ALICE@example.com']);
+        $user = User::factory()->create(['email' => 'bob@example.com']);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('profile.update'), [
+                'name' => $user->name,
+                'email' => 'alice@example.com',
+            ])
+            ->assertSessionHasErrors('email');
+
+        $this->assertSame('bob@example.com', $user->fresh()->email);
+    }
+
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();
