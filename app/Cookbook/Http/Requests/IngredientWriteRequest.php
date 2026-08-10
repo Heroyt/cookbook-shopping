@@ -48,6 +48,8 @@ abstract class IngredientWriteRequest extends AuthenticatedRequest
             'metric_unit' => ['nullable', 'required_with:metric_quantity', Rule::in(MetricQuantityInput::UNITS)],
             'piece_count' => ['nullable', 'regex:/^\d{1,14}(?:\.\d{1,6})?$/', 'gt:0'],
             'description' => ['nullable', 'string'],
+            'store_id' => ['nullable', 'integer', 'min:1'],
+            'store_section_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -83,6 +85,20 @@ abstract class IngredientWriteRequest extends AuthenticatedRequest
                 $validator->errors()->add('metric_quantity', __('The normalized package quantity must fit a decimal with at most six fractional places.'));
             }
         }];
+    }
+
+    public function storeId(): ?int
+    {
+        $storeId = $this->validated('store_id');
+
+        return is_numeric($storeId) ? (int) $storeId : null;
+    }
+
+    public function storeSectionId(): ?int
+    {
+        $storeSectionId = $this->validated('store_section_id');
+
+        return is_numeric($storeSectionId) ? (int) $storeSectionId : null;
     }
 
     protected function prepareForValidation(): void

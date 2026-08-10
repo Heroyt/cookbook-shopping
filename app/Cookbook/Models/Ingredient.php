@@ -24,10 +24,12 @@ use Illuminate\Support\Carbon;
  * @property string|null $volume_millilitres
  * @property string|null $piece_count
  * @property string|null $description
+ * @property int|null $store_id
+ * @property int|null $store_section_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['family_id', 'name', 'weight_grams', 'volume_millilitres', 'piece_count', 'description'])]
+#[Fillable(['family_id', 'name', 'weight_grams', 'volume_millilitres', 'piece_count', 'description', 'store_id', 'store_section_id'])]
 final class Ingredient extends Model
 {
     /** @use HasFactory<IngredientFactory> */
@@ -37,6 +39,18 @@ final class Ingredient extends Model
     public function family(): BelongsTo
     {
         return $this->belongsTo(Family::class);
+    }
+
+    /** @return BelongsTo<Store, $this> */
+    public function store(): BelongsTo
+    {
+        return $this->belongsTo(Store::class);
+    }
+
+    /** @return BelongsTo<StoreSection, $this> */
+    public function storeSection(): BelongsTo
+    {
+        return $this->belongsTo(StoreSection::class);
     }
 
     public function packageQuantities(): IngredientPackageQuantities

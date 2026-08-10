@@ -67,6 +67,7 @@ final class StoreController extends Controller
                     ->select(['id', 'name', 'colour'])
                     ->withCount([
                         'stores' => fn (Builder $stores): Builder => $stores->whereBelongsTo($family),
+                        'ingredients' => fn (Builder $ingredients): Builder => $ingredients->whereBelongsTo($family),
                     ])
                     ->orderBy('name')
                     ->get()
@@ -75,6 +76,7 @@ final class StoreController extends Controller
                         'name' => $storeSection->name,
                         'colour' => $storeSection->colour,
                         'associationCount' => $storeSection->stores_count,
+                        'placementCount' => $storeSection->ingredients_count,
                     ]),
             ],
         );

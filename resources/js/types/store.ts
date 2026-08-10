@@ -10,11 +10,12 @@ export type StoreSectionSummary = {
     name: string;
     colour: string;
     associationCount: number;
+    placementCount: number;
 };
 
 export type StoreSectionAssociationSummary = Omit<
     StoreSectionSummary,
-    'associationCount'
+    'associationCount' | 'placementCount'
 > & {
     position: number;
 };

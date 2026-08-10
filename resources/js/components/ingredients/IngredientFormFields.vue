@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -20,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import type { IngredientSummary } from '@/types';
+import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
 type IngredientField =
     | 'name'
@@ -28,13 +29,16 @@ type IngredientField =
     | 'metric_unit'
     | 'piece_count'
     | 'description'
+    | 'store_id'
+    | 'store_section_id'
     | 'quantities';
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         errors?: Partial<Record<IngredientField, string>>;
         processing?: boolean;
         ingredient?: IngredientSummary | null;
+        stores?: IngredientPlacementStore[];
         idPrefix?: string;
         submitLabel?: string;
         showSubmit?: boolean;
@@ -43,11 +47,38 @@ withDefaults(
         errors: () => ({}),
         processing: false,
         ingredient: null,
+        stores: () => [],
         idPrefix: 'ingredient-create',
         submitLabel: 'Vytvořit surovinu',
         showSubmit: true,
     },
 );
+
+const storeSelection = ref(
+    props.ingredient?.storeId === null ||
+        props.ingredient?.storeId === undefined
+        ? 'none'
+        : String(props.ingredient.storeId),
+);
+const sectionSelection = ref(
+    props.ingredient?.storeSectionId === null ||
+        props.ingredient?.storeSectionId === undefined
+        ? 'none'
+        : String(props.ingredient.storeSectionId),
+);
+const selectedStore = computed(() =>
+    props.stores.find((store) => String(store.id) === storeSelection.value),
+);
+
+watch(storeSelection, () => {
+    if (
+        !selectedStore.value?.sections.some(
+            (section) => String(section.id) === sectionSelection.value,
+        )
+    ) {
+        sectionSelection.value = 'none';
+    }
+});
 </script>
 
 <template>
@@ -156,6 +187,82 @@ withDefaults(
                     :aria-invalid="Boolean(errors.piece_count)"
                 />
                 <FieldError :errors="[errors.piece_count]" />
+            </Field>
+        </FieldSet>
+
+        <FieldSet>
+            <FieldLegend variant="legend">Umístění v obchodě</FieldLegend>
+            <FieldDescription>
+                Umístění slouží pouze pro budoucí seskupení nákupního seznamu.
+                Nevyjadřuje dostupnost ani skladovou zásobu.
+            </FieldDescription>
+
+            <input
+                type="hidden"
+                name="store_id"
+                :value="storeSelection === 'none' ? '' : storeSelection"
+            />
+            <input
+                type="hidden"
+                name="store_section_id"
+                :value="sectionSelection === 'none' ? '' : sectionSelection"
+            />
+
+            <Field :data-invalid="Boolean(errors.store_id)">
+                <FieldLabel :for="`${idPrefix}-store`">Obchod</FieldLabel>
+                <Select v-model="storeSelection">
+                    <SelectTrigger
+                        :id="`${idPrefix}-store`"
+                        :aria-invalid="Boolean(errors.store_id)"
+                    >
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectItem value="none">Bez obchodu</SelectItem>
+                            <SelectItem
+                                v-for="store in stores"
+                                :key="store.id"
+                                :value="String(store.id)"
+                            >
+                                {{ store.name }}
+                            </SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <FieldError :errors="[errors.store_id]" />
+            </Field>
+
+            <Field :data-invalid="Boolean(errors.store_section_id)">
+                <FieldLabel :for="`${idPrefix}-store-section`">
+                    Část obchodu
+                </FieldLabel>
+                <Select
+                    v-model="sectionSelection"
+                    :disabled="storeSelection === 'none'"
+                >
+                    <SelectTrigger
+                        :id="`${idPrefix}-store-section`"
+                        :aria-invalid="Boolean(errors.store_section_id)"
+                    >
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectItem value="none"
+                                >Bez části obchodu</SelectItem
+                            >
+                            <SelectItem
+                                v-for="section in selectedStore?.sections ?? []"
+                                :key="section.id"
+                                :value="String(section.id)"
+                            >
+                                {{ section.name }}
+                            </SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <FieldError :errors="[errors.store_section_id]" />
             </Field>
         </FieldSet>
 

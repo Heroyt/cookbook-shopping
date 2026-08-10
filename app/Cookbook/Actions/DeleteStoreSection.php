@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Actions;
 
+use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
@@ -28,6 +29,11 @@ final readonly class DeleteStoreSection
                 ->get();
 
             foreach ($affectedStores as $store) {
+                Ingredient::query()
+                    ->whereBelongsTo($family)
+                    ->where('store_id', $store->id)
+                    ->where('store_section_id', $storeSection->id)
+                    ->update(['store_section_id' => null]);
                 $store->removeStoreSectionAssociation($storeSection);
             }
 

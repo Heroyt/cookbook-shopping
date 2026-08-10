@@ -16,9 +16,12 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import type { IngredientSummary } from '@/types';
+import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
-defineProps<{ ingredient: IngredientSummary }>();
+defineProps<{
+    ingredient: IngredientSummary;
+    stores: IngredientPlacementStore[];
+}>();
 
 const open = shallowRef(false);
 </script>
@@ -50,6 +53,7 @@ const open = shallowRef(false);
 
                 <IngredientFormFields
                     :ingredient="ingredient"
+                    :stores="stores"
                     :errors="errors"
                     :processing="processing"
                     :id-prefix="`ingredient-${ingredient.id}-edit`"

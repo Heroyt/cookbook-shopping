@@ -52,7 +52,9 @@ const deleteStoreSection = (): void => {
                         Přiřazení k obchodům:
                         {{ storeSection.associationCount }}.
                     </span>
-                    <span class="block">Umístění surovin: 0.</span>
+                    <span class="block">
+                        Umístění surovin: {{ storeSection.placementCount }}.
+                    </span>
                     <span class="block">
                         Část bude trvale odebrána ze všech obchodů a jejich
                         pořadí se upraví. Tuto akci nelze vrátit zpět.

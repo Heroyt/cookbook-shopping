@@ -14,15 +14,21 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class CreateIngredient
 {
-    public function __construct(private CurrentFamilyScope $currentFamilyScope) {}
+    public function __construct(
+        private CurrentFamilyScope $currentFamilyScope,
+        private ResolveIngredientStorePlacement $resolveIngredientStorePlacement,
+    ) {}
 
     public function handle(
         User $user,
         string $name,
         ?string $description,
         IngredientPackageQuantities $quantities,
+        ?int $storeId,
+        ?int $storeSectionId,
     ): Ingredient {
-        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $description, $quantities): Ingredient {
+        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $description, $quantities, $storeId, $storeSectionId): Ingredient {
+            $placement = $this->resolveIngredientStorePlacement->handle($family, $storeId, $storeSectionId);
             $normalizedName = NormalizedName::from($name);
             $ingredient = Ingredient::query()->createOrFirst(
                 [
@@ -35,6 +41,8 @@ final readonly class CreateIngredient
                     'weight_grams' => $quantities->weightGrams,
                     'volume_millilitres' => $quantities->volumeMillilitres,
                     'piece_count' => $quantities->pieceCount,
+                    'store_id' => $placement->storeId,
+                    'store_section_id' => $placement->storeSectionId,
                 ],
             );
 

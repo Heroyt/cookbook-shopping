@@ -44,7 +44,7 @@ describe('Store Section UI', () => {
         );
         expect(dialog).toContain('router.delete');
         expect(dialog).toContain('Přiřazení k obchodům:');
-        expect(dialog).toContain('Umístění surovin: 0');
+        expect(dialog).toContain('storeSection.placementCount');
         expect(dialog).toContain('Tuto akci nelze vrátit zpět.');
         expect(list).toContain('<DeleteStoreSectionAlertDialog');
         expect(list).toContain(':store-section="storeSection"');

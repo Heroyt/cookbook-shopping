@@ -26,8 +26,30 @@ describe('Ingredient UI', () => {
             'IngredientController.update.form(ingredient.id)',
         );
         expect(edit).toContain('@success="open = false"');
-        expect(page).toContain('<CreateIngredientForm />');
-        expect(page).toContain('<IngredientList :ingredients="ingredients" />');
+        expect(page).toContain('<CreateIngredientForm :stores="stores" />');
+        expect(page).toContain(':stores="stores"');
+    });
+
+    it('renders accessible Store Placement selectors and non-colour placement output', async () => {
+        const stores = [
+            {
+                id: 1,
+                name: 'Tržiště',
+                sections: [{ id: 2, name: 'Zelenina', colour: '#16A34A' }],
+            },
+        ];
+        const html = await render(IngredientFormFields, { stores });
+        const source = readSource('./IngredientFormFields.vue');
+
+        expect(html).toContain('Umístění v obchodě');
+        expect(html).toContain('Obchod');
+        expect(html).toContain('Část obchodu');
+        expect(source).toContain(
+            '<SelectItem value="none">Bez obchodu</SelectItem>',
+        );
+        expect(html).toContain('name="store_id"');
+        expect(html).toContain('name="store_section_id"');
+        expect(html).toContain('Umístění slouží pouze');
     });
 
     it('renders accessible explicit metric units, description, and Czech guidance', async () => {
@@ -75,13 +97,24 @@ describe('Ingredient UI', () => {
     });
 
     it('renders an empty state and derived package quantities', async () => {
-        const emptyHtml = await render(IngredientList, { ingredients: [] });
+        const emptyHtml = await render(IngredientList, {
+            ingredients: [],
+            stores: [],
+        });
         const listHtml = await render(IngredientList, {
+            stores: [],
             ingredients: [
                 {
                     id: 1,
                     name: 'Celozrnný chléb',
+                    description: null,
+                    metricQuantity: '1100.000000',
+                    metricUnit: 'g',
+                    pieceCount: '10.000000',
                     quantities: ['1,1 kg', '10 ks'],
+                    storeId: 1,
+                    storeSectionId: 2,
+                    placement: 'Tržiště · Zelenina',
                 },
             ],
         });
@@ -90,6 +123,7 @@ describe('Ingredient UI', () => {
         expect(listHtml).toContain('Celozrnný chléb');
         expect(listHtml).toContain('1,1 kg');
         expect(listHtml).toContain('10 ks');
+        expect(listHtml).toContain('Tržiště · Zelenina');
     });
 
     it('adds Ingredients to primary navigation through a generated route', () => {

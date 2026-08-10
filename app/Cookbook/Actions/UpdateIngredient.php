@@ -15,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 final readonly class UpdateIngredient
 {
-    public function __construct(private CurrentFamilyScope $currentFamilyScope) {}
+    public function __construct(
+        private CurrentFamilyScope $currentFamilyScope,
+        private ResolveIngredientStorePlacement $resolveIngredientStorePlacement,
+    ) {}
 
     public function handle(
         User $user,
@@ -23,15 +26,18 @@ final readonly class UpdateIngredient
         string $name,
         ?string $description,
         IngredientPackageQuantities $quantities,
+        ?int $storeId,
+        ?int $storeSectionId,
     ): Ingredient {
         return $this->currentFamilyScope->within(
             $user,
-            fn (Family $family): Ingredient => DB::transaction(function () use ($family, $ingredientId, $name, $description, $quantities): Ingredient {
+            fn (Family $family): Ingredient => DB::transaction(function () use ($family, $ingredientId, $name, $description, $quantities, $storeId, $storeSectionId): Ingredient {
                 $ingredient = Ingredient::query()
                     ->whereBelongsTo($family)
                     ->whereKey($ingredientId)
                     ->lockForUpdate()
                     ->firstOrFail();
+                $placement = $this->resolveIngredientStorePlacement->handle($family, $storeId, $storeSectionId);
 
                 $ingredient->fill([
                     'name' => $name,
@@ -39,6 +45,8 @@ final readonly class UpdateIngredient
                     'weight_grams' => $quantities->weightGrams,
                     'volume_millilitres' => $quantities->volumeMillilitres,
                     'piece_count' => $quantities->pieceCount,
+                    'store_id' => $placement->storeId,
+                    'store_section_id' => $placement->storeSectionId,
                 ]);
 
                 try {

@@ -16,9 +16,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { IngredientSummary } from '@/types';
+import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
-defineProps<{ ingredients: IngredientSummary[] }>();
+defineProps<{
+    ingredients: IngredientSummary[];
+    stores: IngredientPlacementStore[];
+}>();
 </script>
 
 <template>
@@ -40,6 +43,7 @@ defineProps<{ ingredients: IngredientSummary[] }>();
                 <TableHead>Název</TableHead>
                 <TableHead>Obsah balení</TableHead>
                 <TableHead>Popis</TableHead>
+                <TableHead>Umístění</TableHead>
                 <TableHead class="text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
@@ -59,8 +63,14 @@ defineProps<{ ingredients: IngredientSummary[] }>();
                 <TableCell>{{
                     ingredient.description || 'Bez popisu'
                 }}</TableCell>
+                <TableCell>{{
+                    ingredient.placement || 'Bez obchodu'
+                }}</TableCell>
                 <TableCell class="text-right">
-                    <EditIngredientDialog :ingredient="ingredient" />
+                    <EditIngredientDialog
+                        :ingredient="ingredient"
+                        :stores="stores"
+                    />
                 </TableCell>
             </TableRow>
         </TableBody>

@@ -10,9 +10,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { index } from '@/routes/ingredients';
-import type { IngredientSummary } from '@/types';
+import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
-defineProps<{ ingredients: IngredientSummary[] }>();
+defineProps<{
+    ingredients: IngredientSummary[];
+    stores: IngredientPlacementStore[];
+}>();
 
 defineOptions({
     layout: {
@@ -46,7 +49,7 @@ defineOptions({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <CreateIngredientForm />
+                    <CreateIngredientForm :stores="stores" />
                 </CardContent>
             </Card>
 
@@ -58,7 +61,10 @@ defineOptions({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <IngredientList :ingredients="ingredients" />
+                    <IngredientList
+                        :ingredients="ingredients"
+                        :stores="stores"
+                    />
                 </CardContent>
             </Card>
         </div>

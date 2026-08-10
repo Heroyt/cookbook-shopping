@@ -2,6 +2,9 @@
 import { Form } from '@inertiajs/vue3';
 import IngredientController from '@/actions/App/Cookbook/Http/Controllers/IngredientController';
 import IngredientFormFields from '@/components/ingredients/IngredientFormFields.vue';
+import type { IngredientPlacementStore } from '@/types';
+
+defineProps<{ stores: IngredientPlacementStore[] }>();
 </script>
 
 <template>
@@ -10,6 +13,10 @@ import IngredientFormFields from '@/components/ingredients/IngredientFormFields.
         reset-on-success
         v-slot="{ errors, processing }"
     >
-        <IngredientFormFields :errors="errors" :processing="processing" />
+        <IngredientFormFields
+            :errors="errors"
+            :processing="processing"
+            :stores="stores"
+        />
     </Form>
 </template>

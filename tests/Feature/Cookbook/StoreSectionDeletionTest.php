@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Cookbook;
 
+use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\Models\Family;
@@ -127,6 +128,10 @@ final class StoreSectionDeletionTest extends TestCase
         $firstStore->storeSections()->attach($storeSection, ['position' => 0]);
         $secondStore->storeSections()->attach($storeSection, ['position' => 0]);
         $otherFamilyStore->storeSections()->attach($storeSection, ['position' => 0]);
+        Ingredient::factory()->for($family)->create([
+            'store_id' => $firstStore->id,
+            'store_section_id' => $storeSection->id,
+        ]);
 
         $this
             ->actingAs($user)
@@ -134,7 +139,8 @@ final class StoreSectionDeletionTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
                 ->where('storeSections.0.id', $storeSection->id)
-                ->where('storeSections.0.associationCount', 2));
+                ->where('storeSections.0.associationCount', 2)
+                ->where('storeSections.0.placementCount', 1));
     }
 
     public function test_deletion_uses_only_the_authenticated_users_current_family(): void

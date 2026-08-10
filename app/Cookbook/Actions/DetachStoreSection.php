@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Actions;
 
+use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\CurrentFamilyScope;
@@ -29,6 +30,11 @@ final readonly class DetachStoreSection
                 ->firstOrFail();
 
             $store->storeSections()->whereKey($storeSection->id)->firstOrFail();
+            Ingredient::query()
+                ->whereBelongsTo($family)
+                ->where('store_id', $store->id)
+                ->where('store_section_id', $storeSection->id)
+                ->update(['store_section_id' => null]);
             $store->removeStoreSectionAssociation($storeSection);
         });
     }

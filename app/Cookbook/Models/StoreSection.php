@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -42,6 +43,12 @@ final class StoreSection extends Model
     {
         return $this->belongsToMany(Store::class)
             ->withPivot('position');
+    }
+
+    /** @return HasMany<Ingredient, $this> */
+    public function ingredients(): HasMany
+    {
+        return $this->hasMany(Ingredient::class);
     }
 
     protected static function newFactory(): StoreSectionFactory

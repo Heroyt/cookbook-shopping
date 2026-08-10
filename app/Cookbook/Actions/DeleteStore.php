@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Actions;
 
+use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Store;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
@@ -16,11 +17,18 @@ final readonly class DeleteStore
     public function handle(User $user, int $storeId): void
     {
         $this->currentFamilyScope->within($user, function (Family $family) use ($storeId): void {
-            Store::query()
+            $store = Store::query()
                 ->whereBelongsTo($family)
                 ->whereKey($storeId)
-                ->firstOrFail()
-                ->delete();
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            Ingredient::query()
+                ->whereBelongsTo($family)
+                ->where('store_id', $store->id)
+                ->update(['store_id' => null, 'store_section_id' => null]);
+
+            $store->delete();
         });
     }
 }
