@@ -39,8 +39,14 @@ final class StoreSectionStoreRequest extends AuthenticatedRequest
 
     protected function prepareForValidation(): void
     {
+        $name = $this->input('name');
+
+        if ( ! is_string($name)) {
+            return;
+        }
+
         $this->merge([
-            'name' => NormalizedName::from($this->string('name')->toString())->display,
+            'name' => NormalizedName::from($name)->display,
         ]);
     }
 }

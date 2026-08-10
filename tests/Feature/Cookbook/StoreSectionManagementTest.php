@@ -181,6 +181,10 @@ final class StoreSectionManagementTest extends TestCase
             ->assertSessionHasErrors('name');
         $this
             ->actingAs($user)
+            ->post(route('store-sections.store'), ['name' => ['Zelenina'], 'colour' => '#123456'])
+            ->assertSessionHasErrors('name');
+        $this
+            ->actingAs($user)
             ->post(route('store-sections.store'), ['name' => 'Zelenina'])
             ->assertSessionHasErrors('colour');
 
