@@ -37,6 +37,12 @@ final readonly class UpdateIngredient
                     ->whereKey($ingredientId)
                     ->lockForUpdate()
                     ->firstOrFail();
+
+                if ($ingredient->archived_at !== null) {
+                    throw ValidationException::withMessages([
+                        'ingredient' => __('Restore the Ingredient before editing it.'),
+                    ]);
+                }
                 $placement = $this->resolveIngredientStorePlacement->handle($family, $storeId, $storeSectionId);
 
                 $ingredient->fill([

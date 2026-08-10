@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { WheatIcon } from '@lucide/vue';
+import ArchiveIngredientAlertDialog from '@/components/ingredients/ArchiveIngredientAlertDialog.vue';
 import EditIngredientDialog from '@/components/ingredients/EditIngredientDialog.vue';
+import RestoreIngredientButton from '@/components/ingredients/RestoreIngredientButton.vue';
+import { Badge } from '@/components/ui/badge';
 import {
     Empty,
     EmptyDescription,
@@ -49,7 +52,14 @@ defineProps<{
         </TableHeader>
         <TableBody>
             <TableRow v-for="ingredient in ingredients" :key="ingredient.id">
-                <TableCell>{{ ingredient.name }}</TableCell>
+                <TableCell>
+                    <div class="flex items-center gap-2">
+                        <span>{{ ingredient.name }}</span>
+                        <Badge v-if="ingredient.archived" variant="secondary">
+                            Archivovaná
+                        </Badge>
+                    </div>
+                </TableCell>
                 <TableCell>
                     <ul class="flex flex-wrap gap-x-3 gap-y-1">
                         <li
@@ -67,10 +77,21 @@ defineProps<{
                     ingredient.placement || 'Bez obchodu'
                 }}</TableCell>
                 <TableCell class="text-right">
-                    <EditIngredientDialog
-                        :ingredient="ingredient"
-                        :stores="stores"
-                    />
+                    <div class="flex justify-end gap-2">
+                        <RestoreIngredientButton
+                            v-if="ingredient.archived"
+                            :ingredient="ingredient"
+                        />
+                        <template v-else>
+                            <EditIngredientDialog
+                                :ingredient="ingredient"
+                                :stores="stores"
+                            />
+                            <ArchiveIngredientAlertDialog
+                                :ingredient="ingredient"
+                            />
+                        </template>
+                    </div>
                 </TableCell>
             </TableRow>
         </TableBody>

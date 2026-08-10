@@ -12,6 +12,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('ingredients', [IngredientController::class, 'index'])->name('ingredients.index');
     Route::post('ingredients', [IngredientController::class, 'store'])->name('ingredients.store');
     Route::patch('ingredients/{ingredient}', [IngredientController::class, 'update'])->name('ingredients.update');
+    Route::patch('ingredients/{ingredient}/archive', [IngredientController::class, 'archive'])->name('ingredients.archive');
+    Route::patch('ingredients/{ingredient}/restore', [IngredientController::class, 'restore'])->name('ingredients.restore');
     Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
     Route::post('stores', [StoreController::class, 'store'])->name('stores.store');
     Route::patch('stores/{store}', [StoreController::class, 'update'])->name('stores.update');

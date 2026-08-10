@@ -9,6 +9,7 @@ export type IngredientSummary = {
     storeId: number | null;
     storeSectionId: number | null;
     placement: string | null;
+    archived: boolean;
 };
 
 export type IngredientPlacementStore = {

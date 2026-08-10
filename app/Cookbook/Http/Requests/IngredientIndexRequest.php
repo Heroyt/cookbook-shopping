@@ -6,12 +6,20 @@ namespace App\Cookbook\Http\Requests;
 
 use App\Http\Requests\AuthenticatedRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Validation\Rule;
 
 final class IngredientIndexRequest extends AuthenticatedRequest
 {
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
-        return [];
+        return ['filter' => ['sometimes', 'string', Rule::in(['active', 'archived', 'all'])]];
+    }
+
+    public function ingredientFilter(): string
+    {
+        $filter = $this->validated('filter', 'active');
+
+        return is_string($filter) ? $filter : 'active';
     }
 }

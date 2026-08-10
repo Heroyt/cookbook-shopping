@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import CreateIngredientForm from '@/components/ingredients/CreateIngredientForm.vue';
 import IngredientList from '@/components/ingredients/IngredientList.vue';
+import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -15,6 +16,7 @@ import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 defineProps<{
     ingredients: IngredientSummary[];
     stores: IngredientPlacementStore[];
+    filter: 'active' | 'archived' | 'all';
 }>();
 
 defineOptions({
@@ -61,6 +63,46 @@ defineOptions({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div
+                        class="mb-4 flex flex-wrap gap-2"
+                        aria-label="Filtr surovin"
+                    >
+                        <Button
+                            as-child
+                            size="sm"
+                            :variant="
+                                filter === 'active' ? 'default' : 'outline'
+                            "
+                        >
+                            <Link
+                                :href="index({ query: { filter: 'active' } })"
+                            >
+                                Aktivní
+                            </Link>
+                        </Button>
+                        <Button
+                            as-child
+                            size="sm"
+                            :variant="
+                                filter === 'archived' ? 'default' : 'outline'
+                            "
+                        >
+                            <Link
+                                :href="index({ query: { filter: 'archived' } })"
+                            >
+                                Archivované
+                            </Link>
+                        </Button>
+                        <Button
+                            as-child
+                            size="sm"
+                            :variant="filter === 'all' ? 'default' : 'outline'"
+                        >
+                            <Link :href="index({ query: { filter: 'all' } })">
+                                Všechny
+                            </Link>
+                        </Button>
+                    </div>
                     <IngredientList
                         :ingredients="ingredients"
                         :stores="stores"

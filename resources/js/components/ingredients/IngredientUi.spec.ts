@@ -26,8 +26,15 @@ describe('Ingredient UI', () => {
             'IngredientController.update.form(ingredient.id)',
         );
         expect(edit).toContain('@success="open = false"');
+        expect(readSource('./ArchiveIngredientAlertDialog.vue')).toContain(
+            'IngredientController.archive(ingredient.id)',
+        );
+        expect(readSource('./RestoreIngredientButton.vue')).toContain(
+            'IngredientController.restore(ingredient.id)',
+        );
         expect(page).toContain('<CreateIngredientForm :stores="stores" />');
         expect(page).toContain(':stores="stores"');
+        expect(page).toContain("filter: 'archived'");
     });
 
     it('renders accessible Store Placement selectors and non-colour placement output', async () => {
@@ -115,6 +122,7 @@ describe('Ingredient UI', () => {
                     storeId: 1,
                     storeSectionId: 2,
                     placement: 'Tržiště · Zelenina',
+                    archived: true,
                 },
             ],
         });
@@ -124,6 +132,9 @@ describe('Ingredient UI', () => {
         expect(listHtml).toContain('1,1 kg');
         expect(listHtml).toContain('10 ks');
         expect(listHtml).toContain('Tržiště · Zelenina');
+        expect(listHtml).toContain('Archivovaná');
+        expect(listHtml).toContain('Obnovit');
+        expect(listHtml).not.toContain('Upravit');
     });
 
     it('adds Ingredients to primary navigation through a generated route', () => {

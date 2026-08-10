@@ -26,10 +26,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property int|null $store_id
  * @property int|null $store_section_id
+ * @property Carbon|null $archived_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['family_id', 'name', 'weight_grams', 'volume_millilitres', 'piece_count', 'description', 'store_id', 'store_section_id'])]
+#[Fillable(['family_id', 'name', 'weight_grams', 'volume_millilitres', 'piece_count', 'description', 'store_id', 'store_section_id', 'archived_at'])]
 final class Ingredient extends Model
 {
     /** @use HasFactory<IngredientFactory> */
@@ -87,6 +88,7 @@ final class Ingredient extends Model
             'weight_grams' => 'decimal:6',
             'volume_millilitres' => 'decimal:6',
             'piece_count' => 'decimal:6',
+            'archived_at' => 'datetime',
         ];
     }
 }
