@@ -2,6 +2,7 @@
 import { StoreIcon } from '@lucide/vue';
 import DeleteStoreAlertDialog from '@/components/stores/DeleteStoreAlertDialog.vue';
 import RenameStoreDialog from '@/components/stores/RenameStoreDialog.vue';
+import StoreSectionOrderManager from '@/components/stores/StoreSectionOrderManager.vue';
 import {
     Empty,
     EmptyDescription,
@@ -17,9 +18,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { StoreSummary } from '@/types';
+import type { StoreSectionSummary, StoreSummary } from '@/types';
 
-defineProps<{ stores: StoreSummary[] }>();
+defineProps<{
+    stores: StoreSummary[];
+    storeSections: StoreSectionSummary[];
+}>();
 </script>
 
 <template>
@@ -39,12 +43,19 @@ defineProps<{ stores: StoreSummary[] }>();
         <TableHeader>
             <TableRow>
                 <TableHead>Název</TableHead>
+                <TableHead>Části a pořadí</TableHead>
                 <TableHead class="text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
             <TableRow v-for="store in stores" :key="store.id">
                 <TableCell>{{ store.name }}</TableCell>
+                <TableCell>
+                    <StoreSectionOrderManager
+                        :store="store"
+                        :store-sections="storeSections"
+                    />
+                </TableCell>
                 <TableCell class="text-right">
                     <div class="flex justify-end gap-2">
                         <RenameStoreDialog :store="store" />

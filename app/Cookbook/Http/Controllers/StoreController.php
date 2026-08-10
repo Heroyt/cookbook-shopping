@@ -16,9 +16,11 @@ use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use LogicException;
 
 final class StoreController extends Controller
 {
@@ -36,12 +38,28 @@ final class StoreController extends Controller
             fn (Family $family): array => [
                 'stores' => Store::query()
                     ->whereBelongsTo($family)
-                    ->select(['id', 'name'])
+                    ->select(['id', 'name', 'section_order_version'])
+                    ->with('storeSections:id,name,colour')
                     ->orderBy('name')
                     ->get()
                     ->map(fn (Store $store): array => [
                         'id' => $store->id,
                         'name' => $store->name,
+                        'sectionOrderVersion' => $store->section_order_version,
+                        'sections' => $store->storeSections->map(function (StoreSection $storeSection): array {
+                            $pivot = $storeSection->getRelation('pivot');
+
+                            if ( ! $pivot instanceof Pivot) {
+                                throw new LogicException('Store Section association metadata is unavailable.');
+                            }
+
+                            return [
+                                'id' => $storeSection->id,
+                                'name' => $storeSection->name,
+                                'colour' => $storeSection->colour,
+                                'position' => $pivot->getAttribute('position'),
+                            ];
+                        }),
                     ]),
                 'storeSections' => StoreSection::query()
                     ->whereBelongsTo($family)

@@ -17,8 +17,14 @@
     "Store deleted.": "Obchod byl smazán.",
     "Store renamed.": "Obchod byl přejmenován.",
     "Store Section created.": "Část obchodu byla vytvořena.",
+    "Store Section associated.": "Část obchodu byla přiřazena.",
+    "Store Section removed.": "Část obchodu byla odebrána.",
+    "Store Section order saved.": "Pořadí částí obchodu bylo uloženo.",
     "That User already belongs to the Current Family.": "Tento uživatel už patří do aktuální rodiny.",
+    "This Store Section is already associated with the Store.": "Tato část obchodu už je k obchodu přiřazena.",
     "The Family name does not match.": "Název rodiny se neshoduje.",
+    "The Store Section order changed. Review the fresh order and try again.": "Pořadí částí obchodu se mezitím změnilo. Zkontrolujte nové pořadí a zkuste to znovu.",
     "The colour must be a six-digit hexadecimal value.": "Barva musí být šestimístný hexadecimální kód.",
-    "The final Family Membership cannot be removed. Delete the Family instead.": "Poslední členství v rodině nelze odebrat. Místo toho rodinu smažte."
+    "The final Family Membership cannot be removed. Delete the Family instead.": "Poslední členství v rodině nelze odebrat. Místo toho rodinu smažte.",
+    "The order must contain every associated Store Section exactly once.": "Pořadí musí obsahovat právě jednou všechny přiřazené části obchodu."
 }

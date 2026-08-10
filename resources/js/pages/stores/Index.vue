@@ -63,7 +63,10 @@ defineOptions({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <StoreList :stores="stores" />
+                    <StoreList
+                        :stores="stores"
+                        :store-sections="storeSections"
+                    />
                 </CardContent>
             </Card>
         </div>
