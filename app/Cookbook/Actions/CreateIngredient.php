@@ -16,9 +16,13 @@ final readonly class CreateIngredient
 {
     public function __construct(private CurrentFamilyScope $currentFamilyScope) {}
 
-    public function handle(User $user, string $name, IngredientPackageQuantities $quantities): Ingredient
-    {
-        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $quantities): Ingredient {
+    public function handle(
+        User $user,
+        string $name,
+        ?string $description,
+        IngredientPackageQuantities $quantities,
+    ): Ingredient {
+        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $description, $quantities): Ingredient {
             $normalizedName = NormalizedName::from($name);
             $ingredient = Ingredient::query()->createOrFirst(
                 [
@@ -27,6 +31,7 @@ final readonly class CreateIngredient
                 ],
                 [
                     'name' => $normalizedName->display,
+                    'description' => $description,
                     'weight_grams' => $quantities->weightGrams,
                     'volume_millilitres' => $quantities->volumeMillilitres,
                     'piece_count' => $quantities->pieceCount,

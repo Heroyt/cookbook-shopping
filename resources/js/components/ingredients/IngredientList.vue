@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { WheatIcon } from '@lucide/vue';
+import EditIngredientDialog from '@/components/ingredients/EditIngredientDialog.vue';
 import {
     Empty,
     EmptyDescription,
@@ -38,6 +39,8 @@ defineProps<{ ingredients: IngredientSummary[] }>();
             <TableRow>
                 <TableHead>Název</TableHead>
                 <TableHead>Obsah balení</TableHead>
+                <TableHead>Popis</TableHead>
+                <TableHead class="text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
@@ -52,6 +55,12 @@ defineProps<{ ingredients: IngredientSummary[] }>();
                             {{ quantity }}
                         </li>
                     </ul>
+                </TableCell>
+                <TableCell>{{
+                    ingredient.description || 'Bez popisu'
+                }}</TableCell>
+                <TableCell class="text-right">
+                    <EditIngredientDialog :ingredient="ingredient" />
                 </TableCell>
             </TableRow>
         </TableBody>

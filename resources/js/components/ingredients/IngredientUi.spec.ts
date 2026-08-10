@@ -15,26 +15,38 @@ const readSource = (relativePath: string): string =>
     readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 
 describe('Ingredient UI', () => {
-    it('wires the create form to its generated action and thin page composition', () => {
+    it('wires create and edit forms to generated actions and thin page composition', () => {
         const form = readSource('./CreateIngredientForm.vue');
+        const edit = readSource('./EditIngredientDialog.vue');
         const page = readSource('../../pages/ingredients/Index.vue');
 
         expect(form).toContain('IngredientController.store.form()');
         expect(form).toContain('reset-on-success');
+        expect(edit).toContain(
+            'IngredientController.update.form(ingredient.id)',
+        );
+        expect(edit).toContain('@success="open = false"');
         expect(page).toContain('<CreateIngredientForm />');
         expect(page).toContain('<IngredientList :ingredients="ingredients" />');
     });
 
-    it('renders accessible canonical package quantity inputs with Czech guidance', async () => {
+    it('renders accessible explicit metric units, description, and Czech guidance', async () => {
         const html = await render(IngredientFormFields);
+        const source = readSource('./IngredientFormFields.vue');
 
         expect(html).toContain('Název suroviny');
-        expect(html).toContain('Hmotnost balení (g)');
-        expect(html).toContain('Objem balení (ml)');
+        expect(html).toContain('Metrické množství');
+        expect(html).toContain('Jednotka');
+        expect(source).toContain('<SelectItem value="mg">');
+        expect(source).toContain('<SelectItem value="kg">');
+        expect(source).toContain('<SelectItem value="cl">');
+        expect(source).toContain('<SelectItem value="l">');
         expect(html).toContain('Počet kusů v balení');
+        expect(html).toContain('Popis');
         expect(html).toContain('Vyplňte alespoň jednu hodnotu.');
         expect(html).toContain('počet kusů může být jedinou hodnotou');
-        expect(html).toContain('name="weight_grams"');
+        expect(html).toContain('name="metric_quantity"');
+        expect(html).toContain('name="metric_unit"');
         expect(html).toContain('step="0.000001"');
         expect(html).toContain('aria-invalid="false"');
     });
@@ -43,17 +55,21 @@ describe('Ingredient UI', () => {
         const html = await render(IngredientFormFields, {
             errors: {
                 name: 'Surovina s tímto názvem už v aktuální rodině existuje.',
-                weight_grams: 'Hmotnost a objem balení nelze zadat současně.',
-                quantities: 'Zadejte hmotnost, objem nebo počet kusů v balení.',
+                metric_quantity:
+                    'Množství po převodu musí mít nejvýše šest desetinných míst.',
+                quantities:
+                    'Zadejte metrické množství nebo počet kusů v balení.',
             },
         });
 
         expect(html).toContain(
             'Surovina s tímto názvem už v aktuální rodině existuje.',
         );
-        expect(html).toContain('Hmotnost a objem balení nelze zadat současně.');
         expect(html).toContain(
-            'Zadejte hmotnost, objem nebo počet kusů v balení.',
+            'Množství po převodu musí mít nejvýše šest desetinných míst.',
+        );
+        expect(html).toContain(
+            'Zadejte metrické množství nebo počet kusů v balení.',
         );
         expect(html).toContain('aria-invalid="true"');
     });

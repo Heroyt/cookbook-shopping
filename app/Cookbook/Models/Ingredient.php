@@ -23,10 +23,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $weight_grams
  * @property string|null $volume_millilitres
  * @property string|null $piece_count
+ * @property string|null $description
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['family_id', 'name', 'weight_grams', 'volume_millilitres', 'piece_count'])]
+#[Fillable(['family_id', 'name', 'weight_grams', 'volume_millilitres', 'piece_count', 'description'])]
 final class Ingredient extends Model
 {
     /** @use HasFactory<IngredientFactory> */

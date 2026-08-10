@@ -10,23 +10,42 @@ import {
     FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import type { IngredientSummary } from '@/types';
 
 type IngredientField =
     | 'name'
-    | 'weight_grams'
-    | 'volume_millilitres'
+    | 'metric_quantity'
+    | 'metric_unit'
     | 'piece_count'
+    | 'description'
     | 'quantities';
 
 withDefaults(
     defineProps<{
         errors?: Partial<Record<IngredientField, string>>;
         processing?: boolean;
+        ingredient?: IngredientSummary | null;
+        idPrefix?: string;
+        submitLabel?: string;
+        showSubmit?: boolean;
     }>(),
     {
         errors: () => ({}),
         processing: false,
+        ingredient: null,
+        idPrefix: 'ingredient-create',
+        submitLabel: 'Vytvořit surovinu',
+        showSubmit: true,
     },
 );
 </script>
@@ -34,14 +53,15 @@ withDefaults(
 <template>
     <FieldGroup>
         <Field :data-invalid="Boolean(errors.name)">
-            <FieldLabel for="ingredient-name">Název suroviny</FieldLabel>
+            <FieldLabel :for="`${idPrefix}-name`">Název suroviny</FieldLabel>
             <Input
-                id="ingredient-name"
+                :id="`${idPrefix}-name`"
                 name="name"
                 required
                 maxlength="255"
                 autocomplete="off"
                 placeholder="Celozrnný chléb"
+                :default-value="ingredient?.name"
                 :aria-invalid="Boolean(errors.name)"
             />
             <FieldDescription>
@@ -50,71 +70,99 @@ withDefaults(
             <FieldError :errors="[errors.name]" />
         </Field>
 
+        <Field :data-invalid="Boolean(errors.description)">
+            <FieldLabel :for="`${idPrefix}-description`">Popis</FieldLabel>
+            <Textarea
+                :id="`${idPrefix}-description`"
+                name="description"
+                :rows="3"
+                placeholder="Volitelný popis konkrétního balení"
+                :default-value="ingredient?.description ?? ''"
+                :aria-invalid="Boolean(errors.description)"
+            />
+            <FieldError :errors="[errors.description]" />
+        </Field>
+
         <FieldSet>
             <FieldLegend variant="legend">Obsah balení</FieldLegend>
             <FieldDescription>
-                Vyplňte alespoň jednu hodnotu. Hmotnost a objem nelze zadat
-                současně; počet kusů může být jedinou hodnotou nebo doplnit
-                jednu z nich.
+                Vyplňte alespoň jednu hodnotu. Metrické množství zadejte s
+                jednotkou; počet kusů může být jedinou hodnotou nebo jej
+                doplnit.
             </FieldDescription>
             <FieldError :errors="[errors.quantities]" />
 
-            <Field :data-invalid="Boolean(errors.weight_grams)">
-                <FieldLabel for="ingredient-weight">
-                    Hmotnost balení (g)
-                </FieldLabel>
-                <Input
-                    id="ingredient-weight"
-                    name="weight_grams"
-                    type="number"
-                    inputmode="decimal"
-                    min="0.000001"
-                    step="0.000001"
-                    placeholder="500"
-                    :aria-invalid="Boolean(errors.weight_grams)"
-                />
-                <FieldError :errors="[errors.weight_grams]" />
-            </Field>
+            <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_8rem]">
+                <Field :data-invalid="Boolean(errors.metric_quantity)">
+                    <FieldLabel :for="`${idPrefix}-metric-quantity`">
+                        Metrické množství
+                    </FieldLabel>
+                    <Input
+                        :id="`${idPrefix}-metric-quantity`"
+                        name="metric_quantity"
+                        type="number"
+                        inputmode="decimal"
+                        min="0.000001"
+                        step="0.000001"
+                        placeholder="500"
+                        :default-value="ingredient?.metricQuantity ?? ''"
+                        :aria-invalid="Boolean(errors.metric_quantity)"
+                    />
+                    <FieldError :errors="[errors.metric_quantity]" />
+                </Field>
 
-            <Field :data-invalid="Boolean(errors.volume_millilitres)">
-                <FieldLabel for="ingredient-volume">
-                    Objem balení (ml)
-                </FieldLabel>
-                <Input
-                    id="ingredient-volume"
-                    name="volume_millilitres"
-                    type="number"
-                    inputmode="decimal"
-                    min="0.000001"
-                    step="0.000001"
-                    placeholder="1000"
-                    :aria-invalid="Boolean(errors.volume_millilitres)"
-                />
-                <FieldError :errors="[errors.volume_millilitres]" />
-            </Field>
+                <Field :data-invalid="Boolean(errors.metric_unit)">
+                    <FieldLabel :for="`${idPrefix}-metric-unit`">
+                        Jednotka
+                    </FieldLabel>
+                    <Select
+                        name="metric_unit"
+                        :default-value="ingredient?.metricUnit ?? 'g'"
+                    >
+                        <SelectTrigger
+                            :id="`${idPrefix}-metric-unit`"
+                            :aria-invalid="Boolean(errors.metric_unit)"
+                        >
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem value="mg">mg</SelectItem>
+                                <SelectItem value="g">g</SelectItem>
+                                <SelectItem value="kg">kg</SelectItem>
+                                <SelectItem value="ml">ml</SelectItem>
+                                <SelectItem value="cl">cl</SelectItem>
+                                <SelectItem value="l">l</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <FieldError :errors="[errors.metric_unit]" />
+                </Field>
+            </div>
 
             <Field :data-invalid="Boolean(errors.piece_count)">
-                <FieldLabel for="ingredient-pieces">
+                <FieldLabel :for="`${idPrefix}-pieces`">
                     Počet kusů v balení
                 </FieldLabel>
                 <Input
-                    id="ingredient-pieces"
+                    :id="`${idPrefix}-pieces`"
                     name="piece_count"
                     type="number"
                     inputmode="decimal"
                     min="0.000001"
                     step="0.000001"
                     placeholder="10"
+                    :default-value="ingredient?.pieceCount ?? ''"
                     :aria-invalid="Boolean(errors.piece_count)"
                 />
                 <FieldError :errors="[errors.piece_count]" />
             </Field>
         </FieldSet>
 
-        <Field orientation="horizontal">
+        <Field v-if="showSubmit" orientation="horizontal">
             <Button type="submit" :disabled="processing">
                 <Spinner v-if="processing" data-icon="inline-start" />
-                Vytvořit surovinu
+                {{ submitLabel }}
             </Button>
         </Field>
     </FieldGroup>
