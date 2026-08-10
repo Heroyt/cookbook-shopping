@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Foundation\Vite;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
@@ -13,6 +14,15 @@ final class AuthenticationTest extends TestCase
 {
     public function test_login_screen_can_be_rendered(): void
     {
+        $response = $this->get(route('login'));
+
+        $response->assertOk();
+    }
+
+    public function test_login_screen_can_be_rendered_without_built_vite_assets_in_testing(): void
+    {
+        app(Vite::class)->useBuildDirectory('missing-build-for-tests');
+
         $response = $this->get(route('login'));
 
         $response->assertOk();

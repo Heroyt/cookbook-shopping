@@ -29,18 +29,18 @@ final class JenkinsPipelineTest extends TestCase
         );
     }
 
-    public function test_frontend_assets_are_built_during_preparation(): void
+    public function test_node_only_preparation_does_not_run_the_php_dependent_vite_build(): void
     {
-        $this->assertStringContainsString(
+        $this->assertStringNotContainsString(
             "command: 'pnpm install --frozen-lockfile && pnpm build'",
             $this->pipeline,
         );
     }
 
-    public function test_vitest_can_load_the_vite_configuration_in_ci(): void
+    public function test_vitest_uses_its_dedicated_configuration_in_ci(): void
     {
         $this->assertStringContainsString(
-            "testCommand: 'LARAVEL_BYPASS_ENV_CHECK=1 pnpm test:node --maxWorkers=1 --testTimeout=10000'",
+            "testCommand: 'pnpm test:node --maxWorkers=1 --testTimeout=10000'",
             $this->pipeline,
         );
     }
