@@ -13,4 +13,5 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 });
 
 require __DIR__ . '/family-access.php';
+require __DIR__ . '/cookbook.php';
 require __DIR__ . '/settings.php';
