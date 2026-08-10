@@ -3,10 +3,12 @@ import type { UrlMethodPair } from '@inertiajs/core';
 import { router } from '@inertiajs/vue3';
 import { usePasskeyVerify } from '@laravel/passkeys/vue';
 import { KeyRound } from '@lucide/vue';
+import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
+import { localizePasskeyError } from '@/lib/passkeyError';
 
 type Props = {
     routes?: {
@@ -33,6 +35,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
         router.visit(response.redirect ?? '/dashboard');
     },
 });
+const localizedError = computed(() => localizePasskeyError(error.value));
 </script>
 
 <template>
@@ -49,13 +52,13 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
                 <KeyRound v-else class="h-4 w-4" />
                 {{
                     isLoading
-                        ? (props.loadingLabel ?? 'Authenticating...')
-                        : (props.label ?? 'Sign in with a passkey')
+                        ? (props.loadingLabel ?? 'Ověřování…')
+                        : (props.label ?? 'Přihlásit se přístupovým klíčem')
                 }}
             </Button>
 
-            <div v-if="error" class="text-center">
-                <InputError :message="error" />
+            <div v-if="localizedError" class="text-center">
+                <InputError :message="localizedError" />
             </div>
         </div>
 
@@ -65,7 +68,7 @@ const { verify, isLoading, error, isSupported } = usePasskeyVerify({
             </div>
             <div class="relative flex justify-center text-xs uppercase">
                 <span class="bg-background px-2 text-muted-foreground">
-                    {{ props.separator ?? 'Or continue with email' }}
+                    {{ props.separator ?? 'Nebo pokračujte e-mailem' }}
                 </span>
             </div>
         </div>

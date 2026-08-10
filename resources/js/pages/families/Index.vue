@@ -34,7 +34,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Families',
+                title: 'Rodiny',
                 href: index(),
             },
         ],
@@ -43,20 +43,20 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Families" />
+    <Head title="Rodiny" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold tracking-tight">Families</h1>
+                <h1 class="text-2xl font-semibold tracking-tight">Rodiny</h1>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Manage the members and lifecycle of your Current Family.
+                    Spravujte členy a nastavení aktuální rodiny.
                 </p>
             </div>
             <Button as-child>
                 <Link :href="create()">
                     <PlusIcon />
-                    Create Family
+                    Vytvořit rodinu
                 </Link>
             </Button>
         </div>
@@ -66,14 +66,14 @@ defineOptions({
                 <EmptyMedia variant="icon">
                     <UsersRoundIcon />
                 </EmptyMedia>
-                <EmptyTitle>No Family yet</EmptyTitle>
+                <EmptyTitle>Zatím nemáte žádnou rodinu</EmptyTitle>
                 <EmptyDescription>
-                    Create a Family to start a shared cookbook workspace.
+                    Vytvořte rodinu a začněte sdílet společnou kuchařku.
                 </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
                 <Button as-child>
-                    <Link :href="create()">Create your first Family</Link>
+                    <Link :href="create()">Vytvořit první rodinu</Link>
                 </Button>
             </EmptyContent>
         </Empty>
@@ -81,16 +81,16 @@ defineOptions({
         <template v-else>
             <Alert v-if="membershipError" variant="destructive">
                 <CircleAlertIcon />
-                <AlertTitle>Membership could not be removed</AlertTitle>
+                <AlertTitle>Členství se nepodařilo odebrat</AlertTitle>
                 <AlertDescription>{{ membershipError }}</AlertDescription>
             </Alert>
 
             <div class="grid items-start gap-6 lg:grid-cols-3">
                 <Card class="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>{{ family.name }} members</CardTitle>
+                        <CardTitle>Členové rodiny {{ family.name }}</CardTitle>
                         <CardDescription>
-                            Every Family member has the same permissions.
+                            Všichni členové rodiny mají stejná oprávnění.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -103,9 +103,10 @@ defineOptions({
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Add a member</CardTitle>
+                        <CardTitle>Přidat člena</CardTitle>
                         <CardDescription>
-                            Add an existing User to {{ family.name }}.
+                            Přidejte existujícího uživatele do rodiny
+                            {{ family.name }}.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -116,10 +117,10 @@ defineOptions({
 
             <Card class="border-destructive/40">
                 <CardHeader>
-                    <CardTitle>Delete Family</CardTitle>
+                    <CardTitle>Smazat rodinu</CardTitle>
                     <CardDescription>
-                        Permanently delete {{ family.name }} and all data it
-                        owns.
+                        Trvale smažte rodinu {{ family.name }} a všechna její
+                        data.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

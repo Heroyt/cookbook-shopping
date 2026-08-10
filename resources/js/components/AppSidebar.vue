@@ -30,12 +30,12 @@ import type { NavItem } from '@/types';
 const page = usePage();
 const mainNavItems = computed<NavItem[]>(() => [
     {
-        title: 'Dashboard',
+        title: 'Přehled',
         href: dashboard(),
         icon: LayoutGrid,
     },
     {
-        title: 'Families',
+        title: 'Rodiny',
         href: familiesIndex(),
         icon: UsersRound,
     },
@@ -43,7 +43,7 @@ const mainNavItems = computed<NavItem[]>(() => [
         ? []
         : [
               {
-                  title: 'Stores',
+                  title: 'Obchody',
                   href: storesIndex(),
                   icon: StoreIcon,
               },
@@ -52,12 +52,12 @@ const mainNavItems = computed<NavItem[]>(() => [
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
+        title: 'Repozitář',
         href: 'https://github.com/laravel/vue-starter-kit',
         icon: FolderGit2,
     },
     {
-        title: 'Documentation',
+        title: 'Dokumentace',
         href: 'https://laravel.com/docs/starter-kits#vue',
         icon: BookOpen,
     },

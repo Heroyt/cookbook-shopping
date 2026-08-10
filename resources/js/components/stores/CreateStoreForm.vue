@@ -21,18 +21,18 @@ import { Spinner } from '@/components/ui/spinner';
     >
         <FieldGroup>
             <Field :data-invalid="Boolean(errors.name)">
-                <FieldLabel for="store-name">Store name</FieldLabel>
+                <FieldLabel for="store-name">Název obchodu</FieldLabel>
                 <Input
                     id="store-name"
                     name="name"
                     required
                     maxlength="255"
                     autocomplete="off"
-                    placeholder="Weekend Market"
+                    placeholder="Farmářský trh"
                     :aria-invalid="Boolean(errors.name)"
                 />
                 <FieldDescription>
-                    Store names are unique within the Current Family.
+                    Názvy obchodů musí být v aktuální rodině jedinečné.
                 </FieldDescription>
                 <FieldError :errors="[errors.name]" />
             </Field>
@@ -40,7 +40,7 @@ import { Spinner } from '@/components/ui/spinner';
             <Field orientation="horizontal">
                 <Button type="submit" :disabled="processing">
                     <Spinner v-if="processing" data-icon="inline-start" />
-                    Create Store
+                    Vytvořit obchod
                 </Button>
             </Field>
         </FieldGroup>

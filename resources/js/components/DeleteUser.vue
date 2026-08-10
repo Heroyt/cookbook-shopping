@@ -27,22 +27,22 @@ const passwordInput = useTemplateRef('passwordInput');
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Delete account"
-            description="Delete your account and Family Memberships"
+            title="Smazání účtu"
+            description="Smažte svůj účet a členství v rodinách"
         />
         <div
             class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
         >
             <div class="relative space-y-0.5 text-red-600 dark:text-red-100">
-                <p class="font-medium">Warning</p>
+                <p class="font-medium">Upozornění</p>
                 <p class="text-sm">
-                    Please proceed with caution, this cannot be undone.
+                    Pokračujte opatrně. Tuto akci nelze vrátit zpět.
                 </p>
             </div>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="destructive" data-test="delete-user-button"
-                        >Delete account</Button
+                        >Smazat účet</Button
                     >
                 </DialogTrigger>
                 <DialogContent>
@@ -58,37 +58,35 @@ const passwordInput = useTemplateRef('passwordInput');
                     >
                         <DialogHeader class="space-y-3">
                             <DialogTitle
-                                >Are you sure you want to delete your
-                                account?</DialogTitle
+                                >Opravdu chcete smazat svůj účet?</DialogTitle
                             >
                             <DialogDescription>
-                                Your account and Family Memberships will be
-                                permanently deleted. Shared Families keep their
-                                other members and data. Account deletion is not
-                                available while you are the final member of a
-                                Family. Use Family management to add another
-                                member or delete the Family first. Enter your
-                                password to confirm.
+                                Váš účet a členství v rodinách budou trvale
+                                smazány. Sdíleným rodinám zůstanou ostatní
+                                členové i data. Účet nelze smazat, pokud jste
+                                posledním členem některé rodiny. Ve správě
+                                rodiny nejprve přidejte dalšího člena nebo
+                                rodinu smažte. Potvrďte akci zadáním hesla.
                             </DialogDescription>
                         </DialogHeader>
 
                         <Alert v-if="errors.account" variant="destructive">
                             <CircleAlertIcon />
-                            <AlertTitle>Family resolution required</AlertTitle>
+                            <AlertTitle
+                                >Nejprve vyřešte členství v rodině</AlertTitle
+                            >
                             <AlertDescription>
                                 {{ errors.account }}
                             </AlertDescription>
                         </Alert>
 
                         <div class="grid gap-2">
-                            <Label for="password" class="sr-only"
-                                >Password</Label
-                            >
+                            <Label for="password" class="sr-only">Heslo</Label>
                             <PasswordInput
                                 id="password"
                                 name="password"
                                 ref="passwordInput"
-                                placeholder="Password"
+                                placeholder="Heslo"
                             />
                             <InputError :message="errors.password" />
                         </div>
@@ -104,7 +102,7 @@ const passwordInput = useTemplateRef('passwordInput');
                                         }
                                     "
                                 >
-                                    Cancel
+                                    Zrušit
                                 </Button>
                             </DialogClose>
 
@@ -114,7 +112,7 @@ const passwordInput = useTemplateRef('passwordInput');
                                 :disabled="processing"
                                 data-test="confirm-delete-user-button"
                             >
-                                Delete account
+                                Smazat účet
                             </Button>
                         </DialogFooter>
                     </Form>

@@ -39,19 +39,21 @@ const deleteStore = (): void => {
         <AlertDialogTrigger as-child>
             <Button variant="ghost" size="sm">
                 <Trash2Icon data-icon="inline-start" />
-                Delete
+                Smazat
             </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Delete {{ store.name }}?</AlertDialogTitle>
+                <AlertDialogTitle
+                    >Smazat obchod {{ store.name }}?</AlertDialogTitle
+                >
                 <AlertDialogDescription>
-                    This permanently deletes the Store from the Current Family.
-                    This action cannot be undone.
+                    Obchod bude z aktuální rodiny trvale smazán. Tuto akci nelze
+                    vrátit zpět.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Zrušit</AlertDialogCancel>
                 <AlertDialogAction as-child>
                     <Button
                         type="button"
@@ -60,7 +62,7 @@ const deleteStore = (): void => {
                         @click="deleteStore"
                     >
                         <Spinner v-if="processing" data-icon="inline-start" />
-                        Delete Store
+                        Smazat obchod
                     </Button>
                 </AlertDialogAction>
             </AlertDialogFooter>

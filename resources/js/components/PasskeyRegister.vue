@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { usePasskeyRegister } from '@laravel/passkeys/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { localizePasskeyError } from '@/lib/passkeyError';
 
 const emit = defineEmits<{
     success: [];
@@ -29,7 +30,7 @@ const getDefaultPasskeyName = () => {
         { pattern: /Windows/, name: 'Windows' },
     ].find(({ pattern }) => pattern.test(ua))?.name;
 
-    return [browser, os].filter(Boolean).join(' on ') || '';
+    return [browser, os].filter(Boolean).join(' – ') || '';
 };
 
 const name = ref(getDefaultPasskeyName());
@@ -42,6 +43,7 @@ const { register, isLoading, error, isSupported } = usePasskeyRegister({
         emit('success');
     },
 });
+const localizedError = computed(() => localizePasskeyError(error.value));
 
 const handleSubmit = async (event: Event) => {
     event.preventDefault();
@@ -61,11 +63,11 @@ const handleCancel = () => {
 
 <template>
     <div v-if="!isSupported" class="text-sm text-muted-foreground">
-        Passkeys are not supported in this browser.
+        Tento prohlížeč nepodporuje přístupové klíče.
     </div>
 
     <Button v-else-if="!showForm" variant="outline" @click="showForm = true">
-        Add passkey
+        Přidat přístupový klíč
     </Button>
 
     <form
@@ -74,28 +76,30 @@ const handleCancel = () => {
         class="space-y-4 rounded-lg border border-border bg-muted/50 p-4"
     >
         <div class="grid gap-2">
-            <Label for="passkey-name">Passkey name</Label>
+            <Label for="passkey-name">Název přístupového klíče</Label>
             <Input
                 id="passkey-name"
                 type="text"
                 v-model="name"
-                placeholder="e.g., MacBook Pro, iPhone"
+                placeholder="např. MacBook Pro nebo iPhone"
                 class="mt-1 block w-full border-foreground/20"
                 autofocus
             />
             <p class="text-xs text-muted-foreground">
-                A name helps you identify this passkey later.
+                Podle názvu přístupový klíč později poznáte.
             </p>
         </div>
 
-        <InputError v-if="error" :message="error" />
+        <InputError v-if="localizedError" :message="localizedError" />
 
         <div class="flex gap-2">
             <Button type="submit" :disabled="isLoading || !name.trim()">
-                {{ isLoading ? 'Registering...' : 'Register passkey' }}
+                {{
+                    isLoading ? 'Registrace…' : 'Zaregistrovat přístupový klíč'
+                }}
             </Button>
             <Button type="button" variant="ghost" @click="handleCancel">
-                Cancel
+                Zrušit
             </Button>
         </div>
     </form>

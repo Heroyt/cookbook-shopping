@@ -14,7 +14,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Create a Family',
+                title: 'Vytvořit rodinu',
                 href: create(),
             },
         ],
@@ -23,17 +23,17 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Create a Family" />
+    <Head title="Vytvořit rodinu" />
 
-    <h1 class="sr-only">Create a Family</h1>
+    <h1 class="sr-only">Vytvořit rodinu</h1>
 
     <div class="flex flex-1 justify-center p-4 md:p-6">
         <Card class="h-fit w-full max-w-xl">
             <CardHeader>
-                <CardTitle>Create a Family</CardTitle>
+                <CardTitle>Vytvořit rodinu</CardTitle>
                 <CardDescription>
-                    Start a shared cookbook workspace. You will become its first
-                    ordinary member.
+                    Založte společný prostor pro rodinnou kuchařku. Stanete se
+                    jeho prvním členem.
                 </CardDescription>
             </CardHeader>
             <CardContent>

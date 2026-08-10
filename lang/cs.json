@@ -1,0 +1,21 @@
+{
+    "A Store with this name already exists in the Current Family.": "Obchod s tímto názvem už v aktuální rodině existuje.",
+    "Account deletion is unavailable while you are the final member of a Family. Add another member or delete the Family first.": "Účet nelze smazat, dokud jste posledním členem některé rodiny. Nejprve přidejte dalšího člena nebo rodinu smažte.",
+    "Current Family changed to :family.": "Aktuální rodina byla změněna na :family.",
+    "Family created.": "Rodina byla vytvořena.",
+    "Family deleted.": "Rodina byla smazána.",
+    "Family member added.": "Člen rodiny byl přidán.",
+    "Family Membership removed.": "Členství v rodině bylo odebráno.",
+    "Invalid credential format.": "Přihlašovací údaj má neplatný formát.",
+    "No registered User is available for that email.": "Pro tento e-mail není k dispozici žádný registrovaný uživatel.",
+    "Passkey registration session expired. Please try again.": "Platnost registrace přístupového klíče vypršela. Zkuste to znovu.",
+    "Passkey verification session expired. Please try again.": "Platnost ověření přístupového klíče vypršela. Zkuste to znovu.",
+    "Password updated.": "Heslo bylo změněno.",
+    "Profile updated.": "Profil byl aktualizován.",
+    "Store created.": "Obchod byl vytvořen.",
+    "Store deleted.": "Obchod byl smazán.",
+    "Store renamed.": "Obchod byl přejmenován.",
+    "That User already belongs to the Current Family.": "Tento uživatel už patří do aktuální rodiny.",
+    "The Family name does not match.": "Název rodiny se neshoduje.",
+    "The final Family Membership cannot be removed. Delete the Family instead.": "Poslední členství v rodině nelze odebrat. Místo toho rodinu smažte."
+}

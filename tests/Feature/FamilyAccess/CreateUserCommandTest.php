@@ -38,7 +38,7 @@ final class CreateUserCommandTest extends TestCase
         ])
             ->expectsQuestion('Password', 'safe-password')
             ->expectsQuestion('Confirm password', 'safe-password')
-            ->expectsOutputToContain('already been taken')
+            ->expectsOutputToContain('už byla použita')
             ->assertFailed();
 
         $this->assertDatabaseCount((new User())->getTable(), 1);

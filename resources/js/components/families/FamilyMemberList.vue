@@ -49,9 +49,9 @@ const removeMember = (member: FamilyMember): void => {
     <Table>
         <TableHeader>
             <TableRow>
-                <TableHead>Member</TableHead>
-                <TableHead class="hidden sm:table-cell">Email</TableHead>
-                <TableHead class="w-24 text-right">Action</TableHead>
+                <TableHead>Člen</TableHead>
+                <TableHead class="hidden sm:table-cell">E-mail</TableHead>
+                <TableHead class="w-24 text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>
@@ -71,7 +71,7 @@ const removeMember = (member: FamilyMember): void => {
                         variant="secondary"
                         class="mr-2"
                     >
-                        You
+                        Vy
                     </Badge>
 
                     <AlertDialog>
@@ -83,8 +83,8 @@ const removeMember = (member: FamilyMember): void => {
                             >
                                 {{
                                     member.id === authenticatedUserId
-                                        ? 'Leave'
-                                        : 'Remove'
+                                        ? 'Opustit'
+                                        : 'Odebrat'
                                 }}
                             </Button>
                         </AlertDialogTrigger>
@@ -93,23 +93,23 @@ const removeMember = (member: FamilyMember): void => {
                                 <AlertDialogTitle>
                                     {{
                                         member.id === authenticatedUserId
-                                            ? 'Leave this Family?'
-                                            : `Remove ${member.name}?`
+                                            ? 'Opustit tuto rodinu?'
+                                            : `Odebrat uživatele ${member.name}?`
                                     }}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    This removes the Family Membership. It does
-                                    not delete the User account.
+                                    Tímto odeberete členství v rodině. Účet
+                                    uživatele zůstane zachován.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>Zrušit</AlertDialogCancel>
                                 <AlertDialogAction
                                     :disabled="processingMemberId === member.id"
                                     class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     @click="removeMember(member)"
                                 >
-                                    Confirm
+                                    Potvrdit
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
@@ -120,6 +120,6 @@ const removeMember = (member: FamilyMember): void => {
     </Table>
 
     <p v-if="isFinalMembership" class="mt-3 text-sm text-muted-foreground">
-        The final membership cannot be removed. Delete the Family instead.
+        Poslední členství nelze odebrat. Místo toho smažte rodinu.
     </p>
 </template>

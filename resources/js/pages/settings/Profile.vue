@@ -14,7 +14,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Profile settings',
+                title: 'Nastavení profilu',
                 href: edit(),
             },
         ],
@@ -26,15 +26,15 @@ const user = computed(() => page.props.auth.user);
 </script>
 
 <template>
-    <Head title="Profile settings" />
+    <Head title="Nastavení profilu" />
 
-    <h1 class="sr-only">Profile settings</h1>
+    <h1 class="sr-only">Nastavení profilu</h1>
 
     <div class="flex flex-col space-y-6">
         <Heading
             variant="small"
-            title="Profile"
-            description="Update your name and email address"
+            title="Profil"
+            description="Upravte své jméno a e-mailovou adresu"
         />
 
         <Form
@@ -43,7 +43,7 @@ const user = computed(() => page.props.auth.user);
             v-slot="{ errors, processing }"
         >
             <div class="grid gap-2">
-                <Label for="name">Name</Label>
+                <Label for="name">Jméno</Label>
                 <Input
                     id="name"
                     class="mt-1 block w-full"
@@ -51,13 +51,13 @@ const user = computed(() => page.props.auth.user);
                     :default-value="user.name"
                     required
                     autocomplete="name"
-                    placeholder="Full name"
+                    placeholder="Celé jméno"
                 />
                 <InputError class="mt-2" :message="errors.name" />
             </div>
 
             <div class="grid gap-2">
-                <Label for="email">Email address</Label>
+                <Label for="email">E-mailová adresa</Label>
                 <Input
                     id="email"
                     type="email"
@@ -66,14 +66,14 @@ const user = computed(() => page.props.auth.user);
                     :default-value="user.email"
                     required
                     autocomplete="username"
-                    placeholder="Email address"
+                    placeholder="E-mailová adresa"
                 />
                 <InputError class="mt-2" :message="errors.email" />
             </div>
 
             <div class="flex items-center gap-4">
                 <Button :disabled="processing" data-test="update-profile-button"
-                    >Save</Button
+                    >Uložit</Button
                 >
             </div>
         </Form>

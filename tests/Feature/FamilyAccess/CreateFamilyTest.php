@@ -52,7 +52,7 @@ final class CreateFamilyTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('toast', [
                 'type' => 'success',
-                'message' => 'Family created.',
+                'message' => 'Rodina byla vytvořena.',
             ])
             ->assertRedirect(route('families.index'));
 

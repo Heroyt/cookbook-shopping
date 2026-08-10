@@ -20,7 +20,7 @@ import { Spinner } from '@/components/ui/spinner';
     >
         <FieldGroup>
             <Field :data-invalid="Boolean(errors.name)">
-                <FieldLabel for="family-name">Family name</FieldLabel>
+                <FieldLabel for="family-name">Název rodiny</FieldLabel>
                 <Input
                     id="family-name"
                     name="name"
@@ -28,11 +28,11 @@ import { Spinner } from '@/components/ui/spinner';
                     maxlength="255"
                     autocomplete="off"
                     autofocus
-                    placeholder="Weekend Kitchen"
+                    placeholder="Víkendová kuchyně"
                     :aria-invalid="Boolean(errors.name)"
                 />
                 <FieldDescription>
-                    This identifies the shared workspace for its members.
+                    Pod tímto názvem členové společný prostor poznají.
                 </FieldDescription>
                 <FieldError :errors="[errors.name]" />
             </Field>
@@ -40,7 +40,7 @@ import { Spinner } from '@/components/ui/spinner';
             <Field orientation="horizontal">
                 <Button type="submit" :disabled="processing">
                     <Spinner v-if="processing" data-icon="inline-start" />
-                    Create Family
+                    Vytvořit rodinu
                 </Button>
             </Field>
         </FieldGroup>

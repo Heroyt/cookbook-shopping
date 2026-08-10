@@ -18,7 +18,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Stores',
+                title: 'Obchody',
                 href: index(),
             },
         ],
@@ -27,22 +27,22 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Stores" />
+    <Head title="Obchody" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight">Stores</h1>
+            <h1 class="text-2xl font-semibold tracking-tight">Obchody</h1>
             <p class="mt-1 text-sm text-muted-foreground">
-                Manage the places where your Current Family shops.
+                Spravujte obchody pro nákupy aktuální rodiny.
             </p>
         </div>
 
         <div class="grid items-start gap-6 lg:grid-cols-3">
             <Card>
                 <CardHeader>
-                    <CardTitle>Create a Store</CardTitle>
+                    <CardTitle>Vytvořit obchod</CardTitle>
                     <CardDescription>
-                        Add a shopping destination to this Family.
+                        Přidejte místo, kde rodina nakupuje.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -52,9 +52,9 @@ defineOptions({
 
             <Card class="lg:col-span-2">
                 <CardHeader>
-                    <CardTitle>Current Family Stores</CardTitle>
+                    <CardTitle>Obchody aktuální rodiny</CardTitle>
                     <CardDescription>
-                        Every Family member can view and create Stores.
+                        Každý člen rodiny může obchody zobrazit a vytvářet.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

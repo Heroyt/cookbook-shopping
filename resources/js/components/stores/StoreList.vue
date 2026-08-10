@@ -28,9 +28,9 @@ defineProps<{ stores: StoreSummary[] }>();
             <EmptyMedia variant="icon">
                 <StoreIcon />
             </EmptyMedia>
-            <EmptyTitle>No Stores yet</EmptyTitle>
+            <EmptyTitle>Zatím nemáte žádné obchody</EmptyTitle>
             <EmptyDescription>
-                Create the first Store for the Current Family.
+                Vytvořte první obchod pro aktuální rodinu.
             </EmptyDescription>
         </EmptyHeader>
     </Empty>
@@ -38,8 +38,8 @@ defineProps<{ stores: StoreSummary[] }>();
     <Table v-else>
         <TableHeader>
             <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead class="text-right">Actions</TableHead>
+                <TableHead>Název</TableHead>
+                <TableHead class="text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
         <TableBody>

@@ -37,7 +37,7 @@ const selectFamily = (value: unknown): void => {
 <template>
     <div class="space-y-2 px-2 group-data-[collapsible=icon]:hidden">
         <p class="px-2 text-xs font-medium text-muted-foreground">
-            Current Family
+            Aktuální rodina
         </p>
 
         <Select
@@ -46,7 +46,7 @@ const selectFamily = (value: unknown): void => {
             @update:model-value="selectFamily"
         >
             <SelectTrigger class="w-full">
-                <SelectValue placeholder="Select a Family" />
+                <SelectValue placeholder="Vyberte rodinu" />
             </SelectTrigger>
             <SelectContent>
                 <SelectItem
@@ -62,7 +62,7 @@ const selectFamily = (value: unknown): void => {
         <Button v-else variant="outline" class="w-full" as-child>
             <Link :href="create()">
                 <PlusIcon />
-                Create a Family
+                Vytvořit rodinu
             </Link>
         </Button>
     </div>

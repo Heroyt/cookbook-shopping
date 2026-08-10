@@ -23,12 +23,12 @@ describe('Family Access UI contract', () => {
         const sidebar = readSource('../AppSidebar.vue');
 
         expect(createPage).toContain(
-            '<h1 class="sr-only">Create a Family</h1>',
+            '<h1 class="sr-only">Vytvořit rodinu</h1>',
         );
         expect(indexPage).toContain('FamilyMemberList');
         expect(indexPage).toContain('AddFamilyMemberForm');
         expect(indexPage).toContain('DeleteFamilyDialog');
-        expect(sidebar).toContain("title: 'Families'");
+        expect(sidebar).toContain("title: 'Rodiny'");
         expect(sidebar).toContain('href: familiesIndex()');
         expect(sidebar).toContain('<FamilySwitcher />');
     });
@@ -54,7 +54,7 @@ describe('Family Access UI contract', () => {
 
         expect(source).toContain('v-if="errors.account"');
         expect(source).toContain('{{ errors.account }}');
-        expect(source).toContain('Use Family management to add another');
-        expect(source).toContain('member or delete the Family first');
+        expect(source).toContain('Ve správě');
+        expect(source).toContain('rodiny nejprve přidejte dalšího člena nebo');
     });
 });

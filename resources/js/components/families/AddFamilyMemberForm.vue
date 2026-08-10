@@ -22,7 +22,7 @@ import { Spinner } from '@/components/ui/spinner';
     >
         <FieldGroup>
             <Field :data-invalid="Boolean(errors.email)">
-                <FieldLabel for="member-email">User email</FieldLabel>
+                <FieldLabel for="member-email">E-mail uživatele</FieldLabel>
                 <Input
                     id="member-email"
                     name="email"
@@ -34,8 +34,7 @@ import { Spinner } from '@/components/ui/spinner';
                     :aria-invalid="Boolean(errors.email)"
                 />
                 <FieldDescription>
-                    The User must already have an account created by an
-                    operator.
+                    Uživatel už musí mít účet vytvořený provozovatelem.
                 </FieldDescription>
                 <FieldError :errors="[errors.email]" />
             </Field>
@@ -43,7 +42,7 @@ import { Spinner } from '@/components/ui/spinner';
             <Field orientation="horizontal">
                 <Button type="submit" :disabled="processing">
                     <Spinner v-if="processing" data-icon="inline-start" />
-                    Add member
+                    Přidat člena
                 </Button>
             </Field>
         </FieldGroup>

@@ -46,14 +46,14 @@ describe('Store UI contract', () => {
         expect(dialog).toContain('router.delete');
         expect(dialog).toContain('<AlertDialog');
         expect(dialog).toContain('variant="destructive"');
-        expect(dialog).toContain('Delete Store');
+        expect(dialog).toContain('Smazat obchod');
         expect(list).toContain('<DeleteStoreAlertDialog :store="store" />');
     });
 
     it('adds Stores to primary navigation through a generated route', () => {
         const sidebar = readSource('../AppSidebar.vue');
 
-        expect(sidebar).toContain("title: 'Stores'");
+        expect(sidebar).toContain("title: 'Obchody'");
         expect(sidebar).toContain('href: storesIndex()');
         expect(sidebar).toContain("from '@/routes/stores'");
         expect(sidebar).toContain('page.props.currentFamily === null');

@@ -33,8 +33,8 @@ const handleRegisterSuccess = () => {
     <div v-if="canManagePasskeys" class="space-y-6">
         <Heading
             variant="small"
-            title="Passkeys"
-            description="Manage your passkeys for passwordless sign-in"
+            title="Přístupové klíče"
+            description="Spravujte přístupové klíče pro přihlášení bez hesla"
         />
 
         <div class="overflow-hidden rounded-lg border border-border">
@@ -53,9 +53,9 @@ const handleRegisterSuccess = () => {
                 >
                     <KeyRound class="h-7 w-7 text-muted-foreground" />
                 </div>
-                <p class="font-medium">No passkeys yet</p>
+                <p class="font-medium">Zatím nemáte žádné přístupové klíče</p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Add a passkey to sign in without a password
+                    Přidejte přístupový klíč a přihlašujte se bez hesla
                 </p>
             </div>
         </div>

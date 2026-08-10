@@ -29,7 +29,7 @@ const open = ref(false);
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child>
-            <Button variant="destructive">Delete Family</Button>
+            <Button variant="destructive">Smazat rodinu</Button>
         </DialogTrigger>
         <DialogContent>
             <Form
@@ -41,16 +41,16 @@ const open = ref(false);
                 @success="open = false"
             >
                 <DialogHeader>
-                    <DialogTitle>Delete {{ familyName }}?</DialogTitle>
+                    <DialogTitle>Smazat rodinu {{ familyName }}?</DialogTitle>
                     <DialogDescription>
-                        This permanently deletes the Family and all data it
-                        owns. This action cannot be undone.
+                        Rodina a všechna její data budou trvale smazány. Tuto
+                        akci nelze vrátit zpět.
                     </DialogDescription>
                 </DialogHeader>
 
                 <Field :data-invalid="Boolean(errors.family_name)">
                     <FieldLabel for="confirmed-family-name">
-                        Enter {{ familyName }} to confirm
+                        Potvrďte zadáním názvu {{ familyName }}
                     </FieldLabel>
                     <Input
                         id="confirmed-family-name"
@@ -61,7 +61,7 @@ const open = ref(false);
                         :aria-invalid="Boolean(errors.family_name)"
                     />
                     <FieldDescription>
-                        The name is case-sensitive and must match exactly.
+                        Název musí přesně odpovídat včetně velikosti písmen.
                     </FieldDescription>
                     <FieldError :errors="[errors.family_name]" />
                 </Field>
@@ -69,7 +69,7 @@ const open = ref(false);
                 <DialogFooter class="gap-2">
                     <DialogClose as-child>
                         <Button type="button" variant="secondary">
-                            Cancel
+                            Zrušit
                         </Button>
                     </DialogClose>
                     <Button
@@ -77,7 +77,7 @@ const open = ref(false);
                         variant="destructive"
                         :disabled="processing"
                     >
-                        Delete Family
+                        Smazat rodinu
                     </Button>
                 </DialogFooter>
             </Form>

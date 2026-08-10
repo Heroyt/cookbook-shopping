@@ -35,7 +35,7 @@ const open = shallowRef(false);
         <DialogTrigger as-child>
             <Button variant="outline" size="sm">
                 <PencilIcon data-icon="inline-start" />
-                Rename
+                Přejmenovat
             </Button>
         </DialogTrigger>
         <DialogContent>
@@ -47,16 +47,18 @@ const open = shallowRef(false);
                 @success="open = false"
             >
                 <DialogHeader>
-                    <DialogTitle>Rename {{ store.name }}</DialogTitle>
+                    <DialogTitle
+                        >Přejmenovat obchod {{ store.name }}</DialogTitle
+                    >
                     <DialogDescription>
-                        Store names are unique within the Current Family.
+                        Názvy obchodů musí být v aktuální rodině jedinečné.
                     </DialogDescription>
                 </DialogHeader>
 
                 <FieldGroup>
                     <Field :data-invalid="Boolean(errors.name)">
                         <FieldLabel :for="`store-${store.id}-name`">
-                            Store name
+                            Název obchodu
                         </FieldLabel>
                         <Input
                             :id="`store-${store.id}-name`"
@@ -68,8 +70,7 @@ const open = shallowRef(false);
                             :aria-invalid="Boolean(errors.name)"
                         />
                         <FieldDescription>
-                            Repeated whitespace is normalized when the Store is
-                            saved.
+                            Při uložení se opakované mezery automaticky upraví.
                         </FieldDescription>
                         <FieldError :errors="[errors.name]" />
                     </Field>
@@ -78,12 +79,12 @@ const open = shallowRef(false);
                 <DialogFooter class="gap-2">
                     <DialogClose as-child>
                         <Button type="button" variant="secondary">
-                            Cancel
+                            Zrušit
                         </Button>
                     </DialogClose>
                     <Button type="submit" :disabled="processing">
                         <Spinner v-if="processing" data-icon="inline-start" />
-                        Rename Store
+                        Přejmenovat obchod
                     </Button>
                 </DialogFooter>
             </Form>

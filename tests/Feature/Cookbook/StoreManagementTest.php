@@ -35,7 +35,7 @@ final class StoreManagementTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('toast', [
                 'type' => 'success',
-                'message' => 'Store created.',
+                'message' => 'Obchod byl vytvořen.',
             ])
             ->assertRedirect(route('stores.index'));
 
@@ -85,7 +85,7 @@ final class StoreManagementTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('toast', [
                 'type' => 'success',
-                'message' => 'Store renamed.',
+                'message' => 'Obchod byl přejmenován.',
             ])
             ->assertRedirect(route('stores.index'));
 
@@ -119,7 +119,7 @@ final class StoreManagementTest extends TestCase
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('toast', [
                 'type' => 'success',
-                'message' => 'Store deleted.',
+                'message' => 'Obchod byl smazán.',
             ])
             ->assertRedirect(route('stores.index'));
 
