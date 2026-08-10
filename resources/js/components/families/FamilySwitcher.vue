@@ -17,8 +17,14 @@ const page = usePage();
 const families = computed(() => page.props.families);
 const currentFamily = computed(() => page.props.currentFamily);
 
-const selectFamily = (familyId: unknown): void => {
-    if (typeof familyId !== 'string' && typeof familyId !== 'number') {
+const selectFamily = (value: unknown): void => {
+    if (typeof value !== 'string' && typeof value !== 'number') {
+        return;
+    }
+
+    const familyId = Number(value);
+
+    if (!Number.isSafeInteger(familyId) || familyId < 1) {
         return;
     }
 
