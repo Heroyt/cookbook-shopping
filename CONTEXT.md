@@ -2,6 +2,12 @@
 
 This context describes a family's cookbook and the shopping plans generated from its recipes. Authentication protects family data when the application is hosted publicly.
 
+## Commit convention
+
+- Use the subject format `:emoji: [optional context] message`.
+- Write the Gitmoji as its colon-wrapped code, not as a Unicode emoji. For example: `:bug: [shopping-list] fix package rounding`.
+- Keep commits focused on one logical change. Split unrelated implementation, tests, documentation, and tooling changes into separate commits when that improves reviewability.
+
 ## Language
 
 **User**:
