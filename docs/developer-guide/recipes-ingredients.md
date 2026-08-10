@@ -1,6 +1,6 @@
 # Recipes and Ingredients
 
-Recipes, Ingredients, Recipe Tags, and their media are not implemented. This chapter expands the approved terms in [`CONTEXT.md`](../../CONTEXT.md) and the concrete-package decision in [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md). See [Data structure](data-structure.md) for the proposed persistence shape and [Shopping List generation](shopping-generation.md) for quantity aggregation.
+Recipes, Ingredients, Recipe Tags, and their media are not implemented. This chapter expands the approved terms in the final Domain Glossary chapter and the concrete-package decision in [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md). See [Data structure](data-structure.md) for the proposed persistence shape and [Shopping List generation](shopping-generation.md) for quantity aggregation.
 
 ## Concrete purchasable Ingredients
 

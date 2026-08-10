@@ -4,7 +4,7 @@
 
 - Mode: Create
 - Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1, 0.1.2, 0.2.0, and 0.3.0 approved on 2026-08-10
-- Primary languages: Czech for the deferred user guide; English for the configured developer/operator guide
+- Primary languages: Czech for the deferred user guide; English for the configured developer/operator guide and ADR compendium
 - Documentation version: 0.3.0
 
 ## Application and evidence
@@ -63,7 +63,13 @@ The guide serves as the main navigable developer reference for:
 
 `CONTEXT.md` remains the implementation-free canonical glossary rather than being duplicated or replaced by the guide.
 
-Write the developer/operator guide in English and use the canonical terms from `CONTEXT.md` primarily. Preserve Czech domain language where `CONTEXT.md` defines it, including the five Meal Label values: snídaně, dopolední svačina, oběd, odpolední svačina, and večeře. Link to the canonical glossary rather than maintaining a separate competing vocabulary.
+Write the developer/operator guide in English and use the canonical terms from `CONTEXT.md` primarily. Preserve Czech domain language where `CONTEXT.md` defines it, including the five Meal Label values: snídaně, dopolední svačina, oběd, odpolední svačina, and večeře. Publish the canonical glossary as the guide's final chapter rather than maintaining a separate competing vocabulary.
+
+Publish `CONTEXT.md` itself as the final Domain Glossary appendix so the developer PDF remains self-contained without duplicating or transforming the canonical vocabulary.
+
+### Architecture Decision Record compendium
+
+Developers, operators, and AI coding agents that need the complete rationale behind accepted application decisions. Publish a separate English PDF directly from `docs/adr/index.md` and every numbered ADR in identifier order. The compendium is a decision record, not an implementation-status guide; its introduction must direct readers to the Developer and Operator Guide for current versus **Planned** behavior.
 
 ## Scope
 
@@ -134,10 +140,15 @@ Use a multi-page guide rooted at `docs/developer-guide/index.md` with focused ch
 - Testing and quality gates
 - Deployment, operations, recovery, and scaling
 - Troubleshooting and command reference
+- Domain Glossary appendix sourced directly from `CONTEXT.md`
 
-Keep the documentation specification, documentation decisions, ADRs, and other planning or review records outside the rendered source list. Link to those sources where they provide useful evidence.
+Keep the documentation specification, documentation decisions, and other planning or review records outside rendered source lists. Publish ADRs only through the dedicated compendium, and link to those sources from the developer guide where they provide useful evidence.
 
-Every domain chapter must explain relationships, invariants, and workflows; link to `CONTEXT.md` for canonical definitions; link to relevant ADRs; and identify each capability as implemented or **Planned**.
+### Architecture Decision Record compendium
+
+Use `docs/adr/index.md` as a short status and navigation introduction, followed by every numbered file in `docs/adr/` in identifier order. Render the original ADR sources directly; do not copy their text into a parallel appendix that could drift.
+
+Every domain chapter must explain relationships, invariants, and workflows; direct readers to the final Domain Glossary chapter for canonical definitions; link to relevant ADRs; and identify each capability as implemented or **Planned**. Keep `CONTEXT.md` as the authoritative repository source, but do not expose its repository path as reader navigation inside the self-contained PDF.
 
 ## Screenshots and diagrams
 
@@ -162,7 +173,8 @@ Use Mermaid diagrams selectively in the developer/operator guide when they mater
 ## Publication contract
 
 - Commit the portable Markdown sources and their approved publication images.
-- The current configured publication target generates the English developer/operator-guide PDF under ignored `docs/pdf/`.
+- The current configured publication targets generate the English developer/operator-guide PDF and the English Architecture Decision Record compendium under ignored `docs/pdf/`.
+- At the two publication entry points, use `file:` links containing only the sibling PDF filename so the renderer emits portable relative cross-document actions between `developer-guide-en.pdf` and `architecture-decisions-en.pdf`. This is a narrow output-navigation exception; ordinary source navigation continues to use relative Markdown links.
 - When the deferred Czech User guide is authored and added to `documentation.toml`, generate its separate Czech PDF under ignored `docs/pdf/` and run the same publication gates before calling it publish-ready.
 - Use the neutral `default` PDF theme rather than eSoul client branding.
 - Do not commit generated PDFs unless a later project decision explicitly changes the publication policy.
@@ -177,6 +189,6 @@ Version documentation independently using semantic versioning, beginning at `0.1
 - [x] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
 - [x] All material claims have evidence or explicit user attestation.
 - [x] Every published screenshot is manifested and approved; the configured developer guide publishes no screenshots.
-- [x] Configured developer-guide Markdown and PDF pass mechanical, visual, privacy, and accessibility checks.
-- [x] Configured developer-guide correctness and completeness review findings are resolved or explicitly accepted.
+- [x] Configured developer-guide and ADR-compendium Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks after this publication-structure refresh.
+- [x] Configured developer-guide and ADR-compendium correctness and completeness review findings are resolved or explicitly accepted after this publication-structure refresh.
 - [ ] The deferred Czech User guide has authoritative Markdown, a configured PDF target, and completed publication gates.

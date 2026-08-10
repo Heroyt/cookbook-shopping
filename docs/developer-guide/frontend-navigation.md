@@ -12,7 +12,7 @@ Navigation uses Inertia `Link` components and generated Wayfinder route function
 
 Every user-facing string is Czech, including page titles, navigation, form copy, placeholders, dialogs, toasts, loading and empty states, and screen-reader-only labels. Backend validation, authentication, and package feedback is supplied through `lang/cs`. Keep TypeScript and Vue identifiers in English, but treat newly introduced English interface copy as a defect and extend the localization source-contract coverage when adding a workflow.
 
-The Stores page is the only Cookbook navigation and currently supports creation, listing, renaming through a Dialog, and deletion through a consequence-stating AlertDialog. No Store Section maintenance, Ingredient maintenance, Recipe search, weekly planner, Simple Plan, or Shopping List interface exists yet. Those workflows described below are approved intent from the [domain glossary](../../CONTEXT.md), not current behavior.
+The Stores page is the only Cookbook navigation and currently supports creation, listing, renaming through a Dialog, and deletion through a consequence-stating AlertDialog. No Store Section maintenance, Ingredient maintenance, Recipe search, weekly planner, Simple Plan, or Shopping List interface exists yet. Those workflows described below are approved intent from the final Domain Glossary chapter, not current behavior.
 
 ## Planned application navigation
 

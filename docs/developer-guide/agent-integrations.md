@@ -1,6 +1,6 @@
 # Agent Integrations
 
-No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token authentication, or Scramble-generated API contract exists in the repository today. This chapter records the approved design to add agent access after the Cookbook and Meal Planning model is implemented. Canonical definitions live in the [domain glossary](../../CONTEXT.md).
+No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token authentication, or Scramble-generated API contract exists in the repository today. This chapter records the approved design to add agent access after the Cookbook and Meal Planning model is implemented. Canonical definitions live in the final Domain Glossary chapter.
 
 ## Integration choice and boundary
 

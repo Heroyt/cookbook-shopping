@@ -1,6 +1,6 @@
 # Family access
 
-Family Access now implements the complete collaboration workflow needed before Family-owned domain records are introduced. An authenticated User can create a Family, switch among their Families, add an existing User by email, leave or remove a member, and delete the Current Family after exact-name confirmation. Every Family Membership is ordinary and roleless. See [Current application](current-application.md) for the wider implemented boundary and [`CONTEXT.md`](../../CONTEXT.md) for canonical terms.
+Family Access now implements the complete collaboration workflow needed before Family-owned domain records are introduced. An authenticated User can create a Family, switch among their Families, add an existing User by email, leave or remove a member, and delete the Current Family after exact-name confirmation. Every Family Membership is ordinary and roleless. See [Current application](current-application.md) for the wider implemented boundary and the final Domain Glossary chapter for canonical terms.
 
 The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-to-families.md). The relational constraints are described in [Data structure](data-structure.md), and the first Store tracer now closes the Slice 1 Family-owned authorization gate in the [Implementation roadmap](implementation-roadmap.md).
 

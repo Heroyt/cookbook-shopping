@@ -2,7 +2,7 @@
 
 ## Current status
 
-Shopping List generation is not implemented. There is no generator service, Recipe persistence, Calendar persistence, Simple Plan, or saved-list history in the current repository. This chapter documents approved intended behavior from [`CONTEXT.md`](../../CONTEXT.md), [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md), and [ADR 0002](../adr/0002-keep-shopping-list-generation-persistence-independent.md).
+Shopping List generation is not implemented. There is no generator service, Recipe persistence, Calendar persistence, Simple Plan, or saved-list history in the current repository. This chapter documents approved intended behavior from the final Domain Glossary chapter, [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md), and [ADR 0002](../adr/0002-keep-shopping-list-generation-persistence-independent.md).
 
 ## Service boundary
 

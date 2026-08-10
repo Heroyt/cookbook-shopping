@@ -97,4 +97,4 @@ The current frontend uses Vue single-file components, TypeScript, Inertia page r
 
 ## Source boundaries
 
-Do not duplicate canonical definitions in implementation comments or this guide. Update [CONTEXT.md](../../CONTEXT.md) when domain language changes and add an ADR only for a hard-to-reverse, surprising trade-off with genuine alternatives. Update this guide after the underlying implementation or approved intent changes.
+Do not duplicate canonical definitions in implementation comments or this guide. Update the repository source `CONTEXT.md` when domain language changes and add an ADR only for a hard-to-reverse, surprising trade-off with genuine alternatives. Update this guide after the underlying implementation or approved intent changes.

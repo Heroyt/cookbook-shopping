@@ -1,6 +1,6 @@
 # Nutrition
 
-Nutrition profiles and calculations are not implemented. The canonical concepts are defined in [`CONTEXT.md`](../../CONTEXT.md). Ingredient package quantities used for conversion are covered by [Recipes and Ingredients](recipes-ingredients.md), and persistence options are outlined in [Data structure](data-structure.md).
+Nutrition profiles and calculations are not implemented. The canonical concepts are defined in the final Domain Glossary chapter. Ingredient package quantities used for conversion are covered by [Recipes and Ingredients](recipes-ingredients.md), and persistence options are outlined in [Data structure](data-structure.md).
 
 ## Ingredient nutrition basis
 

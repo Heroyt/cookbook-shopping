@@ -83,5 +83,57 @@ sources = [
   "docs/developer-guide/security-observability.md",
   "docs/developer-guide/agent-integrations.md",
   "docs/developer-guide/implementation-roadmap.md",
+  "CONTEXT.md",
+]
+landscape_sources = []
+
+[[guides]]
+id = "architecture-decisions"
+title = "Cookbook and Shopping Planning — Architecture Decision Records"
+output = "architecture-decisions-en.pdf"
+document_version = "0.3.0"
+cross_document_links = "notice"
+invalid_links = "notice"
+link_notice_style = "plain"
+link_notice_paths = "original"
+sources = [
+  "docs/adr/index.md",
+  "docs/adr/0001-use-concrete-purchasable-ingredients.md",
+  "docs/adr/0002-keep-shopping-list-generation-persistence-independent.md",
+  "docs/adr/0003-scope-domain-data-to-families.md",
+  "docs/adr/0004-build-a-laravel-modular-monolith.md",
+  "docs/adr/0005-use-mariadb-in-production-and-sqlite-locally.md",
+  "docs/adr/0006-use-a-single-host-personal-production-profile.md",
+  "docs/adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md",
+  "docs/adr/0008-use-an-api-first-boundary-for-ai-agent-integrations.md",
+  "docs/adr/0009-scope-agent-credentials-to-one-user-and-family.md",
+  "docs/adr/0010-apply-previewed-agent-change-sets-atomically.md",
+  "docs/adr/0011-keep-source-extraction-outside-the-agent-api.md",
+  "docs/adr/0012-delete-store-sections-with-placement-preserving-cleanup.md",
+  "docs/adr/0013-use-exact-rational-quantity-calculation.md",
+  "docs/adr/0014-use-one-universal-piece-unit.md",
+  "docs/adr/0015-enforce-store-placement-through-the-store-section-association.md",
+  "docs/adr/0016-require-canonical-quantity-kinds-for-alternative-replacement.md",
+  "docs/adr/0017-return-an-all-or-nothing-typed-generation-result.md",
+  "docs/adr/0018-compose-grouping-inside-shopping-generation.md",
+  "docs/adr/0019-persist-an-unlabeled-calendar-key.md",
+  "docs/adr/0020-store-versioned-shopping-list-snapshot-payloads.md",
+  "docs/adr/0021-keep-alternative-replacement-single-hop.md",
+  "docs/adr/0022-archive-and-restore-recipes-and-ingredients.md",
+  "docs/adr/0023-rewrite-contiguous-store-section-positions.md",
+  "docs/adr/0024-accumulate-duplicate-calendar-serving-counts.md",
+  "docs/adr/0025-create-a-snapshot-for-every-save.md",
+  "docs/adr/0026-store-one-canonical-metric-package-quantity.md",
+  "docs/adr/0027-restrict-edits-for-archived-recipe-calendar-entries.md",
+  "docs/adr/0028-reject-stale-store-section-reorders.md",
+  "docs/adr/0029-apply-every-calendar-accumulation-request.md",
+  "docs/adr/0030-derive-metric-display-units.md",
+  "docs/adr/0031-accumulate-duplicate-simple-plan-selections.md",
+  "docs/adr/0032-save-recipes-as-versioned-aggregates.md",
+  "docs/adr/0033-delete-recipe-tags-with-assignment-cleanup.md",
+  "docs/adr/0034-generate-the-agent-api-contract-with-scramble.md",
+  "docs/adr/0035-pass-an-authorized-family-context-to-domain-actions.md",
+  "docs/adr/0036-use-a-deep-agent-integration-module.md",
+  "docs/adr/0037-use-updated-at-for-agent-concurrency.md",
 ]
 landscape_sources = []

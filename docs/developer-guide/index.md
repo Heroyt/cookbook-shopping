@@ -8,7 +8,7 @@ This guide is the main technical entry point for developing and operating the co
 
 Unmarked statements describe current repository evidence. A blockquote beginning with **Planned** describes approved intent rather than available behavior.
 
-The canonical implementation-free vocabulary remains in [the domain glossary](../../CONTEXT.md). Architectural trade-offs are recorded in the [ADR directory](../adr/).
+The canonical implementation-free vocabulary is published as the final Domain Glossary chapter in this guide. Architectural trade-offs are published in the companion [Architecture Decision Record compendium](file:architecture-decisions-en.pdf).
 
 ## Guide map
 
@@ -28,13 +28,14 @@ The canonical implementation-free vocabulary remains in [the domain glossary](..
 14. [Security and observability](security-observability.md) — implemented controls, Family authorization requirements, secrets, health, and telemetry.
 15. [Agent integrations](agent-integrations.md) — planned Agent Credentials, Catalog, atomic Change Sets, API contract, and implementation sequence.
 16. [Implementation roadmap](implementation-roadmap.md) — dependency-ordered vertical slices and completion gates.
+17. Domain glossary — canonical implementation-free terms and avoided synonyms, published as chapter 18 after this introduction.
 
 ## Evidence hierarchy
 
 When sources disagree, use this order:
 
 1. Code, tests, migrations, configuration, and observed behavior for implemented functionality.
-2. The [approved documentation specification](../documentation-spec.md), [domain glossary](../../CONTEXT.md), and [ADRs](../adr/) for intended behavior.
+2. The [approved documentation specification](../documentation-spec.md), the final Domain Glossary chapter, and the companion [Architecture Decision Record compendium](file:architecture-decisions-en.pdf) for intended behavior.
 3. Official third-party documentation for framework and platform contracts.
 4. Existing prose as supporting evidence that must still be verified.
 

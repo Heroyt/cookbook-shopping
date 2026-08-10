@@ -1,4 +1,4 @@
-# Cookbook and Shopping Planning
+# Domain Glossary
 
 This context describes a family's cookbook and the shopping plans generated from its recipes. Authentication protects family data when the application is hosted publicly.
 

@@ -1,6 +1,6 @@
 # Calendar planning
 
-Calendar planning and Simple Plans are not implemented. [`CONTEXT.md`](../../CONTEXT.md) defines Calendar Entry, Calendar Day, Calendar Selection, Meal Label, Recipe Selection, Serving Count, and Simple Plan. Both planning modes adapt into the persistence-independent service described in [ADR 0002](../adr/0002-keep-shopping-list-generation-persistence-independent.md) and [Shopping List generation](shopping-generation.md).
+Calendar planning and Simple Plans are not implemented. The final Domain Glossary chapter defines Calendar Entry, Calendar Day, Calendar Selection, Meal Label, Recipe Selection, Serving Count, and Simple Plan. Both planning modes adapt into the persistence-independent service described in [ADR 0002](../adr/0002-keep-shopping-list-generation-persistence-independent.md) and [Shopping List generation](shopping-generation.md).
 
 ## Persistent Calendar Entries
 

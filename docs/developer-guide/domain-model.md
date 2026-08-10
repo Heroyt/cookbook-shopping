@@ -2,7 +2,7 @@
 
 The repository implements the authenticated `User` and account-security shell, Family Access, and a narrow Cookbook Store tracer. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns Store creation, listing, renaming, and deletion; the rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
 
-[`CONTEXT.md`](../../CONTEXT.md) is the canonical implementation-free glossary. These developer chapters explain relationships, invariants, and implementation consequences without replacing that vocabulary.
+The final Domain Glossary chapter is the canonical implementation-free vocabulary. These developer chapters explain relationships, invariants, and implementation consequences without replacing it.
 
 ## Decision map
 

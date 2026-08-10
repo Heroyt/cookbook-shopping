@@ -12,7 +12,7 @@ The conceptual model below applies the decisions to use [Family ownership](../ad
 
 ## Proposed relational shape
 
-> **Planned** — The following structure is conceptual. It names durable relationships and constraints approved in [`CONTEXT.md`](../../CONTEXT.md); it is not a migration contract. Concrete table and index syntax must be finalized and verified against both supported databases during implementation.
+> **Planned** — The following structure is conceptual. It names durable relationships and constraints approved in the final Domain Glossary chapter; it is not a migration contract. Concrete table and index syntax must be finalized and verified against both supported databases during implementation.
 >
 > - **Remaining Store layout:** `store_sections` and
 >   `store_section_positions`. Sections belong to one Family. The

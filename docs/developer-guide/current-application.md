@@ -46,7 +46,7 @@ text.
 > planning, nutrition, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
 > authorization, or persistence from the narrow Store tracer. The canonical vocabulary is in
-> [CONTEXT.md](../../CONTEXT.md), and the architectural direction is recorded in
+> the final Domain Glossary chapter, and the architectural direction is recorded in
 > [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
 ## Technology baseline
