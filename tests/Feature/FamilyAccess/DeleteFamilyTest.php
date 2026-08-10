@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\FamilyAccess;
 
+use App\Cookbook\Models\Store;
 use App\FamilyAccess\Models\Family;
 use App\FamilyAccess\Models\FamilyMembership;
 use App\Models\User;
@@ -16,6 +17,7 @@ final class DeleteFamilyTest extends TestCase
         $actor = User::factory()->create();
         $otherMember = User::factory()->create();
         $family = $this->createFamilyWithMembers('Sunday Suppers', $actor, $otherMember);
+        Store::factory()->for($family)->create();
         $fallbackFamily = $this->createFamilyWithMembers('Weekdays', $actor);
         $this->selectCurrentFamily($actor, $family);
         $this->selectCurrentFamily($otherMember, $family);
@@ -28,6 +30,7 @@ final class DeleteFamilyTest extends TestCase
 
         $this->assertModelMissing($family);
         $this->assertDatabaseMissing((new FamilyMembership())->getTable(), ['family_id' => $family->id]);
+        $this->assertDatabaseMissing('stores', ['family_id' => $family->id]);
         $this->assertSame($fallbackFamily->id, $actor->fresh()->current_family_id);
         $this->assertNull($otherMember->fresh()->current_family_id);
     }
