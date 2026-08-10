@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Cookbook\Http\Controllers;
 
 use App\Cookbook\Actions\CreateStore;
+use App\Cookbook\Actions\UpdateStore;
 use App\Cookbook\Http\Requests\StoreIndexRequest;
 use App\Cookbook\Http\Requests\StoreStoreRequest;
+use App\Cookbook\Http\Requests\StoreUpdateRequest;
 use App\Cookbook\Models\Store;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
@@ -20,6 +22,7 @@ final class StoreController extends Controller
     public function __construct(
         private readonly CurrentFamilyScope $currentFamilyScope,
         private readonly CreateStore $createStore,
+        private readonly UpdateStore $updateStore,
     ) {}
 
     public function index(StoreIndexRequest $request): Response
@@ -45,6 +48,15 @@ final class StoreController extends Controller
         $this->createStore->handle($request->authenticatedUser(), $request->storeName());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store created.')]);
+
+        return to_route('stores.index');
+    }
+
+    public function update(StoreUpdateRequest $request, int $store): RedirectResponse
+    {
+        $this->updateStore->handle($request->authenticatedUser(), $store, $request->storeName());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Store renamed.')]);
 
         return to_route('stores.index');
     }
