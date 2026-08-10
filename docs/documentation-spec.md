@@ -3,15 +3,15 @@
 ## Status
 
 - Mode: Create
-- Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1 and 0.1.2 approved on 2026-08-10
+- Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1, 0.1.2, and 0.2.0 approved on 2026-08-10
 - Primary languages: Czech for the user guide; English for the developer/operator guide
-- Documentation version: 0.1.2
+- Documentation version: 0.2.0
 
 ## Application and evidence
 
 ### Product boundary
 
-The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, and a placeholder authenticated dashboard. The Family, cookbook, store, recipe, meal-calendar, nutrition, and shopping-list workflows described by the domain context are intended functionality that is not yet implemented.
+The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, a placeholder authenticated dashboard, and a narrow Family Access tracer that persists Families and roleless Family Memberships, creates a Family with its first membership, and protects final-member account deletion. Current Family selection, membership management, Family deletion, and the cookbook, store, recipe, meal-calendar, nutrition, and shopping-list workflows remain intended functionality that is not yet implemented.
 
 ### Source authority
 
@@ -30,7 +30,7 @@ Do not use the currently connected Laravel Boost database as evidence because it
 
 ### Intended-versus-implemented mismatches
 
-The Family, Family Membership, Current Family, Cookbook, Recipe, Ingredient, Store, meal-calendar, nutrition, and Shopping List domain described in `CONTEXT.md` is not implemented in the current application.
+Family and Family Membership persistence, Family creation, and final-member account-deletion protection are implemented as a narrow tracer. Current Family, membership management, Family deletion, and the Cookbook, Recipe, Ingredient, Store, meal-calendar, nutrition, and Shopping List domain described in `CONTEXT.md` are not implemented in the current application.
 
 - Omit unimplemented behavior from the user guide.
 - The developer/operator guide may describe intended design only in visually distinct **Planned** callouts, separated from current setup and operational instructions.
@@ -71,7 +71,7 @@ User guide:
 - Profile updates and profile deletion.
 - Password and security settings.
 - Appearance settings.
-- Family selection and Family Membership only after they are implemented and verified.
+- Family creation only after its user-facing guide is separately refreshed and verified; Family selection and membership management only after those workflows are implemented and verified.
 - Stores, Store Sections, and Store Placements only after they are implemented and verified.
 - Cookbook and Shopping List workflows only after they are implemented and verified.
 

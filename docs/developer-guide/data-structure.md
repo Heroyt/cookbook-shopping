@@ -2,9 +2,11 @@
 
 ## Implemented persistence
 
-The repository currently persists Users and authentication infrastructure only at the domain level. The initial migration creates `users`, `password_reset_tokens`, and `sessions`; a separate migration creates `passkeys`. Framework migrations also persist cache entries and locks, queued jobs, job batches, and failed jobs. The [`User` model](../../app/Models/User.php) exposes authentication and passkey behavior but no domain relationships. See the [migration directory](../../database/migrations/).
+The repository persists Users, authentication infrastructure, Families, and roleless Family Memberships. The initial migration creates `users`, `password_reset_tokens`, and `sessions`; separate migrations create `passkeys`, `families`, and `family_memberships`. Framework migrations also persist cache entries and locks, queued jobs, job batches, and failed jobs. The [`User` model](../../app/Models/User.php) exposes its Family Membership and Family relationships. See the [migration directory](../../database/migrations/) and the [`Family` model](../../app/FamilyAccess/Models/Family.php).
 
-No Family, cookbook, Store, planning, nutrition, or Shopping List tables or models exist yet. The connected Laravel Boost database is intentionally excluded as evidence by the approved documentation specification.
+Each Family has a name. Each Family Membership belongs to one Family and one User, is unique for that pair, and has no role column. Foreign keys cascade membership deletion when either side is deleted. Application behavior creates the Family and its first membership in one transaction. Account deletion is blocked while the User is the final member of any Family; later membership-removal and Family-deletion workflows must apply the same no-orphan rule.
+
+No Current Family preference, cookbook, Store, planning, nutrition, or Shopping List tables or models exist yet. The connected Laravel Boost database is intentionally excluded as evidence by the approved documentation specification.
 
 The conceptual model below applies the decisions to use [Family ownership](../adr/0003-scope-domain-data-to-families.md), [concrete purchasable Ingredients](../adr/0001-use-concrete-purchasable-ingredients.md), a [persistence-independent generator](../adr/0002-keep-shopping-list-generation-persistence-independent.md), and one [Laravel modular monolith](../adr/0004-build-a-laravel-modular-monolith.md). Capability workflows remain authoritative in [Family access](family-access.md), [Recipes and Ingredients](recipes-ingredients.md), [Stores and shopping order](stores-shopping-order.md), [Calendar planning](calendar-planning.md), and [Shopping List generation](shopping-generation.md).
 
@@ -13,10 +15,9 @@ The conceptual model below applies the decisions to use [Family ownership](../ad
 > **Planned** — The following structure is conceptual. It names durable relationships and constraints approved in [`CONTEXT.md`](../../CONTEXT.md); it is not a migration contract. Table names, key types, decimal precision, indexes, media storage, and snapshot encoding must be finalized during implementation.
 >
 >
-> - **Family Access:** `families`, `family_memberships`, and a Current Family
->   preference. Membership is unique per User and Family and has no role. A User
->   can have many memberships. Current Family must reference one of that User's
->   memberships.
+> - **Family Access:** a Current Family preference remains to be designed.
+>   Current Family must reference one of that User's implemented roleless Family
+>   Memberships.
 > - **Store layout:** `stores`, `store_sections`, and
 >   `store_section_positions`. Stores and Sections belong to one Family. The
 >   association between a Store and reusable Section carries traversal position
@@ -70,9 +71,11 @@ The conceptual model below applies the decisions to use [Family ownership](../ad
 
 ## Ownership and authorization constraints
 
+The implemented `family_memberships` table enforces uniqueness for `(family_id, user_id)`. Family creation and account deletion lock the affected User row first; account deletion then locks affected Families in identifier order, loads all membership counts in one query, and rejects deletion before persistence if any Family would be orphaned. This shared lock order prevents Family creation for the same User from racing past account deletion.
+
 > **Planned** — Persist `family_id` on Family-owned aggregate roots even when Family could be inferred through another relation. This makes request scoping, policy checks, and isolation queries explicit. Every cross-record reference must point to a record in the same Family; foreign keys alone may not express this rule, so application validation, scoped relationship queries, and targeted tests are required.
 >
-> Use a unique membership constraint for `(family_id, user_id)`. Deleting a Family cascades through its owned data only after application-level destructive confirmation. Removing the final Family Membership is rejected before persistence. Current Family selection must be cleared or replaced if its membership disappears.
+> Deleting a Family cascades through its owned data only after application-level destructive confirmation. Removing the final Family Membership is rejected before persistence. Current Family selection must be cleared or replaced if its membership disappears. Every membership-changing action must coordinate on one documented User-then-Family lock order, locking multiple rows by identifier, so concurrent writes cannot violate the invariant or deadlock each other.
 
 ## Names, archival, and deletion
 
@@ -119,7 +122,6 @@ The conceptual model below applies the decisions to use [Family ownership](../ad
 > - decimal precision and rounding policy for intermediate conversions;
 > - whether Current Family preference is server-side per User or local per device while preserving membership validation;
 > - how account provisioning works while self-registration is disabled, because add-by-email accepts only an already registered User;
-> - how account deletion handles Families in which the User is the final member, without violating the no-orphan invariant;
 > - storage and lifecycle for Recipe photos, Ingredient photos, Store logos, colours, and icons;
 > - representation and validation of custom count-unit identifiers;
 > - canonical storage for symmetric Alternative Ingredient edges;

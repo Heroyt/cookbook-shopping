@@ -1,6 +1,6 @@
 # Developer and Operator Guide
 
-Documentation version: **0.1.2**
+Documentation version: **0.2.0**
 
 This guide is the main technical entry point for developing and operating the cookbook and shopping-planning application. It describes the application that exists in the repository today and the approved domain design that has not yet been implemented.
 
@@ -16,13 +16,13 @@ The canonical implementation-free vocabulary remains in [the domain glossary](..
 2. [Architecture and system boundaries](architecture.md) — current request flow and planned modular-monolith boundaries.
 3. [Local development](local-development.md) — workstation and Docker workflows, generated route bindings, and verification.
 4. [Domain model](domain-model.md) — module boundaries, ADR map, and capability navigation.
-5. [Family access](family-access.md) — ownership, membership, Current Family selection, and unresolved account lifecycle gates.
+5. [Family access](family-access.md) — implemented creation and account-deletion protection plus planned membership and Current Family workflows.
 6. [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, alternatives, composition, search, and archival.
 7. [Nutrition](nutrition.md) — Ingredient bases, per-serving calculation, overrides, incomplete profiles, and daily totals.
 8. [Stores and shopping order](stores-shopping-order.md) — reusable Sections, placement, removal, and grouping.
 9. [Calendar planning](calendar-planning.md) — Calendar Entries, derived days, Meal Labels, weekly planning, and Simple Plans.
 10. [Shopping-list generation](shopping-generation.md) — service boundary, conversions, aggregation, alternatives, and output.
-11. [Planned data structure](data-structure.md) — conceptual relational model, ownership keys, constraints, and snapshots.
+11. [Data structure](data-structure.md) — implemented Family persistence plus the planned relational model, ownership keys, constraints, and snapshots.
 12. [Frontend architecture and navigation](frontend-navigation.md) — current shell and planned responsive workflows.
 13. [Infrastructure and deployment](infrastructure-deployment.md) — current Docker/Jenkins delivery path, selected external production profile, and remaining acceptance evidence.
 14. [Security and observability](security-observability.md) — implemented controls, Family authorization requirements, secrets, health, and telemetry.

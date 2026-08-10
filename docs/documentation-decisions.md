@@ -322,3 +322,36 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Release the Jenkins-only CI correction and its operator evidence gaps as documentation version `0.1.2`.
 - Rationale: The change corrects CI ownership and operational guidance after publication of `0.1.1`, so it is a backward-compatible patch release under the approved semantic-version policy.
 - Follow-up or review date: None
+
+### DOC-0029 — Document the Slice 1 tracer without closing Slice 0
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Developer/operator guide implementation status and roadmap
+- Evidence: Family Access migrations, models, actions, HTTP and Inertia surfaces, focused PHPUnit coverage, and User direction on 2026-08-10 to proceed while retaining deployment responsibility
+- Decision: Describe Family persistence, Family creation, its initial roleless membership, and final-member account-deletion protection as implemented behavior. Keep provisioning, member management, Current Family selection, reusable Family-scoped authorization, and all later domain modules marked as planned. Preserve the Komodo/MariaDB recreation check as unverified external evidence and keep Slice 0 incomplete despite the explicitly authorized Slice 1 progression.
+- Rationale: The guide must follow verified repository behavior without converting a development-sequencing exception into invented production evidence or overstating Slice 1 completion.
+- Follow-up or review date: Collect the Slice 0 external acceptance evidence and refresh the guide as later Slice 1 increments become verified.
+
+### DOC-0030 — Release the Family Access tracer as version 0.2.0
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Documentation specification, developer/operator guide, and renderer version metadata
+- Evidence: User approval of version `0.2.0` on 2026-08-10; DOC-0029; verified Family Access implementation and tests
+- Decision: Release the first implemented Family workflow and its account-lifecycle rule as documentation version `0.2.0`.
+- Rationale: Family creation is a new user-facing workflow and the first persisted domain slice, so it is a backward-compatible minor documentation release under the approved semantic-version policy.
+- Follow-up or review date: Complete the mechanical, PDF, correctness, and completeness publication gates before calling this revision publish-ready.
+
+### DOC-0031 — Publish the reviewed Family Access tracer guide
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Version 0.2.0 developer/operator guide publication readiness
+- Evidence: Successful managed-tool `doctor`, `validate`, and `build` runs; structural and every-page PDF inspection; focused backend and frontend tests; independent correctness, completeness, Standards, and Spec reviews with every actionable finding resolved
+- Decision: Publish the version 0.2.0 developer/operator guide with the implemented Family creation tracer and final-member account-deletion rule. Keep Slice 0 incomplete, its live Komodo/MariaDB recreation check external and unverified, and the remaining Slice 1 workflows explicitly planned.
+- Rationale: The guide now follows verified repository behavior, the approved version, and the User's development-sequencing direction without inventing production evidence or unresolved provisioning and Current Family decisions.
+- Follow-up or review date: Collect the Slice 0 external acceptance evidence and refresh the guide as later Slice 1 increments become verified.

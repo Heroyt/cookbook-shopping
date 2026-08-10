@@ -1,6 +1,6 @@
 # Family access
 
-Family Access is not implemented. The current application authenticates Users but has no Family, Family Membership, or Current Family persistence or authorization. See [Current application](current-application.md) for current behavior and [`CONTEXT.md`](../../CONTEXT.md) for canonical terms.
+Family Access has a narrow implemented tracer. An authenticated User can open the Family creation page and create a named Family. The transaction also creates that User's first ordinary, roleless Family Membership. The database rejects a duplicate membership for the same User and Family. Current Family selection, member management, Family deletion, and Family-owned authorization are not implemented. See [Current application](current-application.md) for current behavior and [`CONTEXT.md`](../../CONTEXT.md) for canonical terms.
 
 The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-to-families.md). The planned relational constraints are described in [Data structure](data-structure.md), and Slice 1 of the [Implementation roadmap](implementation-roadmap.md) orders the work.
 
@@ -13,6 +13,8 @@ The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-t
 > A User may belong to multiple Families through roleless Family Memberships. Membership grants equal rights to all Family data; there is no Owner or administrator role in the MVP. Creating a Family creates its first ordinary membership automatically.
 
 ## Membership workflow
+
+Family creation accepts a required name of at most 255 characters and normalizes repeated whitespace before persistence. It creates the Family and initial Family Membership atomically, then returns the User to the dashboard with success feedback. The current sidebar's Families entry opens this creation workflow; it is not yet a Family list or switcher.
 
 > **Planned**
 >
@@ -28,17 +30,17 @@ The ownership decision is recorded in [ADR 0003](../adr/0003-scope-domain-data-t
 >
 > Current Family is a preference rather than an ownership field. If its membership disappears, the application clears it or selects another valid membership before accepting Family-owned requests. Authorization must derive from current membership on every request rather than trusting a route parameter, client-provided identifier, cookie, or stale preference alone.
 
-## Account lifecycle gaps
+## Account lifecycle
 
-The current profile-deletion action removes the authenticated User, and the application does not expose self-registration. Those implemented facts become dependencies of Family Access rather than evidence that a Family lifecycle already exists.
+Account deletion is blocked while the User is the final member of any Family. The validation response leaves the User authenticated and preserves every affected Family and membership. If every Family has another member, deletion succeeds and the database removes only the departing User's memberships while retaining the Families and their other members.
 
 > **Planned**
 >
-> Before Family Membership ships, decide how account deletion resolves Families for which the User is the final member. The implementation must preserve the invariant that a Family cannot be orphaned; it must not silently cascade away Family data through the existing profile-deletion action.
->
-> Also define how additional Users become registered. Adding a member by email intentionally accepts existing Users only, while the current application has no self-registration workflow. Account provisioning may be resolved separately, but Family onboarding must not imply that entering an unknown email creates an account.
+> Define how additional Users become registered. Adding a member by email intentionally accepts existing Users only, while the current application has no self-registration workflow. Account provisioning may be resolved separately, but Family onboarding must not imply that entering an unknown email creates an account.
 
 ## Authorization verification
+
+Focused feature tests cover authentication on both Family-creation endpoints, creation of exactly one initial membership, name validation and normalization, duplicate-membership database enforcement, final-member account-deletion rejection, successful deletion when every Family retains another member, and atomic rejection across multiple Families.
 
 > **Planned**
 >

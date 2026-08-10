@@ -4,29 +4,40 @@
 
 The application is a Laravel 13 server-driven single-page application using Inertia 3 and Vue 3. Laravel owns routing, authentication, validation, persistence, and Inertia responses. Vue pages and shared components render the browser interface, while Vite builds the client assets. Wayfinder generates typed frontend bindings for Laravel routes.
 
-The current repository contains an authenticated application shell, profile and security settings, appearance handling, and a placeholder dashboard. The only application model is `User`; the cookbook domain has no migrations, models, routes, controllers, or pages yet. See [Current application](current-application.md) for the implemented surface.
+The current repository contains an authenticated application shell, profile and security settings, appearance handling, a placeholder dashboard, and a narrow Family Access tracer. The tracer persists Families and roleless Family Memberships inside `app/FamilyAccess`, lets an authenticated User create a Family with its first membership, and protects the no-orphan invariant during account deletion. Current Family selection and Family-owned cookbook modules are not implemented. See [Current application](current-application.md) for the implemented surface.
 
 Current architectural evidence:
 
 - [Laravel bootstrap](../../bootstrap/app.php) registers web routes, middleware, JSON exception behavior, and the `/up` health route.
 - [Web routes](../../routes/web.php) expose the public welcome page and authenticated dashboard; the attached `verified` middleware is currently inert as explained in [Security and observability](security-observability.md#implemented-authentication-controls).
 - [Settings routes](../../routes/settings.php) expose authenticated profile, security, password, and appearance operations.
+- [Family Access routes](../../routes/family-access.php) expose authenticated Family creation.
+- [Family creation action](../../app/FamilyAccess/Actions/CreateFamily.php) and its sibling module files contain the models, application actions, controller, and request validation.
 - [Frontend entry point](../../resources/js/app.ts) resolves Inertia pages and initializes Vue.
 - [Composer dependencies](../../composer.json) and [frontend dependencies](../../package.json) define the framework stack.
 
-## Planned modular monolith
+## Modular monolith direction
+
+The first physical module is `app/FamilyAccess`. It owns Family persistence and application behavior without moving the existing `User` identity or authentication into the module. This is a tracer through the accepted modular-monolith boundary; it does not yet establish Current Family selection or reusable authorization for later modules.
 
 <!-- prettier-ignore -->
 > **Planned**
 >
-> The application remains one Laravel deployment and one logical database, organized into four in-process domain modules. This is the accepted direction in [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md), not the current directory structure.
+> Continue as one Laravel deployment and one logical database organized into four in-process domain modules. Family Access has begun; the remaining module boundaries and dependencies are the accepted direction in [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 >
-> | Module              | Owns                                                                                                      | May depend on                                                                                    |
-> | ------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-> | Family Access       | Family, Family Membership, Current Family selection and authorization context                             | Existing User identity and authentication                                                        |
-> | Cookbook            | Recipe, Ingredient, Recipe Tag, Store, Store Section, nutrition and package conversions                   | Family Access for ownership and authorization                                                    |
-> | Meal Planning       | Calendar Entry, derived Calendar Day, Calendar Selection, and temporary Simple Plan input                 | Family Access and read access to Cookbook recipes                                                |
-> | Shopping Generation | Recipe Selection input, aggregation, alternatives, Shopping List output and Saved Shopping List snapshots | Cookbook value objects and Family Access for snapshot ownership; never Meal Planning persistence |
+> - **Family Access** owns Family, Family Membership, Current Family selection,
+>   and authorization context. It may depend on the existing User identity and
+>   authentication.
+> - **Cookbook** owns Recipe, Ingredient, Recipe Tag, Store, Store Section,
+>   nutrition, and package conversions. It may depend on Family Access for
+>   ownership and authorization.
+> - **Meal Planning** owns Calendar Entry, derived Calendar Day, Calendar
+>   Selection, and temporary Simple Plan input. It may depend on Family Access
+>   and read Cookbook recipes.
+> - **Shopping Generation** owns Recipe Selection input, aggregation,
+>   alternatives, Shopping List output, and Saved Shopping List snapshots. It
+>   may depend on Cookbook value objects and Family Access for snapshot
+>   ownership, but never on Meal Planning persistence.
 >
 > The dependency direction protects the central calculation boundary. Meal Planning translates selected Calendar Entries into Recipe Selections. A Simple Plan creates the same input directly. Shopping Generation does not query dates, calendar tables, controllers, or UI state; [ADR 0002](../adr/0002-keep-shopping-list-generation-persistence-independent.md) records this trade-off.
 >
@@ -47,6 +58,8 @@ Current architectural evidence:
 
 ## Application-layer responsibilities
 
+The implemented Family-creation path keeps HTTP validation in a Form Request and delegates the transactional creation of the Family and its first membership to an application action. Account deletion delegates the no-orphan check and deletion transaction to a Family Access action. This establishes the controller-to-action seam without introducing a repository abstraction before one is needed.
+
 > **Planned**
 >
 > Controllers and Inertia pages should orchestrate use cases rather than perform domain calculations. Application actions load and authorize Family-owned records, translate them into typed domain input, invoke a domain service, and persist only explicit outputs such as Saved Shopping List snapshots.
@@ -61,7 +74,7 @@ Current architectural evidence:
 
 ## Frontend boundary
 
-The current frontend uses Vue single-file components, TypeScript, Inertia page resolution, Tailwind CSS, and shadcn-vue components. Generated Wayfinder modules live under ignored/generated paths in `resources/js/actions`, `resources/js/routes`, and `resources/js/wayfinder`; regenerate them rather than hand-editing them.
+The current frontend uses Vue single-file components, TypeScript, Inertia page resolution, Tailwind CSS, and shadcn-vue components. The Family creation page composes an Inertia form with generated Wayfinder actions and installed shadcn-vue form primitives. Generated Wayfinder modules live under ignored/generated paths in `resources/js/actions`, `resources/js/routes`, and `resources/js/wayfinder`; regenerate them rather than hand-editing them.
 
 > **Planned**
 > Desktop layouts should optimize Recipe, Ingredient, Store, and Store Section maintenance. Mobile layouts should give equal support to the weekly planner and generated Shopping List. Both remain the same Inertia application rather than separate clients.

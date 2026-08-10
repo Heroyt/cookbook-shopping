@@ -4,15 +4,30 @@ This chapter describes the infrastructure that is present in the repository and 
 
 ## Status at a glance
 
-| Concern            | Current repository evidence                                                                                                       | Operational consequence                                                                                                |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Local runtime      | Docker Compose runs an Nginx container and one development application container                                                  | The application, Vite server, scheduler, and queue worker can run together for development                             |
-| Production runtime | A multi-stage Dockerfile builds a PHP-FPM image; the user attests that Komodo runs one application container on the server       | The proxy and stack are externally managed and cannot be reproduced from this repository                               |
-| Local persistence  | SQLite is the development and test default; cache and queue also default to the database                                           | Local setup needs a writable SQLite file                                                                               |
-| Production database | MariaDB is selected in ADR 0005 and runs on the same host as the application according to the user attestation                   | Hostname, version, credentials, exposure, and live availability remain server configuration                            |
-| Delivery           | Jenkins tests, builds, pushes, and asks Komodo to redeploy the `cook-book` stack on `main` or `master`                            | The Jenkins shared libraries, credentials, Komodo stack definition, and server configuration are external dependencies |
-| Recovery           | No automated backup, restore, retention, or disaster-recovery objective is required for this personal project                    | Correctly configured persistent database/media storage should survive container recreation but may be lost with the host |
-| Scaling            | The selected production profile is one application container, one host-local MariaDB service, and one persistent filesystem mount | Horizontal scaling is outside the current profile; the live mount remains unverified                                    |
+- **Local runtime:** Docker Compose runs Nginx and one development application
+  container. The application, Vite server, scheduler, and queue worker can run
+  together for development.
+- **Production runtime:** a multi-stage Dockerfile builds a PHP-FPM image, and
+  the User attests that Komodo runs one application container on the server.
+  The proxy and stack are externally managed and cannot be reproduced from this
+  repository.
+- **Local persistence:** SQLite is the development and test default; cache and
+  queue also default to the database. Local setup needs a writable SQLite file.
+- **Production database:** MariaDB is selected in ADR 0005 and runs on the same
+  host as the application by User attestation. Hostname, version, credentials,
+  exposure, and live availability remain server configuration.
+- **Delivery:** Jenkins tests, builds, pushes, and asks Komodo to redeploy the
+  `cook-book` stack on `main` or `master`. Jenkins shared libraries,
+  credentials, the Komodo stack definition, and server configuration are
+  external dependencies.
+- **Recovery:** no automated backup, restore, retention, or disaster-recovery
+  objective is required for this personal project. Correctly configured
+  persistent database and media storage should survive container recreation but
+  may be lost with the host.
+- **Scaling:** the selected production profile is one application container,
+  one host-local MariaDB service, and one persistent filesystem mount.
+  Horizontal scaling is outside the current profile, and the live mount remains
+  unverified.
 
 ## Local Docker topology
 
@@ -63,17 +78,34 @@ The entire repository is bind-mounted, so dependency installation and generated 
 
 Laravel reads runtime choices from environment variables through the files under [`config/`](../../config). The defaults and tracked examples currently imply the following data layout:
 
-| Data                      | Current driver                                    | Location or table                                                               | Persistence requirement                                                                            |
-| ------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Application data          | SQLite locally; MariaDB in production             | Local `DB_DATABASE` file or the configured MariaDB schema                       | Persist MariaDB outside the application container; backup is optional under the accepted risk profile |
-| Sessions                  | Database in the local and production examples     | `sessions` table                                                                | Preserve the chosen database for uninterrupted login sessions                                       |
-| Cache and locks           | Database                                          | `cache` and `cache_locks` tables                                                | Disposable for recovery, but required while the application is running                             |
-| Queue and failures        | Database locally; synchronous in production       | Local `jobs`, `job_batches`, and `failed_jobs`; no production queue persistence | Add a supervised worker before changing production back to an asynchronous connection               |
-| Private uploads           | Local filesystem                                  | `storage/app/private` beneath the `/var/www/storage/app` persistent mount       | Keep Family media private and preserve the mount across container recreation                        |
-| Public uploads            | Local filesystem                                  | `storage/app/public` beneath the same mount, exposed through `public/storage`   | Use only for deliberately public assets; Family media remains private by default                     |
-| Application logs          | Local `stack`/`single`; production example `stderr` | Local `storage/logs/laravel.log` or the production container's standard error | External collection and retention are optional for the personal profile                              |
-| Scheduler and worker logs | Local files                                       | `storage/logs/scheduler.log` in both images and `queue-worker.log` in development | Production scheduler output is ephemeral unless separately mounted or collected                     |
-| Mail                      | Local log driver; production example SMTP         | Local application log or the configured production SMTP service                 | Inject and verify production SMTP credentials before password resets can be delivered               |
+- **Application data:** SQLite uses the local `DB_DATABASE` file, while
+  production uses the configured MariaDB schema. Persist MariaDB outside the
+  application container; backup is optional under the accepted risk profile.
+- **Sessions:** local and production examples use the database-backed
+  `sessions` table. Preserve the chosen database for uninterrupted logins.
+- **Cache and locks:** the database-backed `cache` and `cache_locks` tables are
+  disposable for recovery but required while the application is running.
+- **Queue and failures:** local development uses `jobs`, `job_batches`, and
+  `failed_jobs`; production uses the synchronous connection and has no queue
+  persistence. Add a supervised worker before enabling asynchronous production
+  jobs.
+- **Private uploads:** the local filesystem stores these under
+  `storage/app/private` beneath the `/var/www/storage/app` persistent mount.
+  Keep Family media private and preserve the mount across container recreation.
+- **Public uploads:** the local filesystem stores these under
+  `storage/app/public` beneath the same mount and exposes them through
+  `public/storage`. Use this path only for deliberately public assets; Family
+  media remains private by default.
+- **Application logs:** local `stack` or `single` channels write
+  `storage/logs/laravel.log`; the production example writes to standard error.
+  External collection and retention are optional for the personal profile.
+- **Scheduler and worker logs:** both images write
+  `storage/logs/scheduler.log`, and development also writes
+  `storage/logs/queue-worker.log`. Production scheduler output is ephemeral
+  unless separately mounted or collected.
+- **Mail:** local development uses the log driver; the production example uses
+  configured SMTP. Inject and verify SMTP credentials before password resets
+  can be delivered.
 
 The schema for sessions, cache, queues, failed jobs, and authentication data is committed under [`database/migrations/`](../../database/migrations). Supported Laravel connection definitions for MySQL, MariaDB, PostgreSQL, SQL Server, Redis, S3, and several mail transports exist, but configuration support is not evidence that those services are provisioned or tested for this application.
 

@@ -1,8 +1,9 @@
 # Local Development
 
-This chapter covers the current authenticated Laravel/Inertia shell. It does
-not create or exercise the planned Family, Cookbook, meal-planning, or Shopping
-List features because those modules do not exist yet. See
+This chapter covers the current authenticated Laravel/Inertia shell and Family
+Access tracer. Local setup and migrations create the Family tables; focused
+tests exercise Family creation and account-deletion protection. Cookbook,
+meal-planning, and Shopping List features do not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.
 
 ## Choose a runtime
@@ -142,17 +143,23 @@ See [docker-compose.yml](../../docker-compose.yml),
 
 ## Configuration that matters locally
 
-| Setting            | Local default           | Consequence                                                                      |
-| ------------------ | ----------------------- | -------------------------------------------------------------------------------- |
-| `APP_URL`          | `http://localhost:8000` | Must match the browser origin for passkeys.                                      |
-| `APP_LOCALE`       | `en`                    | The current UI is English; the planned product language is Czech.                |
-| `DB_CONNECTION`    | `sqlite`                | Uses `database/database.sqlite` when `DB_DATABASE` is omitted in native Laravel. |
-| `SESSION_DRIVER`   | `database`              | Requires the migrated `sessions` table.                                          |
-| `CACHE_STORE`      | `database`              | Requires the migrated `cache` and `cache_locks` tables.                          |
-| `QUEUE_CONNECTION` | `database`              | Requires the jobs migration and a running worker for asynchronous work.          |
-| `MAIL_MAILER`      | `log`                   | Password-reset messages are written to the application log rather than sent.     |
-| `FILESYSTEM_DISK`  | `local`                 | Files are private under `storage/app/private` by default.                        |
-| `VITE_APP_NAME`    | inherits `APP_NAME`     | Controls the browser-title suffix.                                               |
+- **`APP_URL`** defaults to `http://localhost:8000` and must match the browser
+  origin for passkeys.
+- **`APP_LOCALE`** defaults to `en`; the current UI is English while the planned
+  product language is Czech.
+- **`DB_CONNECTION`** defaults to `sqlite` and uses
+  `database/database.sqlite` when `DB_DATABASE` is omitted in native Laravel.
+- **`SESSION_DRIVER`** defaults to `database` and requires the migrated
+  `sessions` table.
+- **`CACHE_STORE`** defaults to `database` and requires the migrated `cache` and
+  `cache_locks` tables.
+- **`QUEUE_CONNECTION`** defaults to `database` and requires the jobs migration
+  plus a running worker for asynchronous work.
+- **`MAIL_MAILER`** defaults to `log`, so password-reset messages are written to
+  the application log rather than sent.
+- **`FILESYSTEM_DISK`** defaults to `local`; files are private under
+  `storage/app/private` by default.
+- **`VITE_APP_NAME`** inherits `APP_NAME` and controls the browser-title suffix.
 
 Do not derive documentation or migrations from the Laravel Boost database in
 the present environment; the approved documentation specification records that

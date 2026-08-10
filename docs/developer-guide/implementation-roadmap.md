@@ -48,18 +48,26 @@ The verified implementation increments and resolved delivery decisions are:
 > and telemetry checks are excluded by the accepted personal-project profile in
 > [ADR 0006](../adr/0006-use-a-single-host-personal-production-profile.md).
 
+On 2026-08-10 the User explicitly directed implementation to proceed into Slice 1 while they retain responsibility for deployment. This authorizes the development sequence but is not external acceptance evidence and does not complete Slice 0.
+
 ## Slice 1: Family access
+
+The verified tracer increment now provides:
+
+- `families` and unique roleless `family_memberships` persistence with factories and Eloquent relationships;
+- authenticated Family creation through a validated Inertia form, including the first membership in one transaction;
+- a Family Access module boundary under `app/FamilyAccess` without changing the pure Shopping Generation boundary;
+- an account-deletion guard that rejects deletion if the User is the final member of any Family and otherwise preserves every Family; and
+- focused PHPUnit coverage for authentication, validation, atomic creation, duplicate membership, and the selected deletion policy.
 
 > **Planned**
 >
-> - Create Family and roleless Family Membership persistence.
 > - Decide how Users are provisioned while self-registration is disabled; add-by-email can attach only an already registered User.
-> - Let a User create a Family, add a registered User by email, leave, remove another member, switch Current Family, and delete a Family with explicit confirmation.
-> - Reconcile account deletion with the no-orphan invariant by blocking deletion or requiring explicit resolution of every Family in which that User is the final member.
+> - Let a User add a registered User by email, leave, remove another member, switch Current Family, and delete a Family with explicit confirmation.
 > - Persist the last valid Current Family selection without making it an ownership field.
 > - Establish reusable Family-scoped authorization and cross-Family test helpers.
 >
-> **Completion gate:** tests with two Users and two Families demonstrate equal membership rights and prove complete isolation of Family-owned records.
+> **Completion gate (not yet met):** tests with two Users and two Families demonstrate equal membership rights and prove complete isolation of Family-owned records.
 
 ## Slice 2: Stores and packaged Ingredients
 

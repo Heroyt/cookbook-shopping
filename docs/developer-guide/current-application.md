@@ -7,12 +7,14 @@ the unrelated database currently connected through Laravel Boost.
 
 ## Product boundary
 
-The repository currently implements an authenticated Laravel application shell,
-not the family cookbook product. Its working surfaces are:
+The repository currently implements an authenticated Laravel application shell
+and the first narrow Family Access workflow. Its working surfaces are:
 
 - a public welcome page;
 - login, logout, password reset, and passkey authentication;
 - an authenticated dashboard whose content is still placeholder panels;
+- Family creation, which creates the first roleless Family Membership for the
+  authenticated User;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -28,24 +30,36 @@ Fortify's package routes; inspect them with `php artisan route:list`. See
 
 > **Planned**
 >
-> Family Membership, Current Family selection, Ingredients, Stores, Recipes,
-> meal planning, nutrition, and Shopping List generation are approved domain
-> design, but none is implemented. Do not infer their models, authorization, or
-> persistence from the current authenticated shell. The canonical vocabulary
-> is in [CONTEXT.md](../../CONTEXT.md), and the architectural direction is
-> recorded in [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
+> Membership management beyond the initial membership, Current Family
+> selection, Ingredients, Stores, Recipes, meal planning, nutrition, and
+> Shopping List generation remain approved domain design rather than available
+> behavior. Do not infer their models, authorization, or persistence from the
+> Family-creation tracer. The canonical vocabulary is in
+> [CONTEXT.md](../../CONTEXT.md), and the architectural direction is recorded in
+> [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
 ## Technology baseline
 
 The lock files are the reproducible version source. Key installed versions are:
 
-| Concern           | Current version or target                                                                     | Evidence                                                                                                                                                                                  |
-| ----------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PHP runtime       | Composer permits PHP 8.3 or newer; development, production, and CI images target PHP 8.5      | [Composer manifest](../../composer.json), [development image](../../docker/dev/Dockerfile), [production image](../../docker/production/Dockerfile), [Jenkins pipeline](../../Jenkinsfile) |
-| Backend           | Laravel 13.24.0, Fortify 1.37.3, Inertia Laravel 3.3.1, Wayfinder 0.1.21                      | [Composer lock](../../composer.lock)                                                                                                                                                      |
-| Frontend          | Vue 3.5.41, Inertia Vue 3.6.1, TypeScript 5.9.3                                               | [pnpm lock](../../pnpm-lock.yaml)                                                                                                                                                         |
-| Build and styling | Vite 8.2.1, Tailwind CSS 4.3.3, shadcn-vue 2.8.2                                              | [pnpm lock](../../pnpm-lock.yaml), [Vite configuration](../../vite.config.ts)                                                                                                             |
-| Test and analysis | PHPUnit through Laravel, Vitest 4.1.10, PHPStan/Larastan level 10, ESLint, Prettier, and Pint | [Composer manifest](../../composer.json), [package manifest](../../package.json), [PHPStan configuration](../../phpstan.neon)                                                             |
+- **PHP runtime:** Composer permits PHP 8.3 or newer; development, production,
+  and CI images target PHP 8.5. See the
+  [Composer manifest](../../composer.json),
+  [development image](../../docker/dev/Dockerfile),
+  [production image](../../docker/production/Dockerfile), and
+  [Jenkins pipeline](../../Jenkinsfile).
+- **Backend:** Laravel 13.24.0, Fortify 1.37.3, Inertia Laravel 3.3.1, and
+  Wayfinder 0.1.21. See the [Composer lock](../../composer.lock).
+- **Frontend:** Vue 3.5.41, Inertia Vue 3.6.1, and TypeScript 5.9.3. See the
+  [pnpm lock](../../pnpm-lock.yaml).
+- **Build and styling:** Vite 8.2.1, Tailwind CSS 4.3.3, and shadcn-vue 2.8.2.
+  See the [pnpm lock](../../pnpm-lock.yaml) and
+  [Vite configuration](../../vite.config.ts).
+- **Test and analysis:** PHPUnit through Laravel, Vitest 4.1.10,
+  PHPStan/Larastan level 10, ESLint, Prettier, and Pint. See the
+  [Composer manifest](../../composer.json),
+  [package manifest](../../package.json), and
+  [PHPStan configuration](../../phpstan.neon).
 
 ## Request and rendering architecture
 
@@ -61,8 +75,8 @@ layouts by page name:
 - every other page uses the application layout.
 
 The application layout provides a responsive sidebar, breadcrumb header, and
-toast host. The sidebar currently links only to the placeholder dashboard;
-settings are reached through the user menu. See
+toast host. The sidebar links to the placeholder dashboard and the Family
+creation page; settings are reached through the user menu. See
 [the sidebar](../../resources/js/components/AppSidebar.vue) and
 [settings layout](../../resources/js/layouts/settings/Layout.vue).
 
@@ -94,10 +108,12 @@ registration or login. See
 
 The `User` model implements Fortify's passkey contract. Its password is hashed
 through an Eloquent cast, and credential secrets are hidden from serialization.
-Profile email changes clear `email_verified_at`; account deletion logs out the
-session, removes the User, and relies on the passkey foreign key's cascading
-delete. Evidence is in [User.php](../../app/Models/User.php),
+Profile email changes clear `email_verified_at`. Account deletion is rejected
+if the User is the final member of any Family. Otherwise it clears the remember
+token, removes the User, cascades that User's Family Memberships and passkeys,
+and logs out the session. Evidence is in [User.php](../../app/Models/User.php),
 [ProfileController.php](../../app/Http/Controllers/Settings/ProfileController.php),
+[DeleteUser.php](../../app/FamilyAccess/Actions/DeleteUser.php),
 and [the passkey migration](../../database/migrations/2024_01_01_000000_create_passkeys_table.php).
 
 `HandleInertiaRequests` shares the application name, authenticated User, and
@@ -110,15 +126,18 @@ and [HandleAppearance](../../app/Http/Middleware/HandleAppearance.php).
 
 ## Current persistence
 
-Only infrastructure and account data are migrated. The current schema contains:
+Infrastructure, account data, and the first Family Access records are migrated.
+The current schema contains:
 
 - Users, password-reset tokens, and sessions;
 - passkey credentials;
+- Families and unique roleless Family Memberships;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Family, Recipe, Ingredient, Store, Calendar Entry, nutrition, or
-Shopping List tables. See the [migration directory](../../database/migrations/).
+There are no Current Family preference, Recipe, Ingredient, Store, Calendar
+Entry, nutrition, or Shopping List tables. See the
+[migration directory](../../database/migrations/).
 
 The default environment uses SQLite and database-backed sessions, cache, and
 queues. The local filesystem disk points to `storage/app/private`; the public
@@ -172,11 +191,11 @@ operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 - Runtime configuration is injected rather than baked into the production
   image, but the deployment platform's secret definitions and validated
   production values are not committed here.
-- Cookbook-specific authorization, isolation tests, and media-upload workflows
-  are not implemented. The selected personal profile uses the private local
-  filesystem and intentionally requires no automated backup, recovery, or
-  centralized observability; the persistent mount remains external and
-  unverified.
+- Family-owned cookbook authorization, cross-Family isolation helpers, and
+  media-upload workflows are not implemented. The selected personal profile
+  uses the private local filesystem and intentionally requires no automated
+  backup, recovery, or centralized observability; the persistent mount remains
+  external and unverified.
 
 See [ADR 0006](../adr/0006-use-a-single-host-personal-production-profile.md)
 for the selected profile and its reassessment triggers.

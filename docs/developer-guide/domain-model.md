@@ -1,6 +1,6 @@
 # Domain model
 
-The repository currently implements the authenticated `User` and account-security shell only. The [`User` model](../../app/Models/User.php) has no Family or cookbook relationships, and there are no models, migrations, routes, controllers, or pages for the cookbook and shopping-planning domain. See [Current application](current-application.md) for the implemented surface.
+The repository implements the authenticated `User` and account-security shell plus the first Family Access tracer. The [`User` model](../../app/Models/User.php) exposes Family Membership and Family relationships, while the `app/FamilyAccess` module persists Families, creates the first membership, and protects final-member account deletion. Current Family selection and the Cookbook, Meal Planning, and Shopping Generation modules remain unimplemented. See [Current application](current-application.md) for the implemented surface.
 
 [`CONTEXT.md`](../../CONTEXT.md) is the canonical implementation-free glossary. These developer chapters explain relationships, invariants, and implementation consequences without replacing that vocabulary.
 
@@ -23,11 +23,11 @@ The approved design is governed by:
 >
 > Family is the ownership and authorization boundary at every module edge. Cookbook, planning, and saved-history records belong to exactly one Family. No operation combines or copies data across Families in the MVP.
 
-See [Architecture and system boundaries](architecture.md) for framework placement and module dependencies, and [Planned data structure](data-structure.md) for the conceptual relational shape.
+See [Architecture and system boundaries](architecture.md) for framework placement and module dependencies, and [Data structure](data-structure.md) for implemented Family persistence and the remaining conceptual relational shape.
 
 ## Capability chapters
 
-- [Family access](family-access.md) — membership, Current Family selection, isolation, and destructive operations.
+- [Family access](family-access.md) — implemented creation and account-deletion protection plus planned membership, Current Family selection, isolation, and destructive operations.
 - [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, conversions, alternatives, Recipe composition, search, and archival.
 - [Nutrition](nutrition.md) — Ingredient bases, calculated per-serving values, overrides, incomplete profiles, and daily totals.
 - [Stores and shopping order](stores-shopping-order.md) — reusable Sections, Ingredient placement, deletion behavior, and final grouping.
