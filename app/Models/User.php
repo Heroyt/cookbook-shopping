@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\FamilyAccess\Models\Family;
+use App\FamilyAccess\Models\FamilyMembership;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -34,6 +38,18 @@ class User extends Authenticatable implements PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable;
+
+    /** @return HasMany<FamilyMembership, $this> */
+    public function familyMemberships(): HasMany
+    {
+        return $this->hasMany(FamilyMembership::class);
+    }
+
+    /** @return BelongsToMany<Family, $this> */
+    public function families(): BelongsToMany
+    {
+        return $this->belongsToMany(Family::class, 'family_memberships')->withTimestamps();
+    }
 
     /**
      * Get the attributes that should be cast.
