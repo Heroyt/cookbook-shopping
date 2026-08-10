@@ -22,6 +22,8 @@ final class CreateFamily
 
             $family->memberships()->create(['user_id' => $lockedCreator->id]);
 
+            $lockedCreator->forceFill(['current_family_id' => $family->id])->save();
+
             return $family;
         });
     }

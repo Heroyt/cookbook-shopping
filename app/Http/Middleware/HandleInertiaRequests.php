@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\FamilyAccess\CurrentFamily;
+use App\FamilyAccess\Models\Family;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -17,6 +20,8 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function __construct(private readonly CurrentFamily $currentFamily) {}
 
     /**
      * Determines the current asset version.
@@ -37,12 +42,31 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $currentFamily = $user instanceof User ? $this->currentFamily->resolve($user) : null;
+        $families = $user instanceof User
+            ? $user
+                ->families()
+                ->select(['families.id', 'families.name'])
+                ->orderBy('families.id')
+                ->get()
+                ->map(fn (Family $family): array => [
+                    'id' => $family->id,
+                    'name' => $family->name,
+                ])
+            : [];
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'currentFamily' => $currentFamily === null ? null : [
+                'id' => $currentFamily->id,
+                'name' => $currentFamily->name,
+            ],
+            'families' => $families,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

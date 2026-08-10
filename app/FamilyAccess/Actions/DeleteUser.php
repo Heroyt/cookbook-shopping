@@ -30,7 +30,7 @@ final class DeleteUser
             foreach ($families as $family) {
                 if ($family->memberships_count <= 1) {
                     throw ValidationException::withMessages([
-                        'account' => __('Account deletion is unavailable while you are the final member of a Family. Family member management and Family deletion are not available yet.'),
+                        'account' => __('Account deletion is unavailable while you are the final member of a Family. Add another member or delete the Family first.'),
                     ]);
                 }
             }
