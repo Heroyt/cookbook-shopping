@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\FamilyAccess\Actions\DeleteUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    public function __construct(private readonly DeleteUser $deleteUser) {}
+
     /**
      * Show the user's profile settings page.
      */
@@ -54,9 +57,9 @@ class ProfileController extends Controller
     {
         $user = $request->authenticatedUser();
 
-        Auth::logout();
+        $this->deleteUser->handle($user);
 
-        $user->delete();
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

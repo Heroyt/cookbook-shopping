@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
+import { CircleAlertIcon } from '@lucide/vue';
 import { useTemplateRef } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -26,7 +28,7 @@ const passwordInput = useTemplateRef('passwordInput');
         <Heading
             variant="small"
             title="Delete account"
-            description="Delete your account and all of its resources"
+            description="Delete your account and Family Memberships"
         />
         <div
             class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
@@ -60,13 +62,23 @@ const passwordInput = useTemplateRef('passwordInput');
                                 account?</DialogTitle
                             >
                             <DialogDescription>
-                                Once your account is deleted, all of its
-                                resources and data will also be permanently
-                                deleted. Please enter your password to confirm
-                                you would like to permanently delete your
-                                account.
+                                Your account and Family Memberships will be
+                                permanently deleted. Shared Families keep their
+                                other members and data. Account deletion is not
+                                available while you are the final member of a
+                                Family because member management and Family
+                                deletion have not shipped yet. Enter your
+                                password to confirm.
                             </DialogDescription>
                         </DialogHeader>
+
+                        <Alert v-if="errors.account" variant="destructive">
+                            <CircleAlertIcon />
+                            <AlertTitle>Family resolution required</AlertTitle>
+                            <AlertDescription>
+                                {{ errors.account }}
+                            </AlertDescription>
+                        </Alert>
 
                         <div class="grid gap-2">
                             <Label for="password" class="sr-only"
