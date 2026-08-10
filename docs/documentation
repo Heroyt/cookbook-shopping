@@ -498,19 +498,18 @@ prepare_image() {
             echo "ERROR: Configured remote renderer is not allowlisted." >&2
             exit 1
         fi
-        # OrbStack/Docker 29 may reject a redundant digest pull with
-        # "cannot overwrite digest" even when the exact immutable image is
-        # already present. Reuse only the fully pinned, allowlisted reference;
-        # a missing image still follows the normal authenticated pull path.
-        if docker image inspect "${pdf_image}" >/dev/null 2>&1; then
-            renderer_image=${pdf_image}
-            return
-        fi
         set -- docker pull
         if [ -n "${pdf_platform}" ]; then
             set -- "$@" --platform "${pdf_platform}"
         fi
-        "$@" "${pdf_image}"
+        if ! "$@" "${pdf_image}"; then
+            if docker image inspect "${pdf_image}" >/dev/null 2>&1; then
+                echo "WARNING: Docker reported a pull failure, but the exact immutable renderer is available locally: ${pdf_image}" >&2
+            else
+                echo "ERROR: Could not pull the immutable documentation renderer: ${pdf_image}" >&2
+                exit 1
+            fi
+        fi
         renderer_image=${pdf_image}
         return
     fi

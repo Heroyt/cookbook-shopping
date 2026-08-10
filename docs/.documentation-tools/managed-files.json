@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "tool_version": "0.6.3",
+  "tool_version": "0.6.5",
   "install_profile": "remote",
   "managed_files": {
-    "docs/.documentation-tools/VERSION": "c9f56eb9348cbc8345bdaea7ca24c9f960e1598af05472794760a2682ff07a8c",
+    "docs/.documentation-tools/VERSION": "34bf52562bae401de106933a7565c9d3a5c8dc83c04b0b29492dd3f6f3983b7a",
     "docs/.documentation-tools/pdf/header.tex": "e1ff367e53bc75537048ce608b6e396482d6b945d137fe1e35b1ef9a2e641e26",
-    "docs/documentation": "564c69d59f7577697bdb3f226b09ce44d2b09d11bf1f450a77ec7163f269451a"
+    "docs/documentation": "a8b62d6f2f8b95d97b50f32a3f052a9f003ffc9b29b97d85722fae66c95731a6"
   }
 }

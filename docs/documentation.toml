@@ -13,8 +13,8 @@ contact = ""
 
 [pdf]
 mode = "remote"
-image = "rg.fr-par.scw.cloud/esoul-internal-tools/documentation-tools@sha256:927cb33b8c8e44ce3f161e7d541f9d054caad71394288ebfd3d987ede2a580b3"
-platform = "linux/amd64"
+image = "rg.fr-par.scw.cloud/esoul-internal-tools/documentation-tools@sha256:b1804236503c31bf73d559848e03582dc9843fe12bfe784c87bced4639bf134a"
+platform = ""
 dockerfile = "docs/.documentation-tools/pdf/Dockerfile"
 template = ""
 header_include = "docs/.documentation-tools/pdf/header.tex"
