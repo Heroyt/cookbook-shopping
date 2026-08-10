@@ -257,16 +257,16 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Rationale: This is the production database boundary explicitly selected by the User. The repository must continue to verify database-specific constraints and queries across both engines where their behavior differs.
 - Follow-up or review date: Reassess only if the production database engine changes.
 
-### DOC-0023 — Resolve the Slice 0 refresh review and propose version 0.1.1
+### DOC-0023 — Resolve the Slice 0 refresh review and release version 0.1.1
 
 - Date: 2026-08-09
 - Mode: Refresh
-- Status: Pending version approval
+- Status: Approved
 - Affects: Developer/operator guide and documentation publication metadata
-- Evidence: Independent repository-correctness and specification-completeness reviews; verified clean-checkout setup, production-image build, managed documentation validation, PDF build, and visual inspection
-- Decision: Correct the stale tooling status, planned/current Slice 0 split, mail scheme, local/production log and mail distinctions, migration concurrency risk, SQLite-only verification scope, setup key-rotation warning, environment placeholders, database transport-security gate, and Docker environment-file wording. Retain `0.1.0` in the specification, guide index, and renderer configuration until the User explicitly approves the proposed patch release `0.1.1`.
-- Rationale: Every actionable review finding is corrected in the Markdown or environment contract. The remaining version change requires explicit approval under DOC-0013 and must not be applied implicitly during implementation.
-- Follow-up or review date: Ask the User to approve or reject documentation version `0.1.1` at the Slice 0 handback.
+- Evidence: Independent repository-correctness and specification-completeness reviews; verified clean-checkout setup, production-image build, managed documentation validation, PDF build, and visual inspection; User approval of version `0.1.1` on 2026-08-10
+- Decision: Correct the stale tooling status, planned/current Slice 0 split, mail scheme, local/production log and mail distinctions, migration concurrency risk, SQLite-only verification scope, setup key-rotation warning, environment placeholders, database transport-security gate, and Docker environment-file wording. Apply the approved patch version `0.1.1` consistently to the specification, guide index, and renderer configuration.
+- Rationale: Every actionable review finding is corrected in the Markdown or environment contract. The User supplied the explicit approval required by DOC-0013 before the version metadata changed.
+- Follow-up or review date: None
 
 ### DOC-0024 — Upgrade managed documentation tooling to 0.6.5
 
@@ -278,3 +278,25 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Replace the temporary `0.6.3` installation and local launcher compatibility patch with the official remote-profile `0.6.5` managed tooling. Preserve project-owned guide sources and publication settings, update the pinned renderer digest, clear the obsolete `pdf.platform = "linux/amd64"` override so Docker selects the native image, and use the standard GitHub release bootstrap for future upgrades.
 - Rationale: Release `0.6.5` publishes a compatible installer and manifest, provides a native arm64 renderer, and natively handles Docker's failed redundant digest pull only when the exact immutable image is inspectable locally. The official upgrade restores the managed-tool trust and lifecycle contract without changing documentation scope or configuration schema.
 - Follow-up or review date: Reassess through the standard upgrade preview when a newer official release is requested.
+
+### DOC-0025 — Use the personal single-host production profile
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Production runtime, persistence, health, recovery, observability, and Slice 0 completion criteria
+- Evidence: User attestation on 2026-08-10; `.env.production.example`; production Dockerfile and entrypoint; `bootstrap/app.php`; `routes/console.php`; repository search showing no queued jobs or application-specific schedules; ADR 0006
+- Decision: Record the user's exact selections: keep the Komodo stack only on the server, run one image/container with startup migrations and same-host MariaDB, use filesystem media with S3 as a future option, require no automated recovery or current observability integration, and retain the existing OpenTelemetry stack only as a future option. Derive the repository contract separately: mount `/var/www/storage/app` for Laravel's private local disk, use synchronous production jobs while no worker is required, retain the image's existing cron process, and recommend shallow `/up` health polling. These derived values are not user attestations or evidence of live Komodo configuration. Workers, additional scheduler roles, dependency-aware readiness, backups, and telemetry may be introduced later when operational needs justify them.
+- Rationale: This is the smallest production profile that matches the application's current behavior and personal-project risk tolerance. It avoids an idle worker and dependency-driven restart loops while preserving a migration path to S3, asynchronous jobs, and stronger operations.
+- Follow-up or review date: Reassess before adding replicas, queued work, application-specific schedules, valuable irreplaceable data, or externally committed availability objectives.
+
+### DOC-0026 — Publish the 0.1.1 developer guide after resolving production-profile review findings
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Developer/operator guide publication readiness
+- Evidence: Successful managed-tool `doctor`, `validate`, and `build` runs; structural PDF inspection; every-page visual inspection; independent correctness, completeness, standards, and specification reviews
+- Decision: Publish the version 0.1.1 developer/operator guide after correcting every actionable review finding. Keep live Komodo configuration, `/up` polling, MariaDB connectivity, and database/private-file survival across application-container recreation as external evidence still required for Slice 0 implementation completion, not as documentation publication blockers.
+- Rationale: The Markdown and generated PDF now satisfy the approved mechanical, visual, privacy, accessibility, correctness, and completeness gates without overstating the unobserved production deployment.
+- Follow-up or review date: Collect and record the external acceptance evidence before marking Slice 0 complete.

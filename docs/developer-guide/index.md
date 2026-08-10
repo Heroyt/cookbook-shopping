@@ -1,6 +1,6 @@
 # Developer and Operator Guide
 
-Documentation version: **0.1.0**
+Documentation version: **0.1.1**
 
 This guide is the main technical entry point for developing and operating the cookbook and shopping-planning application. It describes the application that exists in the repository today and the approved domain design that has not yet been implemented.
 
@@ -24,7 +24,7 @@ The canonical implementation-free vocabulary remains in [the domain glossary](..
 10. [Shopping-list generation](shopping-generation.md) — service boundary, conversions, aggregation, alternatives, and output.
 11. [Planned data structure](data-structure.md) — conceptual relational model, ownership keys, constraints, and snapshots.
 12. [Frontend architecture and navigation](frontend-navigation.md) — current shell and planned responsive workflows.
-13. [Infrastructure and deployment](infrastructure-deployment.md) — current Docker/Jenkins delivery path, operational gaps, and planned production topology.
+13. [Infrastructure and deployment](infrastructure-deployment.md) — current Docker/Jenkins delivery path, selected external production profile, and remaining acceptance evidence.
 14. [Security and observability](security-observability.md) — implemented controls, Family authorization requirements, secrets, health, and telemetry.
 15. [Implementation roadmap](implementation-roadmap.md) — dependency-ordered vertical slices and completion gates.
 

@@ -153,21 +153,31 @@ Jenkins runs PHP quality checks and parallel tests, frontend type checks and
 Vitest, and a production-image build for change requests. Commits on `main` or
 `master` build and push a multi-platform image to a Scaleway registry and ask
 Komodo to deploy the configured stack. This describes pipeline code, not proof
-that credentials, registry access, the target stack, backups, or rollback have
-been operationally verified. See [Jenkinsfile](../../Jenkinsfile).
+that credentials, registry access, the target stack, health polling, migrations,
+or persistence across container recreation have been operationally verified.
+See [Jenkinsfile](../../Jenkinsfile).
 
-## Known current-state gaps
+## Known current-state constraints and evidence gaps
 
 - The development Compose stack defines no database service. Its default
-  path is the repository's SQLite database. Production is configured for
-  MariaDB, but no production database service or external provisioning is
-  represented in this repository yet.
+  path is the repository's SQLite database. The user attests that production
+  MariaDB runs on the application host, but its live configuration is not
+  represented in this repository.
 - The production image contains PHP-FPM and a scheduler trigger but no web
-  proxy, queue-worker process, readiness check, or deployable production stack.
+  proxy or queue worker. The external Komodo stack supplies the single-container
+  runtime by user attestation; the repository uses synchronous production jobs
+  and recommends `/up` as its shallow health signal, but cannot verify live
+  proxy or health-check configuration.
 - Runtime configuration is injected rather than baked into the production
   image, but the deployment platform's secret definitions and validated
   production values are not committed here.
-- Cookbook-specific authorization, isolation tests, storage strategy, backup
-  policy, monitoring, and recovery are not implemented yet.
+- Cookbook-specific authorization, isolation tests, and media-upload workflows
+  are not implemented. The selected personal profile uses the private local
+  filesystem and intentionally requires no automated backup, recovery, or
+  centralized observability; the persistent mount remains external and
+  unverified.
+
+See [ADR 0006](../adr/0006-use-a-single-host-personal-production-profile.md)
+for the selected profile and its reassessment triggers.
 
 Use [Local Development](local-development.md) for setup and quality commands.

@@ -3,9 +3,9 @@
 ## Status
 
 - Mode: Create
-- Approval: Approved on 2026-08-09 after Family-scope revision
+- Approval: Approved on 2026-08-09 after Family-scope revision; version 0.1.1 refresh approved on 2026-08-10
 - Primary languages: Czech for the user guide; English for the developer/operator guide
-- Documentation version: 0.1.0
+- Documentation version: 0.1.1
 
 ## Application and evidence
 
@@ -168,5 +168,5 @@ Version documentation independently using semantic versioning, beginning at `0.1
 - [x] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
 - [x] All material claims have evidence or explicit user attestation.
 - [x] Every published screenshot is manifested and approved; this revision publishes no screenshots.
-- [ ] Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
+- [x] Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
 - [x] Correctness and completeness review findings are resolved or explicitly accepted.

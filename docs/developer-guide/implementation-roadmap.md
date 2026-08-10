@@ -7,7 +7,7 @@ This roadmap orders the approved MVP by dependency and risk. It is an implementa
 
 ## Slice 0: delivery baseline
 
-The verified Slice 0 increments are:
+The verified implementation increments and resolved delivery decisions are:
 
 - `composer setup` succeeds from an isolated clean checkout with SQLite,
   frozen pnpm dependencies, migrations, and a production frontend build.
@@ -19,19 +19,34 @@ The verified Slice 0 increments are:
   environment file or caching Laravel configuration during the image build.
 - The production image builds with the declared pnpm version and includes the
   MariaDB PDO driver.
+- The repository contract records the selected personal deployment profile:
+  one Komodo-managed application container, host-local MariaDB, synchronous
+  jobs, and a required persistent private filesystem mount. `/up` is the
+  recommended minimal health signal; automated recovery and centralized
+  observability are explicitly out of scope. Live server acceptance remains
+  unverified.
 
 > **Planned**
 >
-> Complete the remaining delivery baseline before adding Family data:
+> Verify the externally managed production profile before adding Family data:
 >
-> - Provision the production MariaDB service and decide the durable
->   photo-storage backend.
-> - Represent the production ingress, database, volumes/object storage, queue worker, scheduler, and backup jobs in deployable configuration.
-> - Define readiness checks, backup restoration, and rollback procedures.
+> - Confirm the Komodo container boots and startup migrations succeed against
+>   the same-host MariaDB service.
+> - Configure Komodo or the proxy to poll `/up` and confirm it returns HTTP 200.
+> - Confirm a MariaDB record and a private file beneath the persistent
+>   `/var/www/storage/app` mount survive application-container recreation.
+> - Exercise database-sensitive migrations and constraints against the selected
+>   MariaDB server version before product migrations ship.
+>
+> Follow the non-secret
+> [external acceptance checklist](infrastructure-deployment.md#external-acceptance-checklist)
+> to collect this evidence without using real Family data.
 >
 > **Completion gate (not yet met):** a production-like deployment can boot,
-> migrate, serve `/up`, run a queue job, persist a test file, back up its
-> database and media, and restore both into an isolated environment.
+> migrate, serve `/up`, and preserve both MariaDB data and a private test file
+> across container recreation. Queue-worker, scheduler-workload, backup/restore,
+> and telemetry checks are excluded by the accepted personal-project profile in
+> [ADR 0006](../adr/0006-use-a-single-host-personal-production-profile.md).
 
 ## Slice 1: Family access
 

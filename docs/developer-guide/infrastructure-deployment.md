@@ -1,18 +1,18 @@
 # Infrastructure, Deployment, and Operations
 
-This chapter describes the infrastructure that is present in the repository today and separates it from the production baseline still to be designed. The current application is one Laravel deployment; its planned modular-monolith organization is established by [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md). The repository does not yet contain a complete, self-hosted production stack.
+This chapter describes the infrastructure that is present in the repository and the user-attested production profile operated outside it. The current application is one Laravel deployment; its planned modular-monolith organization is established by [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md). The Komodo stack is configured directly on the production server and is intentionally not stored in a repository, so repository evidence cannot verify its live settings.
 
 ## Status at a glance
 
 | Concern            | Current repository evidence                                                                                                       | Operational consequence                                                                                                |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Local runtime      | Docker Compose runs an Nginx container and one development application container                                                  | The application, Vite server, scheduler, and queue worker can run together for development                             |
-| Production runtime | A multi-stage Dockerfile builds a PHP-FPM image with compiled frontend assets                                                     | A separate web proxy and runtime stack are required; neither is defined in this repository                             |
+| Production runtime | A multi-stage Dockerfile builds a PHP-FPM image; the user attests that Komodo runs one application container on the server       | The proxy and stack are externally managed and cannot be reproduced from this repository                               |
 | Local persistence  | SQLite is the development and test default; cache and queue also default to the database                                           | Local setup needs a writable SQLite file                                                                               |
-| Production database | MariaDB is selected in ADR 0005 and `.env.production.example`; no database service is committed                                  | Provisioning, versioning, credentials, backup, restore, and availability remain deployment responsibilities            |
+| Production database | MariaDB is selected in ADR 0005 and runs on the same host as the application according to the user attestation                   | Hostname, version, credentials, exposure, and live availability remain server configuration                            |
 | Delivery           | Jenkins tests, builds, pushes, and asks Komodo to redeploy the `cook-book` stack on `main` or `master`                            | The Jenkins shared libraries, credentials, Komodo stack definition, and server configuration are external dependencies |
-| Recovery           | No backup, restore, retention, or disaster-recovery automation is committed                                                       | Production recovery cannot currently be performed from this repository alone                                           |
-| Scaling            | MariaDB is external to application roles, but local files and per-container cron remain local                                      | Horizontal scaling remains unsafe until storage and execution-role gates are resolved                                  |
+| Recovery           | No automated backup, restore, retention, or disaster-recovery objective is required for this personal project                    | Correctly configured persistent database/media storage should survive container recreation but may be lost with the host |
+| Scaling            | The selected production profile is one application container, one host-local MariaDB service, and one persistent filesystem mount | Horizontal scaling is outside the current profile; the live mount remains unverified                                    |
 
 ## Local Docker topology
 
@@ -65,19 +65,19 @@ Laravel reads runtime choices from environment variables through the files under
 
 | Data                      | Current driver                                    | Location or table                                                               | Persistence requirement                                                                            |
 | ------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Application data          | SQLite locally; MariaDB in production             | Local `DB_DATABASE` file or the configured MariaDB schema                       | Back up the production MariaDB service and preserve local databases when needed                     |
+| Application data          | SQLite locally; MariaDB in production             | Local `DB_DATABASE` file or the configured MariaDB schema                       | Persist MariaDB outside the application container; backup is optional under the accepted risk profile |
 | Sessions                  | Database in the local and production examples     | `sessions` table                                                                | Preserve the chosen database for uninterrupted login sessions                                       |
 | Cache and locks           | Database                                          | `cache` and `cache_locks` tables                                                | Disposable for recovery, but required while the application is running                             |
-| Queue and failures        | Database                                          | `jobs`, `job_batches`, and `failed_jobs` tables                                 | Preserve while work is pending or failures require inspection                                      |
-| Private uploads           | Local filesystem                                  | `storage/app/private`                                                           | Persist and back up once the application stores user media                                         |
-| Public uploads            | Local filesystem                                  | `storage/app/public`, exposed through `public/storage`                          | Persist and back up once the application stores public media                                       |
-| Application logs          | Local `stack`/`single`; production example `stderr` | Local `storage/logs/laravel.log` or the production container's standard error | Collect externally and retain long enough to diagnose incidents                                     |
-| Scheduler and worker logs | Local files                                       | `storage/logs/scheduler.log` and `storage/logs/queue-worker.log` in development | Collect or rotate explicitly                                                                       |
+| Queue and failures        | Database locally; synchronous in production       | Local `jobs`, `job_batches`, and `failed_jobs`; no production queue persistence | Add a supervised worker before changing production back to an asynchronous connection               |
+| Private uploads           | Local filesystem                                  | `storage/app/private` beneath the `/var/www/storage/app` persistent mount       | Keep Family media private and preserve the mount across container recreation                        |
+| Public uploads            | Local filesystem                                  | `storage/app/public` beneath the same mount, exposed through `public/storage`   | Use only for deliberately public assets; Family media remains private by default                     |
+| Application logs          | Local `stack`/`single`; production example `stderr` | Local `storage/logs/laravel.log` or the production container's standard error | External collection and retention are optional for the personal profile                              |
+| Scheduler and worker logs | Local files                                       | `storage/logs/scheduler.log` in both images and `queue-worker.log` in development | Production scheduler output is ephemeral unless separately mounted or collected                     |
 | Mail                      | Local log driver; production example SMTP         | Local application log or the configured production SMTP service                 | Inject and verify production SMTP credentials before password resets can be delivered               |
 
 The schema for sessions, cache, queues, failed jobs, and authentication data is committed under [`database/migrations/`](../../database/migrations). Supported Laravel connection definitions for MySQL, MariaDB, PostgreSQL, SQL Server, Redis, S3, and several mail transports exist, but configuration support is not evidence that those services are provisioned or tested for this application.
 
-The application exposes Laravel's built-in health endpoint at `/up` through [`bootstrap/app.php`](../../bootstrap/app.php). Neither Dockerfile defines a container health check, and the repository has no evidence that Komodo or an upstream proxy polls this endpoint.
+The application exposes Laravel's built-in health endpoint at `/up` through [`bootstrap/app.php`](../../bootstrap/app.php). For the single-container profile, use it as the minimal Komodo or proxy health signal: it returns success when Laravel boots and intentionally does not turn a transient MariaDB outage into an application restart loop. Neither Dockerfile defines a container health check, and the repository cannot verify whether the external stack currently polls the route.
 
 ## Production image
 
@@ -92,40 +92,67 @@ The final container exposes FastCGI on port `9000` and runs PHP-FPM in the foreg
 
 At startup, the [production entrypoint](../../docker/production/start) creates storage directories, applies ownership, caches configuration and other Laravel optimizations from runtime-injected values, creates the storage link, and runs migrations. A migration failure terminates startup before cron or PHP-FPM begins. A successful startup then starts cron and PHP-FPM.
 
-### Current production blockers and risks
+### Current production constraints and risks
 
-- The selected MariaDB production database is not provisioned by any committed stack, and its supported server version, credentials, availability, connection limits, backup, and restore behavior are not defined here.
+- MariaDB runs on the same host according to the user attestation, but its supported server version, credentials, network exposure, and connection limits are not repository evidence. Keep it off the public network unless a reviewed TLS configuration protects the connection.
 - The image deliberately contains no `.env` or build-time Laravel configuration cache. The external deployment must inject every required runtime value; `.env.production.example` is a non-secret contract, not deployable credentials.
-- The final image stores uploads, framework state, scheduler output, and default logs on its writable container filesystem unless the external stack mounts persistent storage.
-- The final image contains no readiness check or production queue-worker process.
-- Every application container runs migrations during startup. Until the
-  production rollout serializes migrations through a release job or one
-  designated instance, multiple replicas must not start concurrently against
-  an unapplied schema. The rollout and rollback contract must keep application
-  and schema versions compatible.
-- Every application replica starts cron. Multiple replicas would execute the same scheduled work unless scheduling is separated or guarded.
+- Komodo must persist `/var/www/storage/app`; without that mount, uploaded media is lost when the container is replaced. The repository cannot verify the live mount.
+- The final image contains no production queue worker. The production environment therefore uses the synchronous queue connection while the application has no queued jobs.
+- The single application container runs migrations during startup before PHP-FPM. Adding replicas requires a release job or another migration-serialization mechanism before concurrent startup.
+- The container starts cron, but no application-specific scheduled commands are registered. Adding replicas or scheduled work requires exactly one scheduler trigger.
+- `/up` is deliberately shallow. It does not prove MariaDB, mail, writable media storage, or the external proxy is healthy.
 - The image uses local PHP-FPM limits of ten children. No load test or capacity target is committed, so this is a configuration value rather than a demonstrated capacity.
 
 The development image, production image, package manifest, clean-checkout setup, and GitHub Actions path now use pnpm 11.17.0 with the committed frozen lockfile. The native clean-checkout and production-image build have both been exercised successfully; this does not prove the external deployment topology.
 
-> **Planned**
->
-> Complete the production environment contract before the first public deployment. The tracked `.env.production.example` selects MariaDB and names non-secret settings, while the deployment must inject a persistent `APP_KEY`, reviewed MariaDB credentials, the canonical HTTPS `APP_URL`, a delivering mail transport, the selected durable filesystem, and production log routing.
+The tracked `.env.production.example` represents the accepted non-secret runtime contract: MariaDB, synchronous jobs, stderr logging, SMTP, secure database sessions, and the private local filesystem. Komodo must inject a persistent `APP_KEY`, reviewed MariaDB and mail credentials, the canonical HTTPS `APP_URL`, and the actual server hostnames without committing those values.
 
-## Deployment decision gates
+## Selected production profile
 
-> **Planned**
->
-> The committed delivery assets are not yet an executable production topology. Resolve and record these choices before Slice 0 can pass:
->
-> - **Database:** MariaDB is selected for production and SQLite remains the development/test database. Provision the MariaDB service and record its supported version, availability, credentials, backup, restore, migration, and connection-pool behavior. Decide whether the connection is restricted to a private trusted network or protected with TLS; when TLS is required, inject and verify the CA and connection options. Verify database-specific migrations and constraints against MariaDB before product tables ship.
-> - **Media:** choose a durable mounted filesystem or S3-compatible object storage for Recipe, Ingredient, and Store images. Define authorization, retention, deletion, and backup behavior.
-> - **Stack ownership:** place the Komodo stack, proxy/TLS contract, networks, health checks, persistent mounts, worker, scheduler, and runtime secrets under version control here or in a named operations repository.
-> - **Execution roles:** decide whether web, queue worker, and scheduler use one image with different commands or distinct images. Exactly one scheduler trigger must operate, and workers must restart on deployment.
-> - **Recovery:** approve recovery-point and recovery-time objectives, backup retention, restore-test cadence, and rollback ownership.
-> - **Observability:** choose log, metric, trace, uptime, and alert destinations and define who responds.
->
-> These are hard deployment prerequisites rather than implied properties of Jenkins or the production Dockerfile. Each selected infrastructure option should receive an ADR when it creates meaningful lock-in or a non-obvious trade-off.
+The user supplied the following personal-project choices on 2026-08-10, recorded in [ADR 0006](../adr/0006-use-a-single-host-personal-production-profile.md):
+
+- **Stack ownership:** Komodo configuration lives only on the production server.
+- **Database:** MariaDB runs on the same host; SQLite remains the development and test database.
+- **Media:** Family media uses the private local disk persisted from `/var/www/storage/app`. S3 is a future migration option, not a current requirement.
+- **Execution:** one application image and one container run startup migrations and PHP-FPM. The existing image also starts cron.
+- **Recovery:** no automated backup, restore, retention, RPO, or RTO is required for the personal project.
+- **Observability:** stderr logs are sufficient for now. The existing OpenTelemetry stack may be connected later.
+
+The repository derives two operational defaults from those choices: production uses synchronous jobs while there is no worker, and `/up` is the recommended shallow Komodo or proxy health signal. The exact `/var/www/storage/app` mount is the required Laravel path for the selected private local disk. These are repository recommendations and configuration consequences, not claims that the user supplied those exact values or that Komodo already applies them.
+
+These choices resolve the design gates but do not verify the external server. Before declaring the deployment acceptance check complete, observe that the Komodo container boots, migrations succeed, `/up` returns HTTP 200 through the proxy, and both a MariaDB record and a private test file survive container recreation.
+
+### External acceptance checklist
+
+Run this checklist from the Komodo application console and an external client without exposing credentials or using real Family data:
+
+1. Record the deployed Git commit or immutable image digest, timestamp, and the MariaDB server version shown by `php artisan db:show --database=mariadb --no-interaction`.
+2. Record the application-container startup log through the successful migration line and PHP-FPM start. A swallowed or missing migration result fails the check.
+3. From outside the server, run `curl -fsS -o /dev/null -w '%{http_code}\n' https://cookbook.example.com/up` using the real canonical host and record the HTTP 200 result.
+4. Create synthetic sentinels through Laravel's configured services:
+
+   ```bash
+   php artisan tinker --no-interaction --execute 'cache()->forever("slice0:acceptance", "before-recreate");'
+   php artisan tinker --no-interaction --execute 'Illuminate\Support\Facades\Storage::disk("local")->put("slice0-acceptance.txt", "before-recreate");'
+   ```
+
+5. Recreate only the application container in Komodo. Do not recreate MariaDB or delete/recreate the persistent storage mount.
+6. Confirm both sentinels survived:
+
+   ```bash
+   php artisan tinker --no-interaction --execute 'dump(cache()->get("slice0:acceptance"));'
+   php artisan tinker --no-interaction --execute 'dump(Illuminate\Support\Facades\Storage::disk("local")->get("slice0-acceptance.txt"));'
+   ```
+
+   Both commands must output `before-recreate`. This proves the configured database-backed cache and private filesystem survived application-container replacement; it does not prove recovery from host loss.
+7. Remove the synthetic data:
+
+   ```bash
+   php artisan tinker --no-interaction --execute 'cache()->forget("slice0:acceptance");'
+   php artisan tinker --no-interaction --execute 'Illuminate\Support\Facades\Storage::disk("local")->delete("slice0-acceptance.txt");'
+   ```
+
+Record only non-secret results. Keep Komodo configuration, environment values, database credentials, and mail credentials on the server.
 
 ## Continuous integration and delivery
 
@@ -135,9 +162,10 @@ The [GitHub Actions workflow](../../.github/workflows/tests.yml) runs for pull r
 
 Current automated application tests run only on SQLite. The delivery contract
 checks that MariaDB is selected and that the production image includes its PDO
-driver, but it does not connect to a MariaDB server. Once the server version and
-provisioning are selected, CI must add a MariaDB migration, constraint, and
-query-compatibility job before database-sensitive product migrations ship.
+driver, but it does not connect to the host MariaDB server. Run migrations and
+database-sensitive constraint/query tests against the selected server version
+before product migrations ship; this may be an explicit deployment check rather
+than a repository-hosted CI service for the personal profile.
 
 The [Jenkins pipeline](../../Jenkinsfile) is the deployment path. It depends on organization-provided `dockerHelpers`, `testing`, and `deploy` shared libraries. Its relevant flow is:
 
@@ -149,23 +177,23 @@ The [Jenkins pipeline](../../Jenkinsfile) is the deployment path. It depends on 
 
 The repository does not contain the shared-library implementations, registry retention policy, Komodo endpoint, stack manifest, reverse-proxy configuration, TLS configuration, runtime environment, volume mounts, or rollback policy. Consequently, Jenkins is evidence of an automated handoff, not a reproducible standalone deployment runbook.
 
+The pipeline calls the external `deployKomodoStack` helper but contains no post-deploy request to `/up`, no assertion that startup migrations succeeded, and no database or filesystem persistence check. A successful Jenkins stage therefore does not satisfy Slice 0's external completion gate.
+
 > **Planned**
 >
-> Make releases immutable and reversible: deploy a commit- or digest-specific image rather than relying only on `latest`, retain at least one known-good image, define a health-checked rollout and rollback procedure, and fail deployment when migrations fail. Record the external Komodo stack's required services, mounts, networks, secrets, and proxy contract in version-controlled infrastructure or an explicitly governed operations repository.
+> If deployment risk grows beyond the personal-project profile, make releases immutable and reversible: deploy a commit- or digest-specific image rather than relying only on `latest`, retain a known-good image, and add a health-checked rollback procedure. Until then, keep a private server-side checklist of the Komodo stack's required services, mounts, networks, secrets, and proxy contract because the user has explicitly chosen not to store that configuration in a repository.
 
 ## Recovery and data protection
 
-There is no implemented backup or restore process. No committed job backs up the selected MariaDB production database or uploaded files, no retention schedule is defined, and no restore test is recorded. Operators must not describe the application as recoverable until both the mutable database and storage contents are covered by a tested process.
+There is no implemented backup or restore process, and none is required for the selected personal-project profile. When correctly configured, persistent MariaDB storage and the `/var/www/storage/app` mount should protect data across application-container replacement; that behavior has not been observed from this repository and does not protect against host loss, corruption, or operator error. Do not describe the application as recoverable.
 
 Cache data can be rebuilt, but the database may also contain sessions, queued work, and failed-job records in addition to primary application data. Decide deliberately whether those operational tables belong in recovery objectives. The application key is also recovery-critical: changing or losing it invalidates encrypted application data and signed/encrypted cookies.
 
-> **Planned**
->
-> Before storing real family data, define recovery-point and recovery-time objectives; automate backups for the production database and uploaded media; keep copies outside the application host; document restoration into an isolated environment; and perform a restore drill. Preserve the application key in the secret-management system, not only in a container or host-local file.
+Preserve the application key in Komodo's runtime configuration rather than only inside a replaceable container. Revisit backups, retention, and restore testing if the stored data becomes valuable enough that host loss is unacceptable.
 
 ## Scaling model
 
-No committed production topology exists yet. MariaDB removes the selected production database from individual application containers, but local files remain node-local, each web replica would run the scheduler, and the production image has no queue-worker topology.
+The selected production topology is intentionally one application container on one host, with host-local MariaDB and a required persistent local media mount. Its live persistence remains unverified. It is not horizontally scalable and does not claim to be highly available.
 
 > **Planned**
 >
@@ -195,7 +223,7 @@ The development Nginx proxy handles `/resources`, `/node_modules`, `@vite`, `@fs
 
 ### Queued work does not run
 
-The local stack starts one database queue worker. Inspect `storage/logs/queue-worker.log` and the `failed_jobs` table. The production image starts no worker, so verify that the external deployment provides one before expecting asynchronous jobs to run.
+The local stack starts one database queue worker. Inspect `storage/logs/queue-worker.log` and the `failed_jobs` table. Production uses the synchronous queue connection while no worker or queued jobs are required. If production changes to `database` or another asynchronous connection, add and supervise a worker before dispatching work.
 
 ### Scheduled work runs more than once
 
@@ -203,7 +231,7 @@ Each application container starts cron. Verify the replica count and ensure only
 
 ### Health checks disagree with actual readiness
 
-`/up` proves that Laravel can answer the framework health route; it does not currently verify database migrations, queue-worker health, mail delivery, writable persistent storage, or backup freshness. Use it as a liveness signal only until explicit readiness checks are implemented.
+`/up` proves that Laravel can answer the framework health route; it does not verify MariaDB, mail delivery, or writable persistent storage. That shallow behavior is intentional for the single-container personal profile so dependency outages do not trigger restart loops. Configure Komodo or the proxy to poll it, and diagnose dependencies separately when application requests still fail.
 
 ## Evidence and known gaps
 
@@ -212,10 +240,10 @@ This chapter is based on repository configuration, container definitions, migrat
 The following cannot be verified from this repository:
 
 - The actual public host, reverse proxy, TLS termination, DNS, firewall, and runtime topology.
-- The Komodo stack definition, deployed environment variables, persistent mounts, health checks, and rollback behavior.
+- The Komodo stack definition, deployed environment variables, persistent mounts, and active `/up` health check.
 - Scaleway registry access and image-retention behavior.
-- Provisioned MariaDB version, topology, credentials, availability, and backup/restore process.
-- Production mail delivery, centralized logs, metrics, traces, alerts, and incident response.
-- Capacity, availability, recovery, and data-retention objectives.
+- Provisioned MariaDB version, credentials, network exposure, availability, and persistent data location.
+- Production mail delivery and any optional OpenTelemetry integration.
+- Live persistence across container recreation and actual capacity.
 
 Treat claims about those concerns as unverified until their authoritative configuration or an operator attestation is added to the documentation evidence set.

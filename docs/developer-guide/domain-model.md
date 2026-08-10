@@ -13,6 +13,7 @@ The approved design is governed by:
 - [ADR 0003: Scope domain data to Families](../adr/0003-scope-domain-data-to-families.md)
 - [ADR 0004: Build a Laravel modular monolith](../adr/0004-build-a-laravel-modular-monolith.md)
 - [ADR 0005: Use MariaDB in production and SQLite locally](../adr/0005-use-mariadb-in-production-and-sqlite-locally.md)
+- [ADR 0006: Use a single-host personal production profile](../adr/0006-use-a-single-host-personal-production-profile.md)
 
 ## Planned boundaries
 

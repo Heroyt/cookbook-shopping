@@ -32,7 +32,7 @@ Production must set `APP_DEBUG=false`, use HTTPS, set secure session-cookie beha
 ## Planned photos and files
 
 > **Planned**
-> Recipe cover photos, Ingredient photos, and Store logos are Family-owned data. The current default filesystem is local and no upload workflow exists. Before implementing uploads, choose either durable mounted storage or an S3-compatible object store, validate MIME type and size, generate server-controlled filenames, and authorize every non-public retrieval.
+> Recipe cover photos, Ingredient photos, and Store logos are Family-owned data. The selected backend is Laravel's private local disk persisted through the Komodo mount at `/var/www/storage/app`; S3 remains a future migration option. No upload workflow exists yet. Validate MIME type and size, generate server-controlled filenames, and authorize every non-public retrieval when uploads are implemented.
 >
 > Do not place sensitive Family media on an unauthenticated public disk by default. File deletion must be coordinated with record replacement, archiving, and Family deletion. Feature tests should use Laravel filesystem fakes.
 
@@ -53,14 +53,11 @@ Runtime credentials—including `APP_KEY`, MariaDB credentials, mail credentials
 
 ## Health and logs
 
-Laravel exposes `/up` through [application bootstrap](../../bootstrap/app.php). It proves the framework can boot; it does not currently verify database, cache, queue, storage, or mail dependencies.
+Laravel exposes `/up` through [application bootstrap](../../bootstrap/app.php). It proves the framework can boot and is the selected minimal Komodo or proxy health signal for the single-container profile. It intentionally does not verify database, storage, or mail dependencies, because a dependency outage should not cause a restart loop.
 
-The default log stack writes to Laravel's configured channels. Development containers additionally write scheduler, queue-worker, and Supervisor logs beneath `storage/logs`. The production image starts the scheduler and PHP-FPM but does not configure a production queue worker inside the image.
+The default log stack writes to Laravel's configured channels. Development containers additionally write scheduler, queue-worker, and Supervisor logs beneath `storage/logs`. The production example streams application logs to stderr, uses synchronous jobs, and starts PHP-FPM plus the existing cron entry without a queue worker. No centralized log, metric, trace, uptime, or alert destination is required for the personal project.
 
-> **Planned**
-> Keep `/up` as a liveness check and add a deployment-specific readiness check for required dependencies without exposing sensitive details. Stream application and worker logs to container stdout/stderr or a centralized collector, define retention, and alert on HTTP error rate, failed jobs, queue age, migration failure, storage errors, and backup failure.
-
-`.env.docker` defines OpenTelemetry-related variables, while development Compose disables PHP auto-instrumentation. No repository evidence proves that telemetry export is active in production. Treat OpenTelemetry as unverified until the deployed image and collector are observed.
+`.env.docker` defines OpenTelemetry-related variables, while development Compose disables PHP auto-instrumentation. The user has an OpenTelemetry stack available for later integration, but no repository evidence proves that telemetry export is active in production. Add dependency-aware readiness, centralized telemetry, or alerts only when operational needs justify them.
 
 ## Audit and privacy limits
 
