@@ -41,9 +41,9 @@ The connected Laravel Boost database is explicitly excluded as evidence because 
 
 ## Publication verification
 
-The Markdown guide is the source of truth. The repository's temporary managed
-documentation tooling is available under the approved exception recorded in
-[DOC-0021](../documentation-decisions.md#doc-0021--temporarily-install-trusted-063-tooling-with-local-compatibility-fixes).
+The Markdown guide is the source of truth. The repository uses the official
+managed documentation tooling recorded in
+[DOC-0024](../documentation-decisions.md#doc-0024--upgrade-managed-documentation-tooling-to-065).
 Its doctor, validation, PDF build, and visual inspection gates pass for this
 revision. The generated PDF remains an ignored build artifact and must be
 regenerated from the Markdown sources for publication.

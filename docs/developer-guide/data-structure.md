@@ -12,15 +12,35 @@ The conceptual model below applies the decisions to use [Family ownership](../ad
 
 > **Planned** — The following structure is conceptual. It names durable relationships and constraints approved in [`CONTEXT.md`](../../CONTEXT.md); it is not a migration contract. Table names, key types, decimal precision, indexes, media storage, and snapshot encoding must be finalized during implementation.
 >
-> | Area          | Conceptual records                                                                       | Important relationships and constraints                                                                                                                                                                                  |
-> | ------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-> | Family Access | `families`, `family_memberships`, Current Family preference                              | Membership is unique per User and Family and has no role. A User can have many memberships. Current Family must reference one of that User's memberships.                                                                |
-> | Store layout  | `stores`, `store_sections`, `store_section_positions`                                    | Stores and Sections belong to one Family. The association between a Store and reusable Section carries traversal position and is unique for that pair.                                                                   |
-> | Ingredients   | `ingredients`, `ingredient_package_quantities`, `ingredient_alternatives`                | An Ingredient belongs to one Family, has at least one positive package quantity, and optionally references one Store and one Section valid for that Store. Alternative edges are symmetric and non-transitive.           |
-> | Nutrition     | `ingredient_nutrition_profiles`                                                          | A profile belongs to an Ingredient and stores an explicit basis quantity/unit plus kcal, fat, protein, and carbohydrates.                                                                                                |
-> | Recipes       | `recipes`, `recipe_ingredients`, `recipe_steps`, `recipe_tags`, `recipe_tag_assignments` | A Recipe belongs to one Family, has a positive base Serving Count, and has one or more ordered Recipe Ingredients. Ingredient lines may repeat. Steps are ordered. Tags are Family-scoped and many-to-many with Recipes. |
-> | Calendar      | `calendar_entries`                                                                       | An entry belongs to one Family and references a Recipe from that Family. Date, optional fixed Meal Label, and positive Serving Count are stored. Recipe, date, and Meal Label form the business uniqueness rule.         |
-> | Saved history | `saved_shopping_lists` plus snapshot payload or immutable child records                  | A saved list belongs to one Family, is identified by generation timestamp, and freezes output plus Calendar or Simple Plan provenance.                                                                                   |
+>
+> - **Family Access:** `families`, `family_memberships`, and a Current Family
+>   preference. Membership is unique per User and Family and has no role. A User
+>   can have many memberships. Current Family must reference one of that User's
+>   memberships.
+> - **Store layout:** `stores`, `store_sections`, and
+>   `store_section_positions`. Stores and Sections belong to one Family. The
+>   association between a Store and reusable Section carries traversal position
+>   and is unique for that pair.
+> - **Ingredients:** `ingredients`, `ingredient_package_quantities`, and
+>   `ingredient_alternatives`. An Ingredient belongs to one Family, has at least
+>   one positive package quantity, and optionally references one Store and one
+>   Section valid for that Store. Alternative edges are symmetric and
+>   non-transitive.
+> - **Nutrition:** `ingredient_nutrition_profiles`. A profile belongs to an
+>   Ingredient and stores an explicit basis quantity and unit plus kcal, fat,
+>   protein, and carbohydrates.
+> - **Recipes:** `recipes`, `recipe_ingredients`, `recipe_steps`, `recipe_tags`,
+>   and `recipe_tag_assignments`. A Recipe belongs to one Family, has a positive
+>   base Serving Count, and has one or more ordered Recipe Ingredients. Ingredient
+>   lines may repeat. Steps are ordered. Tags are Family-scoped and many-to-many
+>   with Recipes.
+> - **Calendar:** `calendar_entries`. An entry belongs to one Family and
+>   references a Recipe from that Family. Date, optional fixed Meal Label, and
+>   positive Serving Count are stored. Recipe, date, and Meal Label form the
+>   business uniqueness rule.
+> - **Saved history:** `saved_shopping_lists` plus a snapshot payload or immutable
+>   child records. A saved list belongs to one Family, is identified by generation
+>   timestamp, and freezes output plus Calendar or Simple Plan provenance.
 
 <!-- prettier-ignore -->
 > **Planned**

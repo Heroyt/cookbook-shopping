@@ -27,7 +27,6 @@ Do not use the currently connected Laravel Boost database as evidence because it
 ### Evidence gaps and attestations
 
 - Laravel Boost is connected to an unrelated livestock-management database. Repository migrations and code remain authoritative until that connection is corrected.
-- Documentation-tool release `0.6.3` omits the published `install.sh` asset required by the skill, and its verified tag-pinned source script rejects the published `release.env` because `CONFIG_SCHEMA_VERSION` is missing. A User-approved temporary installation supplies only that missing schema value, pins the official Scaleway images by immutable digest, and locally makes the launcher reuse the exact cached renderer because OrbStack/Docker 29 rejects a redundant digest pull. The stable command, integrity doctor, and mechanical validation are available; the installation must be replaced with an unmodified official release when the public defects are fixed.
 
 ### Intended-versus-implemented mismatches
 
@@ -160,7 +159,6 @@ Use Mermaid diagrams selectively in the developer/operator guide when they mater
 - Do not commit generated PDFs unless a later project decision explicitly changes the publication policy.
 - Treat the Markdown sources as authoritative when generated artifacts disagree.
 - Require specification approval, traceable decisions, Markdown and asset validation, successful Dockerized PDF builds, structural PDF checks, every-page visual inspection, privacy and source-level accessibility review, and correctness and completeness reviews before calling either guide publish-ready.
-- The manually compatible `0.6.3` installation is a temporary, explicitly approved trust exception. It restores mechanical validation and PDF generation but is not a substitute for the remaining structural, visual, privacy, accessibility, correctness, and completeness gates required for a publish-ready claim.
 
 Version documentation independently using semantic versioning, beginning at `0.1.0`. During refreshes, propose patch versions for corrections, minor versions for new workflows or substantial sections, and major versions for materially incompatible audience or scope changes. Never apply a version change without explicit approval.
 

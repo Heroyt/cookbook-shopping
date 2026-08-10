@@ -30,12 +30,12 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 
 - Date: 2026-08-09
 - Mode: Create
-- Status: Approved
+- Status: Superseded
 - Affects: Publication contract and mechanical/PDF validation
 - Evidence: GitHub release `0.6.3` metadata and the HTTP 404 returned by the documented `install.sh` URL
 - Decision: Continue specification work without recreating or substituting the missing installer; leave `docs/documentation` and `docs/documentation.toml` absent.
 - Rationale: The latest release does not contain the documented installer asset, and the documentation skill prohibits reconstructing the renderer or project tool interface.
-- Follow-up or review date: Retry after a release publishes `install.sh`.
+- Follow-up or review date: Superseded first by DOC-0021's temporary installation and finally by the official `0.6.5` upgrade in DOC-0024.
 
 ### DOC-0003 — Separate current user behavior from planned developer context
 
@@ -239,12 +239,12 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 
 - Date: 2026-08-09
 - Mode: Refresh
-- Status: Approved
+- Status: Superseded
 - Affects: Managed documentation tooling, renderer trust, validation, and publication contract
 - Evidence: User approval on 2026-08-09; release `0.6.3`; tag source commit `7aa33237bbe3a84c7505cc101bd4a466a66c5c21`; installer blob `c3c2a0bdb114b7092d4f490abb20e93d6515f959`; the published `release.env`; immutable Scaleway installer digest `sha256:c895b325eaa5884f09e836fd6ca5a24f20ca988ee8cec9454275e182cd42803b`; immutable Scaleway renderer digest `sha256:927cb33b8c8e44ce3f161e7d541f9d054caad71394288ebfd3d987ede2a580b3`; successful `doctor` and `validate` runs
 - Decision: Temporarily install the verified `0.6.3` source installer by supplying the missing `CONFIG_SCHEMA_VERSION=1` value in an otherwise unchanged local copy of the release manifest. Keep the remote profile pinned to the approved Scaleway renderer. Locally patch the managed launcher to reuse that exact allowlisted digest when it is already cached, because OrbStack/Docker 29 rejects a redundant pull with `cannot overwrite digest`; preserve the normal pull path when the image is absent and record the patched launcher checksum in the managed-file manifest.
 - Rationale: The User and tooling authors explicitly trust this release and approved a temporary manual compatibility path. The workaround preserves immutable image pinning, renderer allowlisting, managed-file integrity checks, container isolation, and the stable `docs/documentation` command while avoiding the two confirmed bootstrap/runtime defects.
-- Follow-up or review date: Replace the temporary installation with an unmodified official release as soon as the public installer, release manifest, and redundant digest-pull behavior are corrected; remove the local launcher patch during that upgrade.
+- Follow-up or review date: Superseded by DOC-0024 after the official `0.6.5` upgrade removed the temporary compatibility path.
 
 ### DOC-0022 — Use MariaDB in production and SQLite for development and tests
 
@@ -267,3 +267,14 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Correct the stale tooling status, planned/current Slice 0 split, mail scheme, local/production log and mail distinctions, migration concurrency risk, SQLite-only verification scope, setup key-rotation warning, environment placeholders, database transport-security gate, and Docker environment-file wording. Retain `0.1.0` in the specification, guide index, and renderer configuration until the User explicitly approves the proposed patch release `0.1.1`.
 - Rationale: Every actionable review finding is corrected in the Markdown or environment contract. The remaining version change requires explicit approval under DOC-0013 and must not be applied implicitly during implementation.
 - Follow-up or review date: Ask the User to approve or reject documentation version `0.1.1` at the Slice 0 handback.
+
+### DOC-0024 — Upgrade managed documentation tooling to 0.6.5
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Managed documentation tooling, renderer trust, validation, and publication records
+- Evidence: User request on 2026-08-10; official GitHub release `0.6.5`; release source commit `e95adf78a0111200b26e5904a50e8de46b859f62`; published `install.sh` SHA-256 `3d9f6f067f78a1d9f336a4298d53e103cf5f2415b2d029203e46fa5e7f50b2f4`; published `release.env` SHA-256 `d6f4eb6f327b401b7ce84f7c5d14c6528f82e07417a05fde26f3c2ca594adfd0`; immutable Scaleway installer digest `sha256:bd6e30ba5c820815e7324f845c39683e22843178a1b4fe20595eaf6e4b016809`; immutable Scaleway renderer digest `sha256:b1804236503c31bf73d559848e03582dc9843fe12bfe784c87bced4639bf134a`; reviewed upgrade preview; successful post-upgrade `doctor`; deterministic platform-mismatch reproduction; successful `validate` after removing the stale `linux/amd64` override
+- Decision: Replace the temporary `0.6.3` installation and local launcher compatibility patch with the official remote-profile `0.6.5` managed tooling. Preserve project-owned guide sources and publication settings, update the pinned renderer digest, clear the obsolete `pdf.platform = "linux/amd64"` override so Docker selects the native image, and use the standard GitHub release bootstrap for future upgrades.
+- Rationale: Release `0.6.5` publishes a compatible installer and manifest, provides a native arm64 renderer, and natively handles Docker's failed redundant digest pull only when the exact immutable image is inspectable locally. The official upgrade restores the managed-tool trust and lifecycle contract without changing documentation scope or configuration schema.
+- Follow-up or review date: Reassess through the standard upgrade preview when a newer official release is requested.
