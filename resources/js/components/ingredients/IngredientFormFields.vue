@@ -31,6 +31,13 @@ type IngredientField =
     | 'description'
     | 'store_id'
     | 'store_section_id'
+    | 'nutrition'
+    | 'nutrition_basis_kind'
+    | 'nutrition_basis_quantity'
+    | 'nutrition_energy_kcal'
+    | 'nutrition_fat_grams'
+    | 'nutrition_protein_grams'
+    | 'nutrition_carbohydrate_grams'
     | 'quantities';
 
 const props = withDefaults(
@@ -66,6 +73,7 @@ const sectionSelection = ref(
         ? 'none'
         : String(props.ingredient.storeSectionId),
 );
+const nutritionBasis = ref(props.ingredient?.nutrition?.basisKind ?? 'none');
 const selectedStore = computed(() =>
     props.stores.find((store) => String(store.id) === storeSelection.value),
 );
@@ -264,6 +272,107 @@ watch(storeSelection, () => {
                 </Select>
                 <FieldError :errors="[errors.store_section_id]" />
             </Field>
+        </FieldSet>
+
+        <FieldSet>
+            <FieldLegend variant="legend">Nutriční profil</FieldLegend>
+            <FieldDescription>
+                Volitelně vyplňte energii a všechny makroživiny pro uvedené
+                základní množství. Částečný profil nelze uložit.
+            </FieldDescription>
+            <FieldError :errors="[errors.nutrition]" />
+            <input
+                type="hidden"
+                name="nutrition_basis_kind"
+                :value="nutritionBasis === 'none' ? '' : nutritionBasis"
+            />
+            <Field :data-invalid="Boolean(errors.nutrition_basis_kind)">
+                <FieldLabel :for="`${idPrefix}-nutrition-basis-kind`"
+                    >Základ profilu</FieldLabel
+                >
+                <Select v-model="nutritionBasis">
+                    <SelectTrigger
+                        :id="`${idPrefix}-nutrition-basis-kind`"
+                        :aria-invalid="Boolean(errors.nutrition_basis_kind)"
+                        ><SelectValue
+                    /></SelectTrigger>
+                    <SelectContent
+                        ><SelectGroup>
+                            <SelectItem value="none"
+                                >Bez nutričního profilu</SelectItem
+                            >
+                            <SelectItem value="package">Celé balení</SelectItem>
+                            <SelectItem value="grams">Gramy</SelectItem>
+                            <SelectItem value="millilitres"
+                                >Mililitry</SelectItem
+                            >
+                            <SelectItem value="piece">Kusy</SelectItem>
+                        </SelectGroup></SelectContent
+                    >
+                </Select>
+                <FieldError :errors="[errors.nutrition_basis_kind]" />
+            </Field>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <Field :data-invalid="Boolean(errors.nutrition_basis_quantity)">
+                    <FieldLabel :for="`${idPrefix}-nutrition-basis-quantity`"
+                        >Základní množství</FieldLabel
+                    >
+                    <Input
+                        :id="`${idPrefix}-nutrition-basis-quantity`"
+                        name="nutrition_basis_quantity"
+                        type="number"
+                        inputmode="decimal"
+                        min="0.000001"
+                        step="0.000001"
+                        :disabled="nutritionBasis === 'none'"
+                        :default-value="ingredient?.nutrition?.basisQuantity"
+                        :aria-invalid="Boolean(errors.nutrition_basis_quantity)"
+                    />
+                    <FieldError :errors="[errors.nutrition_basis_quantity]" />
+                </Field>
+                <Field
+                    v-for="field in [
+                        [
+                            'energy_kcal',
+                            'Energie (kcal)',
+                            ingredient?.nutrition?.energyKcal,
+                        ],
+                        [
+                            'fat_grams',
+                            'Tuky (g)',
+                            ingredient?.nutrition?.fatGrams,
+                        ],
+                        [
+                            'protein_grams',
+                            'Bílkoviny (g)',
+                            ingredient?.nutrition?.proteinGrams,
+                        ],
+                        [
+                            'carbohydrate_grams',
+                            'Sacharidy (g)',
+                            ingredient?.nutrition?.carbohydrateGrams,
+                        ],
+                    ] as const"
+                    :key="field[0]"
+                    :data-invalid="Boolean(errors[`nutrition_${field[0]}`])"
+                >
+                    <FieldLabel :for="`${idPrefix}-nutrition-${field[0]}`">{{
+                        field[1]
+                    }}</FieldLabel>
+                    <Input
+                        :id="`${idPrefix}-nutrition-${field[0]}`"
+                        :name="`nutrition_${field[0]}`"
+                        type="number"
+                        inputmode="decimal"
+                        min="0"
+                        step="0.000001"
+                        :disabled="nutritionBasis === 'none'"
+                        :default-value="field[2]"
+                        :aria-invalid="Boolean(errors[`nutrition_${field[0]}`])"
+                    />
+                    <FieldError :errors="[errors[`nutrition_${field[0]}`]]" />
+                </Field>
+            </div>
         </FieldSet>
 
         <Field v-if="showSubmit" orientation="horizontal">

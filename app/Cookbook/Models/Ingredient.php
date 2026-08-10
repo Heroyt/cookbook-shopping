@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -52,6 +53,12 @@ final class Ingredient extends Model
     public function storeSection(): BelongsTo
     {
         return $this->belongsTo(StoreSection::class);
+    }
+
+    /** @return HasOne<IngredientNutritionProfile, $this> */
+    public function nutritionProfile(): HasOne
+    {
+        return $this->hasOne(IngredientNutritionProfile::class);
     }
 
     public function packageQuantities(): IngredientPackageQuantities

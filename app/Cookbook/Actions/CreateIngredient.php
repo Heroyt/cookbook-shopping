@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Cookbook\Actions;
 
 use App\Cookbook\Models\Ingredient;
+use App\Cookbook\Values\IngredientNutritionInput;
 use App\Cookbook\Values\IngredientPackageQuantities;
 use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\CurrentFamilyScope;
@@ -26,8 +27,10 @@ final readonly class CreateIngredient
         IngredientPackageQuantities $quantities,
         ?int $storeId,
         ?int $storeSectionId,
+        ?IngredientNutritionInput $nutrition,
     ): Ingredient {
-        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $description, $quantities, $storeId, $storeSectionId): Ingredient {
+        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $description, $quantities, $storeId, $storeSectionId, $nutrition): Ingredient {
+            $this->validateNutritionCompatibility($nutrition, $quantities);
             $placement = $this->resolveIngredientStorePlacement->handle($family, $storeId, $storeSectionId);
             $normalizedName = NormalizedName::from($name);
             $ingredient = Ingredient::query()->createOrFirst(
@@ -52,7 +55,20 @@ final readonly class CreateIngredient
                 ]);
             }
 
+            if ($nutrition !== null) {
+                $ingredient->nutritionProfile()->create($nutrition->persistence());
+            }
+
             return $ingredient;
         });
+    }
+
+    private function validateNutritionCompatibility(?IngredientNutritionInput $nutrition, IngredientPackageQuantities $quantities): void
+    {
+        if ($nutrition !== null && ! $nutrition->supports($quantities)) {
+            throw ValidationException::withMessages([
+                'nutrition_basis_kind' => __('The Nutrition Profile basis is unavailable in this package.'),
+            ]);
+        }
     }
 }

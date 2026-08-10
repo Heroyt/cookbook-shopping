@@ -2,6 +2,7 @@
 import { WheatIcon } from '@lucide/vue';
 import ArchiveIngredientAlertDialog from '@/components/ingredients/ArchiveIngredientAlertDialog.vue';
 import EditIngredientDialog from '@/components/ingredients/EditIngredientDialog.vue';
+import IngredientAlternatives from '@/components/ingredients/IngredientAlternatives.vue';
 import RestoreIngredientButton from '@/components/ingredients/RestoreIngredientButton.vue';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -47,6 +48,8 @@ defineProps<{
                 <TableHead>Obsah balení</TableHead>
                 <TableHead>Popis</TableHead>
                 <TableHead>Umístění</TableHead>
+                <TableHead>Výživa</TableHead>
+                <TableHead>Alternativy</TableHead>
                 <TableHead class="text-right">Akce</TableHead>
             </TableRow>
         </TableHeader>
@@ -76,6 +79,12 @@ defineProps<{
                 <TableCell>{{
                     ingredient.placement || 'Bez obchodu'
                 }}</TableCell>
+                <TableCell>{{
+                    ingredient.nutrition ? 'Nutriční profil' : 'Bez profilu'
+                }}</TableCell>
+                <TableCell class="min-w-64"
+                    ><IngredientAlternatives :ingredient="ingredient"
+                /></TableCell>
                 <TableCell class="text-right">
                     <div class="flex justify-end gap-2">
                         <RestoreIngredientButton

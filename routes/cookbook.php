@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Cookbook\Http\Controllers\IngredientAlternativeController;
 use App\Cookbook\Http\Controllers\IngredientController;
 use App\Cookbook\Http\Controllers\StoreController;
 use App\Cookbook\Http\Controllers\StoreSectionAssociationController;
@@ -14,6 +15,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::patch('ingredients/{ingredient}', [IngredientController::class, 'update'])->name('ingredients.update');
     Route::patch('ingredients/{ingredient}/archive', [IngredientController::class, 'archive'])->name('ingredients.archive');
     Route::patch('ingredients/{ingredient}/restore', [IngredientController::class, 'restore'])->name('ingredients.restore');
+    Route::post('ingredients/{ingredient}/alternatives', [IngredientAlternativeController::class, 'store'])->name('ingredients.alternatives.store');
+    Route::delete('ingredients/{ingredient}/alternatives/{alternative}', [IngredientAlternativeController::class, 'destroy'])->name('ingredients.alternatives.destroy');
     Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
     Route::post('stores', [StoreController::class, 'store'])->name('stores.store');
     Route::patch('stores/{store}', [StoreController::class, 'update'])->name('stores.update');

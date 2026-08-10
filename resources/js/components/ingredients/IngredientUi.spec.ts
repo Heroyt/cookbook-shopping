@@ -32,6 +32,12 @@ describe('Ingredient UI', () => {
         expect(readSource('./RestoreIngredientButton.vue')).toContain(
             'IngredientController.restore(ingredient.id)',
         );
+        expect(readSource('./IngredientAlternatives.vue')).toContain(
+            'IngredientAlternativeController.store.form(ingredient.id)',
+        );
+        expect(readSource('./IngredientAlternatives.vue')).toContain(
+            'IngredientAlternativeController.destroy',
+        );
         expect(page).toContain('<CreateIngredientForm :stores="stores" />');
         expect(page).toContain(':stores="stores"');
         expect(page).toContain("filter: 'archived'");
@@ -57,6 +63,10 @@ describe('Ingredient UI', () => {
         expect(html).toContain('name="store_id"');
         expect(html).toContain('name="store_section_id"');
         expect(html).toContain('Umístění slouží pouze');
+        expect(html).toContain('Nutriční profil');
+        expect(html).toContain('Základ profilu');
+        expect(html).toContain('Energie (kcal)');
+        expect(html).toContain('Bílkoviny (g)');
     });
 
     it('renders accessible explicit metric units, description, and Czech guidance', async () => {
@@ -123,6 +133,16 @@ describe('Ingredient UI', () => {
                     storeSectionId: 2,
                     placement: 'Tržiště · Zelenina',
                     archived: true,
+                    alternatives: [],
+                    alternativeOptions: [],
+                    nutrition: {
+                        basisKind: 'grams',
+                        basisQuantity: '100.000000',
+                        energyKcal: '360.000000',
+                        fatGrams: '1.000000',
+                        proteinGrams: '7.000000',
+                        carbohydrateGrams: '78.000000',
+                    },
                 },
             ],
         });
@@ -134,6 +154,8 @@ describe('Ingredient UI', () => {
         expect(listHtml).toContain('Tržiště · Zelenina');
         expect(listHtml).toContain('Archivovaná');
         expect(listHtml).toContain('Obnovit');
+        expect(listHtml).toContain('Nutriční profil');
+        expect(listHtml).toContain('Bez alternativ');
         expect(listHtml).not.toContain('Upravit');
     });
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Http\Requests;
 
+use App\Cookbook\Values\IngredientNutritionInput;
 use App\Cookbook\Values\IngredientPackageQuantities;
 use App\Cookbook\Values\MetricQuantityInput;
 use App\Cookbook\Values\NormalizedName;
@@ -50,6 +51,12 @@ abstract class IngredientWriteRequest extends AuthenticatedRequest
             'description' => ['nullable', 'string'],
             'store_id' => ['nullable', 'integer', 'min:1'],
             'store_section_id' => ['nullable', 'integer', 'min:1'],
+            'nutrition_basis_kind' => ['nullable', Rule::in(['package', 'grams', 'millilitres', 'piece'])],
+            'nutrition_basis_quantity' => ['nullable', 'regex:/^\d{1,14}(?:\.\d{1,6})?$/', 'gt:0'],
+            'nutrition_energy_kcal' => ['nullable', 'regex:/^\d{1,14}(?:\.\d{1,6})?$/'],
+            'nutrition_fat_grams' => ['nullable', 'regex:/^\d{1,14}(?:\.\d{1,6})?$/'],
+            'nutrition_protein_grams' => ['nullable', 'regex:/^\d{1,14}(?:\.\d{1,6})?$/'],
+            'nutrition_carbohydrate_grams' => ['nullable', 'regex:/^\d{1,14}(?:\.\d{1,6})?$/'],
         ];
     }
 
@@ -84,6 +91,23 @@ abstract class IngredientWriteRequest extends AuthenticatedRequest
                 && ! MetricQuantityInput::isRepresentable($metricQuantity, $metricUnit)) {
                 $validator->errors()->add('metric_quantity', __('The normalized package quantity must fit a decimal with at most six fractional places.'));
             }
+
+            $nutritionFields = [
+                'nutrition_basis_kind', 'nutrition_basis_quantity', 'nutrition_energy_kcal',
+                'nutrition_fat_grams', 'nutrition_protein_grams', 'nutrition_carbohydrate_grams',
+            ];
+            $nutritionValues = array_map(fn (string $field): mixed => $this->input($field), $nutritionFields);
+            $hasAnyNutrition = collect($nutritionValues)->contains(fn (mixed $value): bool => ! $this->isMissing($value));
+
+            if ($hasAnyNutrition && collect($nutritionValues)->contains(fn (mixed $value): bool => $this->isMissing($value))) {
+                $validator->errors()->add('nutrition', __('Complete every Nutrition Profile field or leave all of them empty.'));
+            }
+
+            if ($this->input('nutrition_basis_kind') === 'package'
+                && is_string($this->input('nutrition_basis_quantity'))
+                && preg_match('/^1(?:\.0{1,6})?$/', $this->input('nutrition_basis_quantity')) !== 1) {
+                $validator->errors()->add('nutrition_basis_quantity', __('A package Nutrition Profile must use a basis quantity of one.'));
+            }
         }];
     }
 
@@ -99,6 +123,24 @@ abstract class IngredientWriteRequest extends AuthenticatedRequest
         $storeSectionId = $this->validated('store_section_id');
 
         return is_numeric($storeSectionId) ? (int) $storeSectionId : null;
+    }
+
+    public function nutritionInput(): ?IngredientNutritionInput
+    {
+        $basisKind = $this->validated('nutrition_basis_kind');
+
+        if ( ! is_string($basisKind)) {
+            return null;
+        }
+
+        return new IngredientNutritionInput(
+            $basisKind,
+            $this->validatedString('nutrition_basis_quantity'),
+            $this->validatedString('nutrition_energy_kcal'),
+            $this->validatedString('nutrition_fat_grams'),
+            $this->validatedString('nutrition_protein_grams'),
+            $this->validatedString('nutrition_carbohydrate_grams'),
+        );
     }
 
     protected function prepareForValidation(): void
@@ -119,5 +161,12 @@ abstract class IngredientWriteRequest extends AuthenticatedRequest
     private function isMissing(mixed $value): bool
     {
         return $value === null || $value === '';
+    }
+
+    private function validatedString(string $key): string
+    {
+        $value = $this->validated($key);
+
+        return is_string($value) ? $value : '';
     }
 }
