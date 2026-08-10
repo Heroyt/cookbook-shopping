@@ -12,6 +12,7 @@ use App\Cookbook\Http\Requests\StoreIndexRequest;
 use App\Cookbook\Http\Requests\StoreStoreRequest;
 use App\Cookbook\Http\Requests\StoreUpdateRequest;
 use App\Cookbook\Models\Store;
+use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
@@ -30,20 +31,32 @@ final class StoreController extends Controller
 
     public function index(StoreIndexRequest $request): Response
     {
-        $stores = $this->currentFamilyScope->within(
+        $managementData = $this->currentFamilyScope->within(
             $request->authenticatedUser(),
-            fn (Family $family) => Store::query()
-                ->whereBelongsTo($family)
-                ->select(['id', 'name'])
-                ->orderBy('name')
-                ->get()
-                ->map(fn (Store $store): array => [
-                    'id' => $store->id,
-                    'name' => $store->name,
-                ]),
+            fn (Family $family): array => [
+                'stores' => Store::query()
+                    ->whereBelongsTo($family)
+                    ->select(['id', 'name'])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (Store $store): array => [
+                        'id' => $store->id,
+                        'name' => $store->name,
+                    ]),
+                'storeSections' => StoreSection::query()
+                    ->whereBelongsTo($family)
+                    ->select(['id', 'name', 'colour'])
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn (StoreSection $storeSection): array => [
+                        'id' => $storeSection->id,
+                        'name' => $storeSection->name,
+                        'colour' => $storeSection->colour,
+                    ]),
+            ],
         );
 
-        return Inertia::render('stores/Index', ['stores' => $stores]);
+        return Inertia::render('stores/Index', $managementData);
     }
 
     public function store(StoreStoreRequest $request): RedirectResponse

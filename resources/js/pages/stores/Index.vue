@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import CreateStoreForm from '@/components/stores/CreateStoreForm.vue';
+import CreateStoreSectionForm from '@/components/stores/CreateStoreSectionForm.vue';
 import StoreList from '@/components/stores/StoreList.vue';
+import StoreSectionList from '@/components/stores/StoreSectionList.vue';
 import {
     Card,
     CardContent,
@@ -10,9 +12,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { index } from '@/routes/stores';
-import type { StoreSummary } from '@/types';
+import type { StoreSectionSummary, StoreSummary } from '@/types';
 
-defineProps<{ stores: StoreSummary[] }>();
+defineProps<{
+    stores: StoreSummary[];
+    storeSections: StoreSectionSummary[];
+}>();
 
 defineOptions({
     layout: {
@@ -59,6 +64,32 @@ defineOptions({
                 </CardHeader>
                 <CardContent>
                     <StoreList :stores="stores" />
+                </CardContent>
+            </Card>
+        </div>
+
+        <div class="grid items-start gap-6 lg:grid-cols-3">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Vytvořit část obchodu</CardTitle>
+                    <CardDescription>
+                        Přidejte opakovaně použitelnou část s vlastní barvou.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <CreateStoreSectionForm />
+                </CardContent>
+            </Card>
+
+            <Card class="lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Části obchodů aktuální rodiny</CardTitle>
+                    <CardDescription>
+                        Každý člen rodiny může části zobrazit a vytvářet.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <StoreSectionList :store-sections="storeSections" />
                 </CardContent>
             </Card>
         </div>
