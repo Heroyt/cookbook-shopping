@@ -300,3 +300,25 @@ Record substantive authoring decisions, evidence conflicts, omissions, attestati
 - Decision: Publish the version 0.1.1 developer/operator guide after correcting every actionable review finding. Keep live Komodo configuration, `/up` polling, MariaDB connectivity, and database/private-file survival across application-container recreation as external evidence still required for Slice 0 implementation completion, not as documentation publication blockers.
 - Rationale: The Markdown and generated PDF now satisfy the approved mechanical, visual, privacy, accessibility, correctness, and completeness gates without overstating the unobserved production deployment.
 - Follow-up or review date: Collect and record the external acceptance evidence before marking Slice 0 complete.
+
+### DOC-0027 — Keep Jenkins as the sole CI pipeline
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Repository CI configuration and developer/operator infrastructure guide
+- Evidence: User direction on 2026-08-10; `Jenkinsfile`; removed alternate CI definition and its dedicated maintenance and export configuration; delivery baseline test
+- Decision: Treat Jenkins as the authoritative and only CI pipeline. Remove the alternate pipeline configuration and its documentation and maintenance artifacts, and retain a repository test that enforces that boundary. Record external Jenkins trigger/status-gate configuration and repository-unverified ESLint/Prettier coverage as operational evidence gaps.
+- Rationale: A second workflow would duplicate CI ownership and could diverge from the organization-provided Jenkins libraries, registry flow, and Komodo deployment path.
+- Follow-up or review date: Reassess only if the User explicitly selects another CI authority.
+
+### DOC-0028 — Release the CI-authority correction as version 0.1.2
+
+- Date: 2026-08-10
+- Mode: Refresh
+- Status: Approved
+- Affects: Documentation specification, developer/operator guide, and renderer version metadata
+- Evidence: User approval of version `0.1.2` on 2026-08-10; DOC-0027; resolved independent correctness and completeness reviews
+- Decision: Release the Jenkins-only CI correction and its operator evidence gaps as documentation version `0.1.2`.
+- Rationale: The change corrects CI ownership and operational guidance after publication of `0.1.1`, so it is a backward-compatible patch release under the approved semantic-version policy.
+- Follow-up or review date: None

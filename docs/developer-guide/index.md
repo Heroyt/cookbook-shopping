@@ -1,6 +1,6 @@
 # Developer and Operator Guide
 
-Documentation version: **0.1.1**
+Documentation version: **0.1.2**
 
 This guide is the main technical entry point for developing and operating the cookbook and shopping-planning application. It describes the application that exists in the repository today and the approved domain design that has not yet been implemented.
 

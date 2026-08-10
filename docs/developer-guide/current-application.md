@@ -150,12 +150,13 @@ See [docker-compose.yml](../../docker-compose.yml),
 [production entrypoint](../../docker/production/start).
 
 Jenkins runs PHP quality checks and parallel tests, frontend type checks and
-Vitest, and a production-image build for change requests. Commits on `main` or
-`master` build and push a multi-platform image to a Scaleway registry and ask
-Komodo to deploy the configured stack. This describes pipeline code, not proof
-that credentials, registry access, the target stack, health polling, migrations,
-or persistence across container recreation have been operationally verified.
-See [Jenkinsfile](../../Jenkinsfile).
+Vitest, and a production-image build for change requests. When Jenkins runs the
+pipeline for `main` or `master`, its branch-conditioned stages build and push a
+multi-platform image to a Scaleway registry and ask Komodo to deploy the
+configured stack. This describes pipeline code, not proof that external job
+triggers, status gates, credentials, registry access, the target stack, health
+polling, migrations, or persistence across container recreation have been
+operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 
 ## Known current-state constraints and evidence gaps
 

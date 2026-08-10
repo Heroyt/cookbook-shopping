@@ -3,9 +3,9 @@
 ## Status
 
 - Mode: Create
-- Approval: Approved on 2026-08-09 after Family-scope revision; version 0.1.1 refresh approved on 2026-08-10
+- Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1 and 0.1.2 approved on 2026-08-10
 - Primary languages: Czech for the user guide; English for the developer/operator guide
-- Documentation version: 0.1.1
+- Documentation version: 0.1.2
 
 ## Application and evidence
 

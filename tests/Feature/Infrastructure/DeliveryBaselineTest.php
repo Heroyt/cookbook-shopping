@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Infrastructure;
 
 use Illuminate\Support\Facades\File;
+use SplFileInfo;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
@@ -117,6 +118,20 @@ SH);
         $this->assertMatchesRegularExpression('/^MAIL_SCHEME=smtp$/m', $productionEnvironment);
         $this->assertStringContainsString("'mariadb' => [", $databaseConfiguration);
         $this->assertStringContainsString("'driver' => 'mariadb'", $databaseConfiguration);
+    }
+
+    public function test_github_actions_remains_unconfigured_while_jenkins_is_authoritative(): void
+    {
+        $workflowDirectory = base_path('.github/workflows');
+        $workflowFiles = File::isDirectory($workflowDirectory)
+            ? array_filter(
+                File::allFiles($workflowDirectory, hidden: true),
+                static fn (SplFileInfo $file): bool => in_array($file->getExtension(), ['yml', 'yaml'], true),
+            )
+            : [];
+
+        $this->assertFileExists(base_path('Jenkinsfile'));
+        $this->assertCount(0, $workflowFiles, 'GitHub Actions must remain unconfigured while Jenkins is authoritative.');
     }
 
     private function runEntrypoint(string $path): Process

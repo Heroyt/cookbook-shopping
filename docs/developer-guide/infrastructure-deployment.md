@@ -103,7 +103,7 @@ At startup, the [production entrypoint](../../docker/production/start) creates s
 - `/up` is deliberately shallow. It does not prove MariaDB, mail, writable media storage, or the external proxy is healthy.
 - The image uses local PHP-FPM limits of ten children. No load test or capacity target is committed, so this is a configuration value rather than a demonstrated capacity.
 
-The development image, production image, package manifest, clean-checkout setup, and GitHub Actions path now use pnpm 11.17.0 with the committed frozen lockfile. The native clean-checkout and production-image build have both been exercised successfully; this does not prove the external deployment topology.
+The development image, production image, package manifest, and clean-checkout setup use pnpm 11.17.0 with the committed frozen lockfile. The native clean-checkout and production-image build have both been exercised successfully; this does not prove the external deployment topology.
 
 The tracked `.env.production.example` represents the accepted non-secret runtime contract: MariaDB, synchronous jobs, stderr logging, SMTP, secure database sessions, and the private local filesystem. Komodo must inject a persistent `APP_KEY`, reviewed MariaDB and mail credentials, the canonical HTTPS `APP_URL`, and the actual server hostnames without committing those values.
 
@@ -156,9 +156,7 @@ Record only non-secret results. Keep Komodo configuration, environment values, d
 
 ## Continuous integration and delivery
 
-Two CI definitions are present.
-
-The [GitHub Actions workflow](../../.github/workflows/tests.yml) runs for pull requests and pushes to `main`. It installs PHP 8.5 and Node 22, activates pnpm 11.17.0, runs `composer setup`, and then `composer ci:check`. The setup script creates the ignored SQLite file before migration, installs the frozen pnpm dependency graph, and builds production assets. An isolated clean-checkout execution of that sequence succeeds.
+The [Jenkins pipeline](../../Jenkinsfile) is the repository's sole authoritative CI and delivery definition. No alternate CI pipeline definition is retained in the repository while Jenkins owns CI.
 
 Current automated application tests run only on SQLite. The delivery contract
 checks that MariaDB is selected and that the production image includes its PDO
@@ -167,7 +165,7 @@ database-sensitive constraint/query tests against the selected server version
 before product migrations ship; this may be an explicit deployment check rather
 than a repository-hosted CI service for the personal profile.
 
-The [Jenkins pipeline](../../Jenkinsfile) is the deployment path. It depends on organization-provided `dockerHelpers`, `testing`, and `deploy` shared libraries. Its relevant flow is:
+Jenkins depends on organization-provided `dockerHelpers`, `testing`, and `deploy` shared libraries. Its relevant flow is:
 
 1. Authenticate to Scaleway's test registry using the `scaleway_secret_key` Jenkins credential.
 2. Install dependencies and generate Wayfinder routes in test images.
@@ -175,7 +173,11 @@ The [Jenkins pipeline](../../Jenkinsfile) is the deployment path. It depends on 
 4. On change requests, build the production Dockerfile as an additional check.
 5. On `main` or `master`, build a multi-platform image named `cook-book-shopping-list`, push `latest` plus any Git tags that point at the commit to the Scaleway application registry, and invoke the external Komodo stack named `cook-book`.
 
-The repository does not contain the shared-library implementations, registry retention policy, Komodo endpoint, stack manifest, reverse-proxy configuration, TLS configuration, runtime environment, volume mounts, or rollback policy. Consequently, Jenkins is evidence of an automated handoff, not a reproducible standalone deployment runbook.
+The `Jenkinsfile` does not define repository-visible job discovery, webhook or polling triggers, reported commit-status names, or branch-protection rules. The external Jenkins and source-control configuration must ensure that change requests and pushes to `main` or `master` start this pipeline, report its result, and require the successful Jenkins status before protected branches can merge. Verify those settings on the server; without them, the repository contains no fallback CI gate.
+
+The visible pipeline explicitly requests PHP tests, PHPStan, Pint, Vitest, and TypeScript checks. It does not explicitly invoke ESLint or Prettier, and the external `testing` shared-library implementation is not repository evidence that it adds those checks. Until the external pipeline proves that coverage or the commands become repository-visible Jenkins steps, run the mandatory frontend gates documented in [Local development](local-development.md#testing-and-quality-gates) and [AGENTS.md](../../AGENTS.md) before merging frontend changes.
+
+The repository does not contain the shared-library implementations, Jenkins job and status-gate configuration, registry retention policy, Komodo endpoint, stack manifest, reverse-proxy configuration, TLS configuration, runtime environment, volume mounts, or rollback policy. Consequently, Jenkins is evidence of an automated handoff, not a reproducible standalone deployment runbook.
 
 The pipeline calls the external `deployKomodoStack` helper but contains no post-deploy request to `/up`, no assertion that startup migrations succeeded, and no database or filesystem persistence check. A successful Jenkins stage therefore does not satisfy Slice 0's external completion gate.
 
