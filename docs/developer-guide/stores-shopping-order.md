@@ -12,11 +12,11 @@ The backend derives Family ownership only from the authenticated User through `C
 
 ## Delete a Store Section
 
-The User must be authenticated, belong to the selected Current Family, and choose a reusable Store Section in that Family. On the Stores page, choose **Smazat**, review the destructive AlertDialog, and choose **Smazat část obchodu**. The confirmation discloses the current Store-association count and an Ingredient-placement count of zero because Ingredient and Store Placement persistence does not exist. Choosing **Zrušit** closes the dialog without deleting anything.
+The User must be authenticated, belong to the selected Current Family, and choose a reusable Store Section in that Family. On the Stores page, choose **Smazat**, review the destructive AlertDialog, and choose **Smazat část obchodu**. The confirmation discloses the current Store-association count and an Ingredient-placement count of zero because Store Placement persistence does not exist. Choosing **Zrušit** closes the dialog without deleting anything.
 
 The request supplies only the Store Section identifier. The backend derives Family context exclusively from the authenticated User through `CurrentFamilyScope`; a submitted Family identifier cannot redirect the operation, and a Section from another Family is not found. In one transaction, the action locks the Section, locks its affected Stores in identifier order, removes every association, closes each affected Store's positions contiguously, increments each affected Store's `section_order_version`, and deletes the reusable Section. Unaffected Stores do not change. The Section's normalized name becomes immediately reusable. [ADR 0012](../adr/0012-delete-store-sections-with-placement-preserving-cleanup.md) records the full lifecycle.
 
-After success, the Stores page no longer lists the Section and the application flashes **Část obchodu byla smazána.** Ingredient placement cleanup remains pending until those records exist; the current tracer neither invents nor persists Ingredients.
+After success, the Stores page no longer lists the Section and the application flashes **Část obchodu byla smazána.** Ingredients now exist, but Store Placement fields do not; placement cleanup remains pending until those records exist, and the current deletion tracer reports zero placements without altering Ingredients.
 
 ## Rename a Store
 
@@ -30,7 +30,7 @@ After a successful rename, the Dialog closes, the Stores page shows the persiste
 
 The User must be authenticated, belong to the selected Current Family, and choose an existing Store in that Family. On the Stores page, choose **Smazat** (Delete), review the permanent-deletion warning in the **Smazat obchod** confirmation AlertDialog, and choose **Smazat obchod**. Choosing **Zrušit** (Cancel) closes the AlertDialog without deleting anything.
 
-The request supplies only the Store identifier. The backend derives Family context from the authenticated User and returns not found for a Store in another Family; a submitted Family identifier cannot redirect the operation. A missing or already-deleted Store also returns not found, as does deletion without a valid Current Family. In those cases the success redirect and flash do not run: refresh a stale Stores page, or select a valid Current Family before retrying. The current implementation hard-deletes the Store, and its Store–Section associations cascade with it. Ingredients and Store Placement do not exist, so there are no placement references to clear in this tracer.
+The request supplies only the Store identifier. The backend derives Family context from the authenticated User and returns not found for a Store in another Family; a submitted Family identifier cannot redirect the operation. A missing or already-deleted Store also returns not found, as does deletion without a valid Current Family. In those cases the success redirect and flash do not run: refresh a stale Stores page, or select a valid Current Family before retrying. The current implementation hard-deletes the Store, and its Store–Section associations cascade with it. Ingredients exist without Store Placement fields, so there are no placement references to clear in this tracer.
 
 After a successful deletion, the Stores page no longer lists the Store and the application flashes **Obchod byl smazán.**
 

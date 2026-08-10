@@ -25,7 +25,7 @@ final-membership removal is blocked, and Family deletion requires the exact
 Family name. Focused tests reject selecting or removing membership through a
 different Family. `CurrentFamilyScope` applies the same membership-validated
 context to Store reads, creation, rename, and deletion; Store Section reads,
-creation, and deletion; and both-record resolution for association, removal, and reorder.
+creation, and deletion; both-record resolution for association, removal, and reorder; and Ingredient reads and creation.
 Every member has equal Cookbook-management rights. Store
 rename and deletion resolve the route Store identifier
 inside that scope, ignore a client-supplied Family identifier, and return not
@@ -33,7 +33,7 @@ found for a Store owned by another Family. Store and Store Section tests use
 multiple Users and two Families to prove those equal rights, scoped reads and
 writes, and ownership that cannot be redirected by client input. Store Section
 tests also prove that normalized duplicate races become field validation
-errors rather than unhandled database exceptions. Association tests reject a
+errors rather than unhandled database exceptions; Ingredient tests additionally prove package validation and database constraints. Association tests reject a
 foreign-Family Store or Section, incomplete orders, duplicate identifiers, and
 stale order versions without changing persisted traversal order. Section
 deletion tests additionally prove equal-member rights, Current-Family-only
@@ -42,7 +42,7 @@ increments, and normalized-name reuse.
 
 > **Planned**
 >
-> Authentication establishes User identity; it does not by itself authorize Family data. Every later Family-owned query and mutation must reuse the authenticated User's Family Membership and selected Current Family scope. No request-supplied Family or record identifier may bypass that membership check.
+> Authentication establishes User identity; it does not by itself authorize Family data. Every later Family-owned query and mutation must reuse the authenticated User's Family Membership and selected Current Family scope, following the implemented Store, Store Section, and Ingredient tracers. No request-supplied Family or record identifier may bypass that membership check.
 >
 > The roleless model gives every Family member equal authority. Controls still required for Family-owned records include:
 >

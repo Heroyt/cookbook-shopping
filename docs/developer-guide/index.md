@@ -17,12 +17,12 @@ The canonical implementation-free vocabulary is published as the final Domain Gl
 3. [Local development](local-development.md) — workstation and Docker workflows, generated route bindings, and verification.
 4. [Domain model](domain-model.md) — module boundaries, ADR map, and capability navigation.
 5. [Family access](family-access.md) — implemented provisioning, creation, Current Family, membership, deletion, and account-lifecycle workflows.
-6. [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, alternatives, composition, search, and archival.
+6. [Recipes and Ingredients](recipes-ingredients.md) — implemented concrete package creation/listing and planned units, alternatives, composition, search, and archival.
 7. [Nutrition](nutrition.md) — Ingredient bases, per-serving calculation, overrides, incomplete profiles, and daily totals.
 8. [Stores and shopping order](stores-shopping-order.md) — implemented Store management, reusable Store Section lifecycle, and per-Store association/order plus planned placement and grouping.
 9. [Calendar planning](calendar-planning.md) — Calendar Entries, derived days, Meal Labels, weekly planning, and Simple Plans.
 10. [Shopping-list generation](shopping-generation.md) — service boundary, conversions, aggregation, alternatives, and output.
-11. [Data structure](data-structure.md) — implemented Family persistence plus the planned relational model, ownership keys, constraints, and snapshots.
+11. [Data structure](data-structure.md) — implemented persistence plus the planned relational model, ownership keys, constraints, and snapshots.
 12. [Frontend architecture and navigation](frontend-navigation.md) — current shell and planned responsive workflows.
 13. [Infrastructure and deployment](infrastructure-deployment.md) — current Docker/Jenkins delivery path, selected external production profile, and remaining acceptance evidence.
 14. [Security and observability](security-observability.md) — implemented controls, Family authorization requirements, secrets, health, and telemetry.

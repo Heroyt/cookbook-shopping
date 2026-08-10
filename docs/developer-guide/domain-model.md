@@ -1,6 +1,6 @@
 # Domain model
 
-The repository implements the authenticated `User` and account-security shell, Family Access, and narrow Cookbook Store and Store Section tracers. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns Store creation, listing, renaming, and deletion plus reusable Store Section creation/listing/deletion and per-Store association/removal/ordering; the rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
+The repository implements the authenticated `User` and account-security shell, Family Access, and narrow Cookbook Store, Store Section, and packaged Ingredient tracers. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns Store creation, listing, renaming, and deletion; reusable Store Section creation/listing/deletion and per-Store association/removal/ordering; and Ingredient creation/listing with core canonical package quantities. The rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
 
 The final Domain Glossary chapter is the canonical implementation-free vocabulary. These developer chapters explain relationships, invariants, and implementation consequences without replacing it.
 
@@ -46,12 +46,12 @@ The approved design is governed by:
 >
 > Family is the ownership and authorization boundary at every module edge. Cookbook, planning, and saved-history records belong to exactly one Family. No operation combines or copies data across Families in the MVP.
 
-See [Architecture and system boundaries](architecture.md) for framework placement and module dependencies, and [Data structure](data-structure.md) for implemented Family persistence and the remaining conceptual relational shape.
+See [Architecture and system boundaries](architecture.md) for framework placement and module dependencies, and [Data structure](data-structure.md) for implemented persistence and the remaining conceptual relational shape.
 
 ## Capability chapters
 
-- [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores and Store Sections; later aggregates must reuse it.
-- [Recipes and Ingredients](recipes-ingredients.md) — concrete packages, units, conversions, alternatives, Recipe composition, search, and archival.
+- [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores, Store Sections, and Ingredients; later aggregates must reuse it.
+- [Recipes and Ingredients](recipes-ingredients.md) — implemented concrete package creation/listing and canonical quantity display plus planned conversions, alternatives, Recipe composition, search, and archival.
 - [Nutrition](nutrition.md) — Ingredient bases, calculated per-serving values, overrides, incomplete profiles, and daily totals.
 - [Stores and shopping order](stores-shopping-order.md) — implemented Store lifecycle, reusable Store Section creation/listing/deletion, and per-Store association/order plus planned placement effects and final grouping.
 - [Calendar planning](calendar-planning.md) — Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.

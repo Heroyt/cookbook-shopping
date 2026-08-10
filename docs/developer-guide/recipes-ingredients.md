@@ -1,22 +1,26 @@
 # Recipes and Ingredients
 
-Recipes, Ingredients, Recipe Tags, and their media are not implemented. This chapter expands the approved terms in the final Domain Glossary chapter and the concrete-package decision in [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md). See [Data structure](data-structure.md) for the proposed persistence shape and [Shopping List generation](shopping-generation.md) for quantity aggregation.
+Concrete packaged Ingredient creation and listing are implemented. Recipes, Recipe Tags, Ingredient editing and archival, alternatives, placement, nutrition, and media are not implemented. This chapter separates that current tracer from approved intent in the final Domain Glossary chapter and the concrete-package decision in [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md). See [Data structure](data-structure.md) for persistence details and [Shopping List generation](shopping-generation.md) for planned quantity aggregation.
 
 ## Concrete purchasable Ingredients
 
+An authenticated member creates a concrete purchasable package from the **Suroviny** page. The required name is squished, limited to 255 characters, and case-insensitively unique in the Current Family through the ADR 0007 normalized key and a database constraint. The server derives ownership only from the authenticated User through `CurrentFamilyScope`; all Family members have equal rights, another Family may reuse the name, and a uniqueness race becomes a Czech inline `name` error.
+
+Every current Ingredient defines either one positive weight entered and persisted in grams or one positive volume entered and persisted in millilitres, never both, and may additionally define one positive piece count. Piece count may also be the only package quantity, and it may be fractional. At least one quantity is required. All three fields use the approved `DECIMAL(20,6)` shape; the request rejects more than six fractional places, and a database check rejects missing, non-positive, or weight-plus-volume combinations. For example, one package may define `150 g` and `6 ks`, while another may define only `12,5 ks`. Creation redirects to the list and flashes **Surovina byla vytvořena.** [ADR 0026](../adr/0026-store-one-canonical-metric-package-quantity.md) records the package shape.
+
+The list is Current-Family-only and derives display values from canonical persistence. Weight below 1000 renders in `g` and from 1000 in `kg`; volume uses `ml` and `l` at the same threshold. Values are half-up rounded to at most two fractional digits with trailing zeroes removed, and piece count renders as `ks`. The current form deliberately accepts only canonical `g` and `ml` inputs and does not retain an input-unit preference.
+
 > **Planned**
 >
-> An Ingredient represents one concrete package the Family buys, not a generic culinary concept plus separate products. Its case-insensitively unique name remains reserved while active or archived. Optional metadata includes a photo and free-form description.
->
-> Every Ingredient defines either one positive weight persisted in grams or one positive volume persisted in millilitres, never both, and may additionally define one positive piece count. At least one quantity is required. For example, one ham Ingredient can define `150 g` and `6 pieces`; `75 g` and `3 pieces` each represent half a package before Recipe scaling. [ADR 0026](../adr/0026-store-one-canonical-metric-package-quantity.md) records the shape.
+> Ingredient editing, description, photo, Store Placement, Nutrition Profile, Alternative Ingredients, and reversible archival/restoration remain unimplemented. Archival will keep the normalized name reserved across active and archived records.
 
 ## Measurement units and conversion
 
 > **Planned**
 >
-> Forms may accept explicit metric weight units such as `mg`, `g`, and `kg`, or metric volume units such as `ml`, `cl`, and `l`, but normalize values at the application boundary. Persistence and calculation use grams for weight and millilitres for volume, and no input-unit preference is stored. Display uses `g` or `ml` below 1000 and `kg` or `l` from 1000. An Ingredient cannot define both weight and volume, so the system never stores or guesses density. [ADR 0030](../adr/0030-derive-metric-display-units.md) records the display rule.
+> Future forms may accept explicit metric weight units such as `mg`, `g`, and `kg`, or metric volume units such as `ml`, `cl`, and `l`, but must normalize values at the application boundary. [ADR 0030](../adr/0030-derive-metric-display-units.md) records the display rule that the current canonical-input tracer already applies.
 >
-> Piece quantity is stored as a count under the internal canonical kind `piece`, without a selectable unit identity. The Czech interface renders the localized label `ks`; optional descriptive wording never creates a distinct identity or affects calculation. Piece quantities may be fractional. Removing the weight, volume, or piece quantity is blocked while a Recipe Ingredient or nutrition basis depends on that quantity kind, and an Ingredient must retain at least one quantity. Editing an existing package quantity affects future Shopping List generation because Recipes retain normalized culinary quantities rather than package snapshots.
+> Future editing must block removal of weight, volume, or piece count while a Recipe Ingredient or nutrition basis depends on that canonical quantity kind, and an Ingredient must retain at least one quantity. Optional piece wording remains presentation only and never creates a distinct identity or affects calculation. Editing an existing package quantity will affect future Shopping List generation because Recipes retain normalized culinary quantities rather than package snapshots.
 
 ## Recipe composition
 

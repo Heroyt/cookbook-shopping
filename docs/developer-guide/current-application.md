@@ -19,6 +19,8 @@ and the Family Access collaboration workflow. Its working surfaces are:
 - Current-Family-scoped Store creation, listing, renaming, and deletion, plus
   reusable Store Section creation/listing/deletion with required colours and
   per-Store association, removal, and optimistic contiguous ordering;
+- Current-Family-scoped creation and listing of concrete packaged Ingredients
+  with canonical grams, millilitres, and piece counts;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -44,10 +46,11 @@ text.
 
 > **Planned**
 >
-> Store logos, optional Store Section icons, Ingredients, Recipes, meal
-> planning, nutrition, and Shopping List generation remain approved domain
+> Store logos, optional Store Section icons, Ingredient editing, Store
+> Placement, media, nutrition, alternatives and archival, Recipes, meal
+> planning, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
-> authorization, or persistence from the narrow Store and Store Section tracers. The canonical vocabulary is in
+> authorization, or persistence from the narrow Store, Store Section, and Ingredient tracers. The canonical vocabulary is in
 > the final Domain Glossary chapter, and the architectural direction is recorded in
 > [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
@@ -88,8 +91,8 @@ layouts by page name:
 - every other page uses the application layout.
 
 The application layout provides a responsive sidebar, breadcrumb header, and
-toast host. The sidebar links to the placeholder dashboard, Families
-management, and Stores pages, and exposes a Current Family switcher populated
+toast host. The sidebar links to the placeholder dashboard, Families,
+Ingredients, and Stores management pages, and exposes a Current Family switcher populated
 only from the authenticated User's memberships. Settings are reached through the user menu. See
 [the sidebar](../../resources/js/components/AppSidebar.vue) and
 [settings layout](../../resources/js/layouts/settings/Layout.vue).
@@ -160,10 +163,12 @@ The current schema contains:
   unique names, and required six-digit hexadecimal colours;
 - Store–Section associations with a position unique within each Store and an
   optimistic Section-order version on the Store;
+- Ingredients with explicit Family ownership, normalized Family-scoped unique
+  names, and constrained canonical package quantities;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Recipe, Ingredient, Calendar Entry, nutrition, or
+There are no Recipe, Calendar Entry, nutrition, or
 Shopping List tables. See the
 [migration directory](../../database/migrations/).
 
@@ -219,8 +224,8 @@ operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 - Runtime configuration is injected rather than baked into the production
   image, but the deployment platform's secret definitions and validated
   production values are not committed here.
-- Reusable Current Family authorization now scopes the Store and Store Section
-  tracers, but later
+- Reusable Current Family authorization now scopes the Store, Store Section,
+  and Ingredient tracers, but later
   Family-owned records and media-upload workflows are not implemented. The selected personal profile
   uses the private local filesystem and intentionally requires no automated
   backup, recovery, or centralized observability; the persistent mount remains

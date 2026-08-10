@@ -1,12 +1,13 @@
 # Local Development
 
 This chapter covers the current authenticated Laravel/Inertia shell and Family
-Access workflow plus the Cookbook Store and Store Section tracers. Local setup
-and migrations create the Family, Store, Store Section, and ordered-association
-tables plus the Current Family preference; focused tests exercise provisioning, Family lifecycle, Store
+Access workflow plus the Cookbook Store, Store Section, and packaged Ingredient tracers. Local setup
+and migrations create the Family, Store, Store Section, ordered-association,
+and Ingredient tables plus the Current Family preference; focused tests exercise provisioning, Family lifecycle, Store
 create/rename normalization and duplicate handling, Store deletion, Store
 Section creation/listing/deletion and colour validation, per-Store attach/removal/reorder,
-optimistic stale-order rejection, equal rights, cross-Family isolation, and account-deletion
+optimistic stale-order rejection, Ingredient creation/listing and package
+quantity constraints, equal rights, cross-Family isolation, and account-deletion
 protection. The rest of Cookbook,
 meal planning, and Shopping List generation do not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.
@@ -208,6 +209,7 @@ php artisan test --compact tests/Feature/Auth/AuthenticationTest.php
 php artisan test --compact --filter=test_users_can_authenticate_using_the_login_screen
 php artisan test --compact tests/Feature/Cookbook/StoreManagementTest.php
 php artisan test --compact tests/Feature/Cookbook/StoreSectionManagementTest.php
+php artisan test --compact tests/Feature/Cookbook/IngredientManagementTest.php
 ```
 
 Before finalizing PHP changes, run the project-required checks:
@@ -230,6 +232,7 @@ Run a narrow test while developing:
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/composables/useInitials.spec.ts
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreUi.spec.ts
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreSectionUi.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/ingredients/IngredientUi.spec.ts
 ```
 
 Replace the example path with an existing affected test. Before finalizing
