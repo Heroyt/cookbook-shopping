@@ -57,7 +57,12 @@ pipeline {
 							// Prepare route definitions for testing
 							runCommandInTest(
 								image: "${TEST_REGISTRY}/${PHP_TEST_IMAGE}",
-								command: 'cp .env.example .env && php artisan key:generate --ansi && php artisan config:clear && php artisan wayfinder:generate',
+								command: 'cp .env.example .env && php artisan key:generate --ansi && php artisan config:clear && php artisan wayfinder:generate --with-form --no-interaction',
+							)
+							// Build frontend assets for tests that render the application shell
+							runCommandInTest(
+								image: "${TEST_REGISTRY}/${NODE_TEST_IMAGE}",
+								command: 'pnpm install --frozen-lockfile && pnpm build',
 							)
 						}
 					}
@@ -86,7 +91,7 @@ pipeline {
 										image: "${TEST_REGISTRY}/${NODE_TEST_IMAGE}",
 										typecheck: true,
 										test: true,
-										testCommand: 'pnpm test:node --maxWorkers=1 --testTimeout=10000'
+										testCommand: 'LARAVEL_BYPASS_ENV_CHECK=1 pnpm test:node --maxWorkers=1 --testTimeout=10000'
 									)
 								}
 							}
