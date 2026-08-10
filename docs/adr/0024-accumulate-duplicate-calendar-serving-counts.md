@@ -1,3 +1,3 @@
-# Accumulate duplicate Calendar Serving Counts
+# ADR 0024 — Accumulate duplicate Calendar Serving Counts
 
 Creating a Calendar Entry for a Recipe, date, and Meal Label combination that already exists atomically adds the submitted positive Serving Count to the existing entry instead of rejecting or replacing it. Editing an entry onto an existing combination likewise adds the submitted edited Serving Count to the target and removes the source row. The UI must explicitly disclose the merge and show the resulting Serving Count. The database uniqueness key still guarantees one entry for the combination, and concurrent collisions must converge through a locked update or equivalent retry rather than producing duplicates.

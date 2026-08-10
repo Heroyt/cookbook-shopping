@@ -1,4 +1,4 @@
-# Apply previewed Agent Change Sets atomically
+# ADR 0010 — Apply previewed Agent Change Sets atomically
 
 AI agents mutate Family-owned Cookbook and Meal Planning data by first validating and previewing an immutable Agent Change Set, then explicitly applying that exact revision in a second API request. Application is atomic and may include creates, updates, archives, restorations, and deletions, but never Family Access or Agent Credential operations. An unordered list of typed operations references existing records by stable API identifiers and new records by request-local references; the server resolves dependencies and rejects name conflicts instead of guessing matches.
 

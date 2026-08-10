@@ -1,3 +1,3 @@
-# Enforce Store Placement through the Store–Section association
+# ADR 0015 — Enforce Store Placement through the Store–Section association
 
 An Ingredient stores nullable Store and Store Section identifiers, with a check that a Section cannot exist without a Store and a composite foreign key from `(store_id, store_section_id)` to the unique Store–Section association. Store-only placement keeps the Section null, while lifecycle actions clear affected references transactionally before an association, Store, or reusable Section is deleted. This gives SQLite and MariaDB a database-backed guarantee that a placed Section actually belongs to the selected Store instead of relying only on request validation.

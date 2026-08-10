@@ -1,3 +1,3 @@
-# Store one canonical metric package quantity
+# ADR 0026 — Store one canonical metric package quantity
 
 An Ingredient package may define either a positive weight persisted in grams or a positive volume persisted in millilitres, never both, and may additionally define a positive piece count. At least one of the metric quantity or piece count is required. Other metric units are accepted only as explicit input choices and normalize at the application boundary before persistence; no input-unit preference is stored. Display derives mechanically from the canonical value: values below 1000 use `g` or `ml`, while values of at least 1000 use `kg` or `l`. This avoids density semantics, redundant equivalent-unit rows, and inconsistent package definitions while still allowing weight-to-piece or volume-to-piece equivalence for the same package.

@@ -1,3 +1,3 @@
-# Store versioned Shopping List snapshot payloads
+# ADR 0020 — Store versioned Shopping List snapshot payloads
 
 A Saved Shopping List uses normal relational header columns for Family ownership, generation timestamp, source kind, and payload schema version, plus one immutable versioned JSON payload containing the complete output and provenance. Exact rational quantities are encoded losslessly and the payload also freezes the rendered two-decimal values required to reproduce the historical presentation. This favors simple read-only history and schema-versioned rendering over a large normalized child graph; line-level relational analytics and duplicated JSON-plus-child storage are outside the MVP.

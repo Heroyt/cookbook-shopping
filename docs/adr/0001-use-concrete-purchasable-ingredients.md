@@ -1,3 +1,3 @@
-# Use concrete purchasable ingredients
+# ADR 0001 — Use concrete purchasable ingredients
 
 Recipes reference the concrete packages the household normally buys rather than separating generic culinary ingredients from branded products. Each ingredient represents exactly one purchasable package, and configured quantities such as weight, volume, and piece count are equivalent descriptions of that package's contents. This favors fast, predictable planning for a household that repeatedly buys the same products: package contents can directly determine purchase quantities, while a user can manually select another ingredient when a different brand is desired. The trade-off is that recipes are coupled to specific purchasable packages instead of a normalized generic ingredient catalog.

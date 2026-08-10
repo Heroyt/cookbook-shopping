@@ -1,4 +1,4 @@
-# Scope Agent Credentials to one User and Family
+# ADR 0009 — Scope Agent Credentials to one User and Family
 
 Each Agent Credential is issued by one User for exactly one Family and is automatically revoked when that User is deleted or loses membership in that Family. Every credential receives `content:read`; its issuer may additionally select `cookbook:write`, `planning:write`, and `destructive:write`. It must expire within one year and defaults to 90 days. API requests derive their Family exclusively from the credential rather than a route parameter or the User's Current Family preference.
 
