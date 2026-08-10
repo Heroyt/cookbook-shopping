@@ -6,6 +6,7 @@ import {
     LayoutGrid,
     StoreIcon,
     UsersRound,
+    WheatIcon,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as familiesIndex } from '@/routes/families';
+import { index as ingredientsIndex } from '@/routes/ingredients';
 import { index as storesIndex } from '@/routes/stores';
 import type { NavItem } from '@/types';
 
@@ -42,6 +44,11 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(page.props.currentFamily === null
         ? []
         : [
+              {
+                  title: 'Suroviny',
+                  href: ingredientsIndex(),
+                  icon: WheatIcon,
+              },
               {
                   title: 'Obchody',
                   href: storesIndex(),

@@ -2,12 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Cookbook\Http\Controllers\IngredientController;
 use App\Cookbook\Http\Controllers\StoreController;
 use App\Cookbook\Http\Controllers\StoreSectionAssociationController;
 use App\Cookbook\Http\Controllers\StoreSectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('ingredients', [IngredientController::class, 'index'])->name('ingredients.index');
+    Route::post('ingredients', [IngredientController::class, 'store'])->name('ingredients.store');
     Route::get('stores', [StoreController::class, 'index'])->name('stores.index');
     Route::post('stores', [StoreController::class, 'store'])->name('stores.store');
     Route::patch('stores/{store}', [StoreController::class, 'update'])->name('stores.update');

@@ -165,8 +165,12 @@ return [
         'current_password' => 'současné heslo',
         'email' => 'e-mail',
         'family_name' => 'název rodiny',
+        'piece_count' => 'počet kusů v balení',
+        'quantities' => 'obsah balení',
         'name' => 'název',
         'password' => 'heslo',
         'password_confirmation' => 'potvrzení hesla',
+        'volume_millilitres' => 'objem balení',
+        'weight_grams' => 'hmotnost balení',
     ],
 ];
