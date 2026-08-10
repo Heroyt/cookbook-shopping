@@ -11,7 +11,7 @@ use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\ValidationException;
 
-final readonly class UpdateStore
+final readonly class RenameStore
 {
     public function __construct(private CurrentFamilyScope $currentFamilyScope) {}
 

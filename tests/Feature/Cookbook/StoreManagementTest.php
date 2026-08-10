@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 final class StoreManagementTest extends TestCase
 {
-    public function test_guests_cannot_list_or_create_stores(): void
+    public function test_guests_cannot_manage_stores(): void
     {
         $this->get(route('stores.index'))->assertRedirect(route('login'));
         $this->post(route('stores.store'), ['name' => 'Market'])->assertRedirect(route('login'));
