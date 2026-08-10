@@ -18,6 +18,7 @@ final class StoreManagementTest extends TestCase
         $this->get(route('stores.index'))->assertRedirect(route('login'));
         $this->post(route('stores.store'), ['name' => 'Market'])->assertRedirect(route('login'));
         $this->patch(route('stores.update', 1), ['name' => 'Market'])->assertRedirect(route('login'));
+        $this->delete(route('stores.destroy', 1))->assertRedirect(route('login'));
     }
 
     public function test_each_member_can_create_and_list_stores_in_their_shared_family(): void
@@ -103,6 +104,35 @@ final class StoreManagementTest extends TestCase
                 ->where('stores.0.name', 'Daily Market'));
     }
 
+    public function test_each_member_can_delete_a_store_in_their_shared_family(): void
+    {
+        $firstMember = User::factory()->create();
+        $secondMember = User::factory()->create();
+        $family = $this->createFamilyWithMembers($firstMember, $secondMember);
+        $this->selectCurrentFamily($firstMember, $family);
+        $this->selectCurrentFamily($secondMember, $family);
+        $store = Store::factory()->for($family)->create(['name' => 'Weekend Market']);
+
+        $this
+            ->actingAs($secondMember)
+            ->delete(route('stores.destroy', $store))
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Store deleted.',
+            ])
+            ->assertRedirect(route('stores.index'));
+
+        $this->assertModelMissing($store);
+
+        $this
+            ->actingAs($firstMember)
+            ->get(route('stores.index'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->has('stores', 0));
+    }
+
     public function test_store_reads_are_scoped_to_the_current_family(): void
     {
         $user = User::factory()->create();
@@ -180,6 +210,31 @@ final class StoreManagementTest extends TestCase
             'family_id' => $otherFamily->id,
             'name' => 'Other Store',
         ]);
+    }
+
+    public function test_store_deletions_are_scoped_to_the_current_family(): void
+    {
+        $user = User::factory()->create();
+        $currentFamily = $this->createFamilyWithMembers($user);
+        $otherFamily = $this->createFamilyWithMembers(User::factory()->create());
+        $this->selectCurrentFamily($user, $currentFamily);
+        $currentStore = Store::factory()->for($currentFamily)->create(['name' => 'Current Store']);
+        $otherStore = Store::factory()->for($otherFamily)->create(['name' => 'Other Store']);
+
+        $this
+            ->actingAs($user)
+            ->delete(route('stores.destroy', $currentStore), ['family_id' => $otherFamily->id])
+            ->assertSessionHasNoErrors();
+
+        $this->assertModelMissing($currentStore);
+        $this->assertModelExists($otherStore);
+
+        $this
+            ->actingAs($user)
+            ->delete(route('stores.destroy', $otherStore))
+            ->assertNotFound();
+
+        $this->assertModelExists($otherStore);
     }
 
     public function test_normalized_store_name_is_unique_within_a_family(): void
@@ -286,6 +341,7 @@ final class StoreManagementTest extends TestCase
         $this->actingAs($user)->get(route('stores.index'))->assertNotFound();
         $this->actingAs($user)->post(route('stores.store'), ['name' => 'No Family'])->assertNotFound();
         $this->actingAs($user)->patch(route('stores.update', 1), ['name' => 'No Family'])->assertNotFound();
+        $this->actingAs($user)->delete(route('stores.destroy', 1))->assertNotFound();
 
         $this->assertDatabaseCount('stores', 0);
     }

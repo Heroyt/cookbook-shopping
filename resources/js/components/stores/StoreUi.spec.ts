@@ -38,6 +38,18 @@ describe('Store UI contract', () => {
         expect(list).toContain('<RenameStoreDialog :store="store" />');
     });
 
+    it('confirms each Store deletion through its typed destroy action', () => {
+        const dialog = readSource('./DeleteStoreAlertDialog.vue');
+        const list = readSource('./StoreList.vue');
+
+        expect(dialog).toContain('StoreController.destroy(store.id).url');
+        expect(dialog).toContain('router.delete');
+        expect(dialog).toContain('<AlertDialog');
+        expect(dialog).toContain('variant="destructive"');
+        expect(dialog).toContain('Delete Store');
+        expect(list).toContain('<DeleteStoreAlertDialog :store="store" />');
+    });
+
     it('adds Stores to primary navigation through a generated route', () => {
         const sidebar = readSource('../AppSidebar.vue');
 
