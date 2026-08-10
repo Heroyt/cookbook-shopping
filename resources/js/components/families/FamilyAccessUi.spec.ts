@@ -45,6 +45,8 @@ describe('Family Access UI contract', () => {
         expect(deleteFamily).toContain('FamilyController.destroy.form()');
         expect(deleteFamily).toContain('name="family_name"');
         expect(switcher).toContain('CurrentFamilyController.update(familyId)');
+        expect(switcher).toContain('const familyId = Number(value)');
+        expect(switcher).toContain('Number.isSafeInteger(familyId)');
     });
 
     it('points final-member account deletion at the available resolution', () => {
