@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3';
 import { BookOpen, FolderGit2, LayoutGrid, UsersRound } from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
+import FamilySwitcher from '@/components/families/FamilySwitcher.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -15,7 +16,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { create as createFamily } from '@/routes/families';
+import { index as familiesIndex } from '@/routes/families';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -26,7 +27,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Families',
-        href: createFamily(),
+        href: familiesIndex(),
         icon: UsersRound,
     },
 ];
@@ -60,6 +61,7 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
+            <FamilySwitcher />
             <NavMain :items="mainNavItems" />
         </SidebarContent>
 

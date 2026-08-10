@@ -66,8 +66,8 @@ const passwordInput = useTemplateRef('passwordInput');
                                 permanently deleted. Shared Families keep their
                                 other members and data. Account deletion is not
                                 available while you are the final member of a
-                                Family because member management and Family
-                                deletion have not shipped yet. Enter your
+                                Family. Use Family management to add another
+                                member or delete the Family first. Enter your
                                 password to confirm.
                             </DialogDescription>
                         </DialogHeader>
