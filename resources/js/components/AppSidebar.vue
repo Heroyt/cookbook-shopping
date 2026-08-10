@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid, UsersRound } from '@lucide/vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BookOpen,
+    FolderGit2,
+    LayoutGrid,
+    StoreIcon,
+    UsersRound,
+} from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import FamilySwitcher from '@/components/families/FamilySwitcher.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -17,9 +24,11 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as familiesIndex } from '@/routes/families';
+import { index as storesIndex } from '@/routes/stores';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+const page = usePage();
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Dashboard',
         href: dashboard(),
@@ -30,7 +39,16 @@ const mainNavItems: NavItem[] = [
         href: familiesIndex(),
         icon: UsersRound,
     },
-];
+    ...(page.props.currentFamily === null
+        ? []
+        : [
+              {
+                  title: 'Stores',
+                  href: storesIndex(),
+                  icon: StoreIcon,
+              },
+          ]),
+]);
 
 const footerNavItems: NavItem[] = [
     {
