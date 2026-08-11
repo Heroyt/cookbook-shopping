@@ -10,6 +10,9 @@ use App\Cookbook\Actions\DeleteStoreSection;
 use App\Cookbook\Http\Requests\StoreSectionDestroyRequest;
 use App\Cookbook\Http\Requests\StoreSectionIconUpdateRequest;
 use App\Cookbook\Http\Requests\StoreSectionStoreRequest;
+use App\Cookbook\Models\StoreSection;
+use App\FamilyAccess\AuthorizedFamilyContext;
+use App\FamilyAccess\CurrentFamilyScope;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -17,6 +20,7 @@ use Inertia\Inertia;
 final class StoreSectionController extends Controller
 {
     public function __construct(
+        private readonly CurrentFamilyScope $currentFamilyScope,
         private readonly CreateStoreSection $createStoreSection,
         private readonly DeleteStoreSection $deleteStoreSection,
         private readonly ChangeStoreSectionIcon $changeStoreSectionIcon,
@@ -24,11 +28,14 @@ final class StoreSectionController extends Controller
 
     public function store(StoreSectionStoreRequest $request): RedirectResponse
     {
-        $this->createStoreSection->handle(
+        $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
-            $request->storeSectionName(),
-            $request->storeSectionColour(),
-            $request->storeSectionIcon(),
+            fn (AuthorizedFamilyContext $context): StoreSection => $this->createStoreSection->handle(
+                $context,
+                $request->storeSectionName(),
+                $request->storeSectionColour(),
+                $request->storeSectionIcon(),
+            ),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store Section created.')]);
@@ -38,10 +45,13 @@ final class StoreSectionController extends Controller
 
     public function updateIcon(StoreSectionIconUpdateRequest $request, int $storeSection): RedirectResponse
     {
-        $this->changeStoreSectionIcon->handle(
+        $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
-            $storeSection,
-            $request->storeSectionIcon(),
+            fn (AuthorizedFamilyContext $context): StoreSection => $this->changeStoreSectionIcon->handle(
+                $context,
+                $storeSection,
+                $request->storeSectionIcon(),
+            ),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store Section icon updated.')]);
@@ -51,7 +61,13 @@ final class StoreSectionController extends Controller
 
     public function destroy(StoreSectionDestroyRequest $request, int $storeSection): RedirectResponse
     {
-        $this->deleteStoreSection->handle($request->authenticatedUser(), $storeSection);
+        $this->currentFamilyScope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($storeSection): void {
+                $this->deleteStoreSection->handle($context, $storeSection);
+            },
+            1,
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store Section deleted.')]);
 

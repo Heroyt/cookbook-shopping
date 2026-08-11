@@ -16,6 +16,7 @@ use App\Cookbook\Models\StoreSection;
 use App\Cookbook\Services\EntityMediaStorage;
 use App\Cookbook\Values\EntityMediaType;
 use App\Cookbook\Values\NormalizedName;
+use App\FamilyAccess\AuthorizedFamilyContext;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
@@ -106,7 +107,10 @@ final class StoreController extends Controller
 
     public function store(StoreStoreRequest $request): RedirectResponse
     {
-        $this->createStore->handle($request->authenticatedUser(), $request->storeName());
+        $this->currentFamilyScope->withinContext(
+            $request->authenticatedUser(),
+            fn (AuthorizedFamilyContext $context): Store => $this->createStore->handle($context, $request->storeName()),
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store created.')]);
 
@@ -115,7 +119,10 @@ final class StoreController extends Controller
 
     public function update(StoreUpdateRequest $request, int $store): RedirectResponse
     {
-        $this->renameStore->handle($request->authenticatedUser(), $store, $request->storeName());
+        $this->currentFamilyScope->withinContext(
+            $request->authenticatedUser(),
+            fn (AuthorizedFamilyContext $context): Store => $this->renameStore->handle($context, $store, $request->storeName()),
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store renamed.')]);
 
@@ -124,7 +131,13 @@ final class StoreController extends Controller
 
     public function destroy(StoreDestroyRequest $request, int $store): RedirectResponse
     {
-        $this->deleteStore->handle($request->authenticatedUser(), $store);
+        $this->currentFamilyScope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($store): void {
+                $this->deleteStore->handle($context, $store);
+            },
+            1,
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store deleted.')]);
 

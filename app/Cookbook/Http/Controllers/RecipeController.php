@@ -12,7 +12,9 @@ use App\Cookbook\Http\Requests\RecipeIndexRequest;
 use App\Cookbook\Http\Requests\RecipeMutationRequest;
 use App\Cookbook\Http\Requests\RecipeStoreRequest;
 use App\Cookbook\Http\Requests\RecipeUpdateRequest;
+use App\Cookbook\Models\Recipe;
 use App\Cookbook\Queries\CurrentFamilyRecipeManagement;
+use App\FamilyAccess\AuthorizedFamilyContext;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
@@ -41,7 +43,10 @@ final class RecipeController extends Controller
 
     public function store(RecipeStoreRequest $request): RedirectResponse
     {
-        $this->createRecipe->handle($request->authenticatedUser(), $request->recipeData());
+        $this->scope->withinContext(
+            $request->authenticatedUser(),
+            fn (AuthorizedFamilyContext $context): Recipe => $this->createRecipe->handle($context, $request->recipeData()),
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Recipe created.')]);
 
         return to_route('recipes.index');
@@ -49,7 +54,15 @@ final class RecipeController extends Controller
 
     public function update(RecipeUpdateRequest $request, int $recipe): RedirectResponse
     {
-        $this->updateRecipe->handle($request->authenticatedUser(), $recipe, $request->recipeVersion(), $request->recipeData());
+        $this->scope->withinContext(
+            $request->authenticatedUser(),
+            fn (AuthorizedFamilyContext $context): Recipe => $this->updateRecipe->handle(
+                $context,
+                $recipe,
+                $request->recipeVersion(),
+                $request->recipeData(),
+            ),
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Recipe saved.')]);
 
         return to_route('recipes.index');
@@ -57,7 +70,12 @@ final class RecipeController extends Controller
 
     public function archive(RecipeMutationRequest $request, int $recipe): RedirectResponse
     {
-        $this->archiveRecipe->handle($request->authenticatedUser(), $recipe);
+        $this->scope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($recipe): void {
+                $this->archiveRecipe->handle($context, $recipe);
+            },
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Recipe archived.')]);
 
         return to_route('recipes.index');
@@ -65,7 +83,12 @@ final class RecipeController extends Controller
 
     public function restore(RecipeMutationRequest $request, int $recipe): RedirectResponse
     {
-        $this->restoreRecipe->handle($request->authenticatedUser(), $recipe);
+        $this->scope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($recipe): void {
+                $this->restoreRecipe->handle($context, $recipe);
+            },
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Recipe restored.')]);
 
         return to_route('recipes.index');

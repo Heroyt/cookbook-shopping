@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\MealPlanning\Http\Controllers;
 
 use App\Cookbook\Models\Recipe;
+use App\FamilyAccess\AuthorizedFamilyContext;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Requests\AuthenticatedRequest;
@@ -65,12 +66,15 @@ final readonly class CalendarController
 
     public function store(CalendarEntryStoreRequest $request): RedirectResponse
     {
-        $result = $this->createEntry->handle(
+        $result = $this->scope->withinContext(
             $request->authenticatedUser(),
-            $request->recipeId(),
-            $request->calendarDate(),
-            $request->mealLabel(),
-            $request->servingCount(),
+            fn (AuthorizedFamilyContext $context): CalendarEntryWriteResult => $this->createEntry->handle(
+                $context,
+                $request->recipeId(),
+                $request->calendarDate(),
+                $request->mealLabel(),
+                $request->servingCount(),
+            ),
         );
         $this->flashResult($result);
 
@@ -79,13 +83,16 @@ final readonly class CalendarController
 
     public function update(CalendarEntryUpdateRequest $request, int $entry): RedirectResponse
     {
-        $result = $this->updateEntry->handle(
+        $result = $this->scope->withinContext(
             $request->authenticatedUser(),
-            $entry,
-            $request->recipeId(),
-            $request->calendarDate(),
-            $request->mealLabel(),
-            $request->servingCount(),
+            fn (AuthorizedFamilyContext $context): CalendarEntryWriteResult => $this->updateEntry->handle(
+                $context,
+                $entry,
+                $request->recipeId(),
+                $request->calendarDate(),
+                $request->mealLabel(),
+                $request->servingCount(),
+            ),
         );
         $this->flashResult($result);
 
@@ -94,7 +101,12 @@ final readonly class CalendarController
 
     public function destroy(CalendarEntryDestroyRequest $request, int $entry): RedirectResponse
     {
-        $this->deleteEntry->handle($request->authenticatedUser(), $entry);
+        $this->scope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($entry): void {
+                $this->deleteEntry->handle($context, $entry);
+            },
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Calendar Entry deleted.')]);
 
         return to_route('calendar.index');

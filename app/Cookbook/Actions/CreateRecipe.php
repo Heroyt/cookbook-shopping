@@ -5,30 +5,29 @@ declare(strict_types=1);
 namespace App\Cookbook\Actions;
 
 use App\Cookbook\Models\Recipe;
-use App\FamilyAccess\CurrentFamilyScope;
+use App\FamilyAccess\AuthorizedFamilyContext;
 use App\FamilyAccess\Models\Family;
-use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 final readonly class CreateRecipe
 {
-    public function __construct(private CurrentFamilyScope $scope, private WriteRecipeAggregate $writer) {}
+    public function __construct(private WriteRecipeAggregate $writer) {}
 
     /** @param array{name: string, base_servings: string, source_url: ?string, preparation_minutes: ?int, cooking_minutes: ?int, notes: ?string, ingredients: list<array{ingredient_id: int, quantity: string, quantity_kind: string}>, steps: list<string>, tag_ids: list<int>, nutrition: array{energy_kcal: string, fat_grams: string, protein_grams: string, carbohydrate_grams: string}|null} $data */
-    public function handle(User $user, array $data): Recipe
+    public function handle(AuthorizedFamilyContext $context, array $data): Recipe
     {
-        return $this->scope->within($user, fn (Family $family): Recipe => DB::transaction(function () use ($family, $data): Recipe {
+        return DB::transaction(function () use ($context, $data): Recipe {
             try {
-                $recipe = Recipe::query()->create($this->attributes($family, $data));
+                $recipe = Recipe::query()->create($this->attributes($context->family, $data));
             } catch (UniqueConstraintViolationException) {
                 throw ValidationException::withMessages(['name' => __('A Recipe with this name already exists in the Current Family.')]);
             }
-            $this->writer->replace($family, $recipe, $data);
+            $this->writer->replace($context->family, $recipe, $data);
 
             return $recipe;
-        }));
+        });
     }
 
     /**

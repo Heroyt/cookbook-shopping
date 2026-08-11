@@ -13,7 +13,9 @@ use App\Cookbook\Http\Requests\IngredientIndexRequest;
 use App\Cookbook\Http\Requests\IngredientRestoreRequest;
 use App\Cookbook\Http\Requests\IngredientStoreRequest;
 use App\Cookbook\Http\Requests\IngredientUpdateRequest;
+use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Queries\CurrentFamilyIngredientManagement;
+use App\FamilyAccess\AuthorizedFamilyContext;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
@@ -48,7 +50,12 @@ final class IngredientController extends Controller
 
     public function archive(IngredientArchiveRequest $request, int $ingredient): RedirectResponse
     {
-        $this->archiveIngredient->handle($request->authenticatedUser(), $ingredient);
+        $this->currentFamilyScope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($ingredient): void {
+                $this->archiveIngredient->handle($context, $ingredient);
+            },
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ingredient archived.')]);
 
         return to_route('ingredients.index');
@@ -56,7 +63,12 @@ final class IngredientController extends Controller
 
     public function restore(IngredientRestoreRequest $request, int $ingredient): RedirectResponse
     {
-        $this->restoreIngredient->handle($request->authenticatedUser(), $ingredient);
+        $this->currentFamilyScope->withinContext(
+            $request->authenticatedUser(),
+            function (AuthorizedFamilyContext $context) use ($ingredient): void {
+                $this->restoreIngredient->handle($context, $ingredient);
+            },
+        );
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ingredient restored.')]);
 
         return to_route('ingredients.index');
@@ -64,14 +76,17 @@ final class IngredientController extends Controller
 
     public function store(IngredientStoreRequest $request): RedirectResponse
     {
-        $this->createIngredient->handle(
+        $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
-            $request->ingredientName(),
-            $request->description(),
-            $request->packageQuantities(),
-            $request->storeId(),
-            $request->storeSectionId(),
-            $request->nutritionInput(),
+            fn (AuthorizedFamilyContext $context): Ingredient => $this->createIngredient->handle(
+                $context,
+                $request->ingredientName(),
+                $request->description(),
+                $request->packageQuantities(),
+                $request->storeId(),
+                $request->storeSectionId(),
+                $request->nutritionInput(),
+            ),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ingredient created.')]);
@@ -81,15 +96,18 @@ final class IngredientController extends Controller
 
     public function update(IngredientUpdateRequest $request): RedirectResponse
     {
-        $this->updateIngredient->handle(
+        $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
-            $request->ingredientId(),
-            $request->ingredientName(),
-            $request->description(),
-            $request->packageQuantities(),
-            $request->storeId(),
-            $request->storeSectionId(),
-            $request->nutritionInput(),
+            fn (AuthorizedFamilyContext $context): Ingredient => $this->updateIngredient->handle(
+                $context,
+                $request->ingredientId(),
+                $request->ingredientName(),
+                $request->description(),
+                $request->packageQuantities(),
+                $request->storeId(),
+                $request->storeSectionId(),
+                $request->nutritionInput(),
+            ),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Ingredient updated.')]);

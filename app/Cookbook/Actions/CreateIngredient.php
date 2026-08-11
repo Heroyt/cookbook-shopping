@@ -8,21 +8,18 @@ use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Values\IngredientNutritionInput;
 use App\Cookbook\Values\IngredientPackageQuantities;
 use App\Cookbook\Values\NormalizedName;
-use App\FamilyAccess\CurrentFamilyScope;
-use App\FamilyAccess\Models\Family;
-use App\Models\User;
+use App\FamilyAccess\AuthorizedFamilyContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
 final readonly class CreateIngredient
 {
     public function __construct(
-        private CurrentFamilyScope $currentFamilyScope,
         private ResolveIngredientStorePlacement $resolveIngredientStorePlacement,
     ) {}
 
     public function handle(
-        User $user,
+        AuthorizedFamilyContext $context,
         string $name,
         ?string $description,
         IngredientPackageQuantities $quantities,
@@ -30,46 +27,44 @@ final readonly class CreateIngredient
         ?int $storeSectionId,
         ?IngredientNutritionInput $nutrition,
     ): Ingredient {
-        return $this->currentFamilyScope->within($user, function (Family $family) use ($name, $description, $quantities, $storeId, $storeSectionId, $nutrition): Ingredient {
-            $this->validateNutritionCompatibility($nutrition, $quantities);
-            $placement = $this->resolveIngredientStorePlacement->handle($family, $storeId, $storeSectionId);
-            $normalizedName = NormalizedName::from($name);
-            try {
-                $ingredient = Ingredient::query()->createOrFirst(
-                    [
-                        'family_id' => $family->id,
-                        'normalized_name' => $normalizedName->key,
-                    ],
-                    [
-                        'name' => $normalizedName->display,
-                        'description' => $description,
-                        'weight_grams' => $quantities->weightGrams,
-                        'volume_millilitres' => $quantities->volumeMillilitres,
-                        'piece_count' => $quantities->pieceCount,
-                        'store_id' => $placement->storeId,
-                        'store_section_id' => $placement->storeSectionId,
-                    ],
-                );
-            } catch (QueryException $exception) {
-                $this->resolveIngredientStorePlacement->rethrowAsValidationExceptionIfUnavailable(
-                    $family,
-                    $placement,
-                    $exception,
-                );
-            }
+        $this->validateNutritionCompatibility($nutrition, $quantities);
+        $placement = $this->resolveIngredientStorePlacement->handle($context->family, $storeId, $storeSectionId);
+        $normalizedName = NormalizedName::from($name);
+        try {
+            $ingredient = Ingredient::query()->createOrFirst(
+                [
+                    'family_id' => $context->family->id,
+                    'normalized_name' => $normalizedName->key,
+                ],
+                [
+                    'name' => $normalizedName->display,
+                    'description' => $description,
+                    'weight_grams' => $quantities->weightGrams,
+                    'volume_millilitres' => $quantities->volumeMillilitres,
+                    'piece_count' => $quantities->pieceCount,
+                    'store_id' => $placement->storeId,
+                    'store_section_id' => $placement->storeSectionId,
+                ],
+            );
+        } catch (QueryException $exception) {
+            $this->resolveIngredientStorePlacement->rethrowAsValidationExceptionIfUnavailable(
+                $context->family,
+                $placement,
+                $exception,
+            );
+        }
 
-            if ( ! $ingredient->wasRecentlyCreated) {
-                throw ValidationException::withMessages([
-                    'name' => __('An Ingredient with this name already exists in the Current Family.'),
-                ]);
-            }
+        if ( ! $ingredient->wasRecentlyCreated) {
+            throw ValidationException::withMessages([
+                'name' => __('An Ingredient with this name already exists in the Current Family.'),
+            ]);
+        }
 
-            if ($nutrition !== null) {
-                $ingredient->nutritionProfile()->create($nutrition->persistence());
-            }
+        if ($nutrition !== null) {
+            $ingredient->nutritionProfile()->create($nutrition->persistence());
+        }
 
-            return $ingredient;
-        });
+        return $ingredient;
     }
 
     private function validateNutritionCompatibility(?IngredientNutritionInput $nutrition, IngredientPackageQuantities $quantities): void

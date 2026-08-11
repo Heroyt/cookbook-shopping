@@ -9,38 +9,36 @@ use App\Cookbook\Models\StoreSection;
 use App\Cookbook\Services\EntityMediaStorage;
 use App\Cookbook\Values\EntityMediaDeletion;
 use App\Cookbook\Values\EntityMediaType;
-use App\FamilyAccess\CurrentFamilyScope;
-use App\FamilyAccess\Models\Family;
-use App\Models\User;
+use App\FamilyAccess\AuthorizedFamilyContext;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 final readonly class DeleteStoreSection
 {
     public function __construct(
-        private CurrentFamilyScope $currentFamilyScope,
         private EntityMediaStorage $entityMediaStorage,
     ) {}
 
-    public function handle(User $user, int $storeSectionId): void
+    public function handle(AuthorizedFamilyContext $context, int $storeSectionId): void
     {
         $mediaDeletion = null;
 
         try {
-            $this->currentFamilyScope->within($user, function (Family $family) use ($storeSectionId, &$mediaDeletion): void {
+            DB::transaction(function () use ($context, $storeSectionId, &$mediaDeletion): void {
                 $storeSection = StoreSection::query()
-                    ->whereBelongsTo($family)
+                    ->whereBelongsTo($context->family)
                     ->whereKey($storeSectionId)
                     ->lockForUpdate()
                     ->firstOrFail();
                 $affectedStores = $storeSection->stores()
-                    ->whereBelongsTo($family)
+                    ->whereBelongsTo($context->family)
                     ->orderBy('stores.id')
                     ->lockForUpdate()
                     ->get();
 
                 foreach ($affectedStores as $store) {
                     Ingredient::query()
-                        ->whereBelongsTo($family)
+                        ->whereBelongsTo($context->family)
                         ->where('store_id', $store->id)
                         ->where('store_section_id', $storeSection->id)
                         ->update(['store_section_id' => null]);
@@ -49,7 +47,7 @@ final readonly class DeleteStoreSection
 
                 $storeSection->delete();
                 $mediaDeletion = $this->entityMediaStorage->deleteEntityWithBackup(
-                    $family->id,
+                    $context->family->id,
                     EntityMediaType::StoreSectionIcon,
                     $storeSectionId,
                 );
