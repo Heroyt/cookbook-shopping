@@ -7,11 +7,12 @@ namespace App\Cookbook\Actions;
 use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\StoreSection;
 use App\Cookbook\Services\EntityMediaStorage;
+use App\Cookbook\Values\EntityMediaDeletion;
 use App\Cookbook\Values\EntityMediaType;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Throwable;
 
 final readonly class DeleteStoreSection
 {
@@ -22,36 +23,43 @@ final readonly class DeleteStoreSection
 
     public function handle(User $user, int $storeSectionId): void
     {
-        $this->currentFamilyScope->within($user, function (Family $family) use ($storeSectionId): void {
-            $storeSection = StoreSection::query()
-                ->whereBelongsTo($family)
-                ->whereKey($storeSectionId)
-                ->lockForUpdate()
-                ->firstOrFail();
-            $affectedStores = $storeSection->stores()
-                ->whereBelongsTo($family)
-                ->orderBy('stores.id')
-                ->lockForUpdate()
-                ->get();
+        $mediaDeletion = null;
 
-            foreach ($affectedStores as $store) {
-                Ingredient::query()
+        try {
+            $this->currentFamilyScope->within($user, function (Family $family) use ($storeSectionId, &$mediaDeletion): void {
+                $storeSection = StoreSection::query()
                     ->whereBelongsTo($family)
-                    ->where('store_id', $store->id)
-                    ->where('store_section_id', $storeSection->id)
-                    ->update(['store_section_id' => null]);
-                $store->removeStoreSectionAssociation($storeSection);
-            }
+                    ->whereKey($storeSectionId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $affectedStores = $storeSection->stores()
+                    ->whereBelongsTo($family)
+                    ->orderBy('stores.id')
+                    ->lockForUpdate()
+                    ->get();
 
-            $storeSection->delete();
+                foreach ($affectedStores as $store) {
+                    Ingredient::query()
+                        ->whereBelongsTo($family)
+                        ->where('store_id', $store->id)
+                        ->where('store_section_id', $storeSection->id)
+                        ->update(['store_section_id' => null]);
+                    $store->removeStoreSectionAssociation($storeSection);
+                }
 
-            DB::afterCommit(function () use ($family, $storeSectionId): void {
-                $this->entityMediaStorage->deleteEntity(
+                $storeSection->delete();
+                $mediaDeletion = $this->entityMediaStorage->deleteEntityWithBackup(
                     $family->id,
                     EntityMediaType::StoreSectionIcon,
                     $storeSectionId,
                 );
-            });
-        });
+            }, 1);
+        } catch (Throwable $exception) {
+            if ($mediaDeletion instanceof EntityMediaDeletion) {
+                $this->entityMediaStorage->restore($mediaDeletion);
+            }
+
+            throw $exception;
+        }
     }
 }

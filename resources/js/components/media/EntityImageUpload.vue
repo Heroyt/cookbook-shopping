@@ -2,12 +2,13 @@
 import { useForm } from '@inertiajs/vue3';
 import { ImageIcon, UploadIcon } from '@lucide/vue';
 import { ref, useId } from 'vue';
-import EntityMediaController from '@/actions/App/Cookbook/Http/Controllers/EntityMediaController';
+import { store as storeEntityMedia } from '@/actions/App/Cookbook/Http/Controllers/EntityMediaController';
 import { Button } from '@/components/ui/button';
 import {
     Field,
     FieldDescription,
     FieldError,
+    FieldGroup,
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -46,7 +47,7 @@ const submit = (): void => {
     }
 
     form.post(
-        EntityMediaController.store({
+        storeEntityMedia({
             mediaType: props.mediaType,
             entity: props.entityId,
         }).url,
@@ -63,7 +64,7 @@ const submit = (): void => {
 </script>
 
 <template>
-    <div class="space-y-2" data-media-image>
+    <div class="flex flex-col gap-2" data-media-image>
         <img
             v-if="imageUrl"
             :src="imageUrl"
@@ -78,25 +79,31 @@ const submit = (): void => {
             <span>Obrázek zatím není nahraný</span>
         </div>
 
-        <form v-if="editable" class="space-y-2" @submit.prevent="submit">
-            <Field :data-invalid="Boolean(form.errors.image)">
-                <FieldLabel :for="inputId">Vybrat obrázek</FieldLabel>
-                <Input
-                    :id="inputId"
-                    :key="inputVersion"
-                    type="file"
-                    name="image"
-                    accept="image/jpeg,image/png"
-                    :aria-invalid="Boolean(form.errors.image)"
-                    :disabled="form.processing"
-                    @change="chooseFile"
-                />
-                <FieldDescription>
-                    JPEG nebo PNG, nejvýše 5 MB. Nové nahrání nahradí současný
-                    obrázek.
-                </FieldDescription>
-                <FieldError :errors="[form.errors.image]" />
-            </Field>
+        <form
+            v-if="editable"
+            class="flex flex-col gap-2"
+            @submit.prevent="submit"
+        >
+            <FieldGroup>
+                <Field :data-invalid="Boolean(form.errors.image)">
+                    <FieldLabel :for="inputId">Vybrat obrázek</FieldLabel>
+                    <Input
+                        :id="inputId"
+                        :key="inputVersion"
+                        type="file"
+                        name="image"
+                        accept="image/jpeg,image/png"
+                        :aria-invalid="Boolean(form.errors.image)"
+                        :disabled="form.processing"
+                        @change="chooseFile"
+                    />
+                    <FieldDescription>
+                        JPEG nebo PNG, nejvýše 5 MB. Nové nahrání nahradí
+                        současný obrázek.
+                    </FieldDescription>
+                    <FieldError :errors="[form.errors.image]" />
+                </Field>
+            </FieldGroup>
 
             <progress
                 v-if="form.progress"

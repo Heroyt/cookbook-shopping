@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Cookbook\Services;
 
 use App\Cookbook\Exceptions\InvalidEntityMedia;
+use App\Cookbook\Values\EntityMediaDeletion;
 use App\Cookbook\Values\EntityMediaType;
 use App\FamilyAccess\Models\Family;
 use GdImage;
@@ -39,7 +40,7 @@ final class EntityMediaStorage
             $writes[$this->path($family->id, $type, $entityId, $variant)] = $bytes;
         }
 
-        $this->replaceAtomically($writes);
+        $this->replaceAtomically($this->entityDirectory($family->id, $type, $entityId), $writes);
     }
 
     public function url(Family $family, EntityMediaType $type, int $entityId, string $variant = 'catalogue'): ?string
@@ -80,21 +81,33 @@ final class EntityMediaStorage
         ]);
     }
 
-    public function deleteEntity(int $familyId, EntityMediaType $type, int $entityId): void
-    {
-        $directory = $this->entityDirectory($familyId, $type, $entityId);
-
-        if ($this->disk()->exists($directory) && ! $this->disk()->deleteDirectory($directory)) {
-            throw new RuntimeException('Entity media could not be deleted.');
-        }
+    public function deleteEntityWithBackup(
+        int $familyId,
+        EntityMediaType $type,
+        int $entityId,
+    ): EntityMediaDeletion {
+        return $this->deleteDirectoryWithBackup(
+            $this->entityDirectory($familyId, $type, $entityId),
+            'Entity media could not be deleted.',
+        );
     }
 
-    public function deleteFamily(int $familyId): void
+    public function deleteFamilyWithBackup(int $familyId): EntityMediaDeletion
     {
-        $directory = $this->familyDirectory($familyId);
+        return $this->deleteDirectoryWithBackup(
+            $this->familyDirectory($familyId),
+            'Family media could not be deleted.',
+        );
+    }
 
-        if ($this->disk()->exists($directory) && ! $this->disk()->deleteDirectory($directory)) {
-            throw new RuntimeException('Family media could not be deleted.');
+    public function restore(EntityMediaDeletion $deletion): void
+    {
+        $disk = $this->disk();
+
+        foreach ($deletion->files as $path => $bytes) {
+            if ( ! $disk->put($path, $bytes)) {
+                throw new RuntimeException('Deleted entity media could not be restored.');
+            }
         }
     }
 
@@ -142,6 +155,10 @@ final class EntityMediaStorage
 
         if ( ! in_array($mime, ['image/jpeg', 'image/png'], true)) {
             throw new InvalidEntityMedia('The uploaded image is not a decodable JPEG or PNG image.');
+        }
+
+        if ( ! $this->hasCompleteStructure($contents, $mime)) {
+            throw new InvalidEntityMedia('The uploaded image is structurally incomplete.');
         }
 
         set_error_handler(static fn (int $severity, string $message): bool => true);
@@ -234,14 +251,10 @@ final class EntityMediaStorage
     }
 
     /** @param array<string, string> $writes */
-    private function replaceAtomically(array $writes): void
+    private function replaceAtomically(string $directory, array $writes): void
     {
         $disk = $this->disk();
-        $previous = [];
-
-        foreach (array_keys($writes) as $path) {
-            $previous[$path] = $disk->exists($path) ? $disk->get($path) : null;
-        }
+        $previous = $this->readFiles($disk, $directory);
 
         try {
             foreach ($writes as $path => $bytes) {
@@ -249,17 +262,113 @@ final class EntityMediaStorage
                     throw new RuntimeException('A normalized image variant could not be stored.');
                 }
             }
+
+            $stalePaths = array_values(array_diff(array_keys($previous), array_keys($writes)));
+
+            if ($stalePaths !== [] && ! $disk->delete($stalePaths)) {
+                throw new RuntimeException('An obsolete image variant could not be deleted.');
+            }
         } catch (Throwable $exception) {
-            foreach ($previous as $path => $bytes) {
-                if (is_string($bytes)) {
-                    $disk->put($path, $bytes);
-                } else {
+            foreach (array_keys($writes) as $path) {
+                if ( ! array_key_exists($path, $previous)) {
                     $disk->delete($path);
                 }
             }
 
+            foreach ($previous as $path => $bytes) {
+                $disk->put($path, $bytes);
+            }
+
             throw $exception;
         }
+    }
+
+    private function deleteDirectoryWithBackup(string $directory, string $failureMessage): EntityMediaDeletion
+    {
+        $disk = $this->disk();
+        if ( ! $disk->exists($directory)) {
+            return new EntityMediaDeletion($directory, []);
+        }
+
+        $files = $this->readFiles($disk, $directory);
+        $deletion = new EntityMediaDeletion($directory, $files);
+
+        if ( ! $disk->deleteDirectory($directory)) {
+            $this->restore($deletion);
+
+            throw new RuntimeException($failureMessage);
+        }
+
+        return $deletion;
+    }
+
+    /** @return array<string, string> */
+    private function readFiles(FilesystemAdapter $disk, string $directory): array
+    {
+        $files = [];
+
+        foreach ($disk->allFiles($directory) as $path) {
+            $bytes = $disk->get($path);
+
+            if ( ! is_string($bytes)) {
+                throw new RuntimeException('Existing entity media could not be read.');
+            }
+
+            $files[$path] = $bytes;
+        }
+
+        return $files;
+    }
+
+    private function hasCompleteStructure(string $contents, string $mime): bool
+    {
+        if ($mime === 'image/jpeg') {
+            return str_starts_with($contents, "\xFF\xD8") && str_ends_with($contents, "\xFF\xD9");
+        }
+
+        return $this->hasCompletePngStructure($contents);
+    }
+
+    private function hasCompletePngStructure(string $contents): bool
+    {
+        if ( ! str_starts_with($contents, "\x89PNG\r\n\x1A\n")) {
+            return false;
+        }
+
+        $offset = 8;
+        $length = strlen($contents);
+        $firstChunk = true;
+
+        while ($offset + 12 <= $length) {
+            $chunkLengthData = unpack('Nlength', substr($contents, $offset, 4));
+            $chunkLength = is_array($chunkLengthData) ? $chunkLengthData['length'] : null;
+
+            if ( ! is_int($chunkLength) || $chunkLength < 0 || $offset + 12 + $chunkLength > $length) {
+                return false;
+            }
+
+            $type = substr($contents, $offset + 4, 4);
+            $data = substr($contents, $offset + 8, $chunkLength);
+            $expectedCrc = substr($contents, $offset + 8 + $chunkLength, 4);
+            $actualCrc = hex2bin(hash('crc32b', $type . $data));
+
+            if ( ! is_string($actualCrc) || ! hash_equals($expectedCrc, $actualCrc)) {
+                return false;
+            }
+
+            if ($firstChunk && $type !== 'IHDR') {
+                return false;
+            }
+
+            $offset += 12 + $chunkLength;
+            $firstChunk = false;
+
+            if ($type === 'IEND') {
+                return $chunkLength === 0 && $offset === $length;
+            }
+        }
+
+        return false;
     }
 
     private function variantExists(EntityMediaType $type, string $variant): bool

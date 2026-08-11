@@ -14,9 +14,11 @@ describe('Entity image upload UI', () => {
         const source = readSource('./EntityImageUpload.vue');
 
         expect(source).toContain(
-            "from '@/actions/App/Cookbook/Http/Controllers/EntityMediaController'",
+            "import { store as storeEntityMedia } from '@/actions/App/Cookbook/Http/Controllers/EntityMediaController'",
         );
-        expect(source).toContain('EntityMediaController.store({');
+        expect(source).toContain('storeEntityMedia({');
+        expect(source).toContain('FieldGroup');
+        expect(source).not.toContain('space-y-');
         expect(source).toContain('accept="image/jpeg,image/png"');
         expect(source).toContain('form.progress.percentage');
         expect(source).toContain(':errors="[form.errors.image]"');

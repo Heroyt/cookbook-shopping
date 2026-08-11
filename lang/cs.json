@@ -78,6 +78,7 @@
     "Tag: :name": "Štítek: :name",
     "Ingredient: :name": "Surovina: :name",
     "Image saved.": "Obrázek byl uložen.",
+    "The file must have a JPG, JPEG, or PNG extension.": "Soubor musí mít příponu JPG, JPEG nebo PNG.",
     "Select a JPEG or PNG image.": "Vyberte obrázek ve formátu JPEG nebo PNG.",
     "The image must not be larger than 5 MB.": "Obrázek nesmí být větší než 5 MB.",
     "The image could not be decoded safely.": "Obrázek se nepodařilo bezpečně načíst.",

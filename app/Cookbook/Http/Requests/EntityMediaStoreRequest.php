@@ -20,6 +20,7 @@ final class EntityMediaStoreRequest extends AuthenticatedRequest
             'image' => [
                 'required',
                 'file',
+                'extensions:jpg,jpeg,png',
                 'mimetypes:image/jpeg,image/png',
                 'max:' . (is_int($maximumKilobytes) ? $maximumKilobytes : 5120),
             ],
@@ -30,6 +31,7 @@ final class EntityMediaStoreRequest extends AuthenticatedRequest
     public function messages(): array
     {
         return [
+            'image.extensions' => __('The file must have a JPG, JPEG, or PNG extension.'),
             'image.mimetypes' => __('Select a JPEG or PNG image.'),
             'image.max' => __('The image must not be larger than 5 MB.'),
         ];

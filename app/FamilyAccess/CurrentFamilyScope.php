@@ -17,14 +17,15 @@ final readonly class CurrentFamilyScope
      * @template TResult
      *
      * @param  Closure(Family): TResult  $operation
+     * @param  positive-int  $attempts
      * @return TResult
      */
-    public function within(User $user, Closure $operation): mixed
+    public function within(User $user, Closure $operation, int $attempts = 3): mixed
     {
         return DB::transaction(function () use ($user, $operation): mixed {
             $family = $this->currentFamily->resolve($user) ?? abort(404);
 
             return $operation($family);
-        }, 3);
+        }, $attempts);
     }
 }

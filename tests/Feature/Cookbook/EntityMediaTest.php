@@ -19,6 +19,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia;
 use Mockery;
+use RuntimeException;
 use Tests\TestCase;
 
 final class EntityMediaTest extends TestCase
@@ -153,6 +154,14 @@ final class EntityMediaTest extends TestCase
             ->post($route, ['image' => UploadedFile::fake()->createWithContent('logo.webp', $this->webpBytes())])
             ->assertSessionHasErrors(['image' => 'Vyberte obrázek ve formátu JPEG nebo PNG.']);
 
+        $jpeg = UploadedFile::fake()->image('logo.jpg');
+
+        $this->actingAs($user)
+            ->post($route, [
+                'image' => UploadedFile::fake()->createWithContent('logo.txt', $jpeg->getContent()),
+            ])
+            ->assertSessionHasErrors(['image' => 'Soubor musí mít příponu JPG, JPEG nebo PNG.']);
+
         $this->actingAs($user)
             ->post($route, ['image' => UploadedFile::fake()->image('logo.jpg')->size(5121)])
             ->assertSessionHasErrors(['image' => 'Obrázek nesmí být větší než 5 MB.']);
@@ -166,7 +175,46 @@ final class EntityMediaTest extends TestCase
             ])
             ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
 
+        $completeJpeg = UploadedFile::fake()->image('complete.jpg')->getContent();
+
+        $this->actingAs($user)
+            ->post($route, [
+                'image' => UploadedFile::fake()->createWithContent(
+                    'truncated.jpg',
+                    substr($completeJpeg, 0, -2),
+                ),
+            ])
+            ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
+
         Storage::disk('media')->assertDirectoryEmpty('family-media');
+    }
+
+    public function test_replacement_removes_variants_that_are_no_longer_configured(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers('Domov', $user);
+        $this->selectCurrentFamily($user, $family);
+        $ingredient = Ingredient::factory()->for($family)->create();
+        $route = route('entity-media.store', ['mediaType' => 'ingredient-photo', 'entity' => $ingredient]);
+
+        $this->actingAs($user)
+            ->post($route, ['image' => UploadedFile::fake()->image('first.jpg')])
+            ->assertSessionHasNoErrors();
+        Storage::disk('media')->assertExists($this->mediaPath($family, 'ingredient-photo', $ingredient->id, 'detail'));
+
+        config()->set('media.types.ingredient-photo.variants', [
+            'catalogue' => ['width' => 80, 'height' => 80],
+        ]);
+
+        $this->actingAs($user)
+            ->post($route, ['image' => UploadedFile::fake()->image('replacement.png')])
+            ->assertSessionHasNoErrors();
+
+        Storage::disk('media')->assertMissing($this->mediaPath($family, 'ingredient-photo', $ingredient->id, 'detail'));
+        $this->assertCount(
+            1,
+            Storage::disk('media')->allFiles("family-media/{$family->id}/ingredient-photo/{$ingredient->id}"),
+        );
     }
 
     public function test_archive_retains_media_while_hard_entity_and_family_deletion_remove_it(): void
@@ -245,9 +293,11 @@ final class EntityMediaTest extends TestCase
             'detail',
         );
         $disk = Mockery::mock(FilesystemAdapter::class);
-        $disk->shouldReceive('exists')->once()->with($cataloguePath)->andReturnTrue();
+        $disk->shouldReceive('allFiles')->once()->with(dirname($cataloguePath))->andReturn([
+            $cataloguePath,
+            $detailPath,
+        ]);
         $disk->shouldReceive('get')->once()->with($cataloguePath)->andReturn('old catalogue');
-        $disk->shouldReceive('exists')->once()->with($detailPath)->andReturnTrue();
         $disk->shouldReceive('get')->once()->with($detailPath)->andReturn('old detail');
         $disk->shouldReceive('put')->once()->with($cataloguePath, Mockery::type('string'))->andReturnTrue();
         $disk->shouldReceive('put')->once()->with($detailPath, Mockery::type('string'))->andReturnFalse();
@@ -263,6 +313,48 @@ final class EntityMediaTest extends TestCase
             ->assertSessionHasErrors([
                 'image' => 'Obrázek se nepodařilo uložit. Zkuste to znovu.',
             ]);
+    }
+
+    public function test_store_deletion_rolls_back_when_media_cleanup_fails(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers('Domov', $user);
+        $this->selectCurrentFamily($user, $family);
+        $store = Store::factory()->for($family)->create();
+        $directory = "family-media/{$family->id}/store-logo/{$store->id}";
+        $disk = Mockery::mock(FilesystemAdapter::class);
+        $disk->shouldReceive('exists')->once()->with($directory)->andReturnTrue();
+        $disk->allows('allFiles')->with($directory)->andReturn([]);
+        $disk->shouldReceive('deleteDirectory')->once()->with($directory)->andReturnFalse();
+        Storage::shouldReceive('disk')->with('media')->andReturn($disk);
+
+        try {
+            $this->actingAs($user)->delete(route('stores.destroy', $store));
+            $this->fail('The failed media cleanup should abort Store deletion.');
+        } catch (RuntimeException) {
+            $this->assertModelExists($store);
+        }
+    }
+
+    public function test_family_deletion_rolls_back_when_media_cleanup_fails(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers('Domov', $user);
+        $this->selectCurrentFamily($user, $family);
+        $directory = "family-media/{$family->id}";
+        $disk = Mockery::mock(FilesystemAdapter::class);
+        $disk->shouldReceive('exists')->once()->with($directory)->andReturnTrue();
+        $disk->allows('allFiles')->with($directory)->andReturn([]);
+        $disk->shouldReceive('deleteDirectory')->once()->with($directory)->andReturnFalse();
+        Storage::shouldReceive('disk')->with('media')->andReturn($disk);
+
+        try {
+            $this->actingAs($user)
+                ->delete(route('current-family.destroy'), ['family_name' => $family->name]);
+            $this->fail('The failed media cleanup should abort Family deletion.');
+        } catch (RuntimeException) {
+            $this->assertModelExists($family);
+        }
     }
 
     public function test_guests_and_unknown_media_routes_cannot_access_private_images(): void
