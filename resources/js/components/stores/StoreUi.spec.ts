@@ -29,8 +29,8 @@ describe('Store UI contract', () => {
         expect(page).toContain(':store-sections="storeSections"');
     });
 
-    it('wires each Store rename dialog to its typed update action', () => {
-        const dialog = readSource('./RenameStoreDialog.vue');
+    it('moves all Store mutation controls into one management dialog', () => {
+        const dialog = readSource('./EditStoreDialog.vue');
         const list = readSource('./StoreList.vue');
 
         expect(dialog).toContain('StoreController.update.form(store.id)');
@@ -39,20 +39,27 @@ describe('Store UI contract', () => {
         expect(dialog).toContain('maxlength="255"');
         expect(dialog).toContain(':aria-invalid="Boolean(errors.name)"');
         expect(dialog).toContain('<FieldError :errors="[errors.name]" />');
-        expect(dialog).toContain('@success="open = false"');
-        expect(list).toContain('<RenameStoreDialog :store="store" />');
+        expect(dialog).toContain('<EntityImageUpload');
+        expect(dialog).toContain('<StoreSectionOrderManager');
+        expect(dialog).toContain('<DeleteStoreAlertDialog :store="store" />');
+        expect(list).toContain('<EditStoreDialog');
+        expect(list).not.toContain('<EntityImageUpload');
+        expect(list).not.toContain('<StoreSectionOrderManager');
+        expect(list).not.toContain('<DeleteStoreAlertDialog');
     });
 
     it('confirms each Store deletion through its typed destroy action', () => {
         const dialog = readSource('./DeleteStoreAlertDialog.vue');
-        const list = readSource('./StoreList.vue');
+        const managementDialog = readSource('./EditStoreDialog.vue');
 
         expect(dialog).toContain('StoreController.destroy(store.id).url');
         expect(dialog).toContain('router.delete');
         expect(dialog).toContain('<AlertDialog');
         expect(dialog).toContain('variant="destructive"');
         expect(dialog).toContain('Smazat obchod');
-        expect(list).toContain('<DeleteStoreAlertDialog :store="store" />');
+        expect(managementDialog).toContain(
+            '<DeleteStoreAlertDialog :store="store" />',
+        );
     });
 
     it('adds Stores to primary navigation through a generated route', () => {
