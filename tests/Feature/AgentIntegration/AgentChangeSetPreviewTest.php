@@ -60,6 +60,7 @@ final class AgentChangeSetPreviewTest extends TestCase
             ->assertJsonPath('data.preview.effects.0.operation_id', 'store-a')
             ->assertJsonPath('data.preview.effects.1.operation_id', 'store-b')
             ->assertJsonPath('data.preview.warnings', []);
+        $this->assertMatchesRegularExpression('/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/', $response->json('data.id'));
         $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $response->json('data.digest'));
         $this->assertDatabaseCount('stores', 0);
 

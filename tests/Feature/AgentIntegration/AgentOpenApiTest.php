@@ -58,6 +58,23 @@ final class AgentOpenApiTest extends TestCase
 
         $schemas = $document['components']['schemas'];
         $this->assertSame('object', $schemas['AgentApiError']['properties']['error']['properties']['details']['type']);
+        $changeSetId = $schemas['AgentChangeSet']['properties']['id'];
+        $this->assertSame('string', $changeSetId['type']);
+        $this->assertSame(26, $changeSetId['minLength']);
+        $this->assertSame(26, $changeSetId['maxLength']);
+        $this->assertSame('^[0-7][0-9A-HJKMNP-TV-Z]{25}$', $changeSetId['pattern']);
+        $this->assertArrayNotHasKey('format', $changeSetId);
+
+        foreach ([
+            $schemas['AgentChangeSetDocument']['properties']['supersedes_id'],
+            $schemas['AgentChangeSet']['properties']['supersedes_id'],
+        ] as $supersedesId) {
+            $this->assertSame(26, $supersedesId['minLength']);
+            $this->assertSame(26, $supersedesId['maxLength']);
+            $this->assertSame('^[0-7][0-9A-HJKMNP-TV-Z]{25}$', $supersedesId['pattern']);
+            $this->assertArrayNotHasKey('format', $supersedesId);
+        }
+
         $this->assertCount(20, $schemas['AgentChangeSetOperation']['oneOf']);
         $this->assertSame([
             '#/components/schemas/CreateStoreOperation',
