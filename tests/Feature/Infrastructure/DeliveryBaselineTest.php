@@ -120,6 +120,13 @@ SH);
         $this->assertStringContainsString("'driver' => 'mariadb'", $databaseConfiguration);
     }
 
+    public function test_development_proxy_accepts_the_approved_image_limit_with_multipart_overhead(): void
+    {
+        $nginxConfiguration = File::get(base_path('docker/dev/nginx.conf'));
+
+        $this->assertStringContainsString('client_max_body_size 6m;', $nginxConfiguration);
+    }
+
     public function test_github_actions_remains_unconfigured_while_jenkins_is_authoritative(): void
     {
         $workflowDirectory = base_path('.github/workflows');
