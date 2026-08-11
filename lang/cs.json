@@ -1,5 +1,8 @@
 {
     "Your session expired. Refresh the page and try again.": "Platnost relace vypršela. Obnovte stránku a zkuste to znovu.",
+    "Agent Credential created.": "Přístup agenta byl vytvořen.",
+    "Agent Credential rotated.": "Tajemství přístupu agenta bylo nahrazeno.",
+    "Agent Credential revoked.": "Přístup agenta byl odvolán.",
     "An Ingredient with this name already exists in the Current Family.": "Surovina s tímto názvem už v aktuální rodině existuje.",
     "A Store Section with this name already exists in the Current Family.": "Část obchodu s tímto názvem už v aktuální rodině existuje.",
     "A Store with this name already exists in the Current Family.": "Obchod s tímto názvem už v aktuální rodině existuje.",

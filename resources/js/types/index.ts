@@ -1,3 +1,4 @@
+export * from './agent-credential';
 export * from './auth';
 export * from './calendar';
 export * from './family';

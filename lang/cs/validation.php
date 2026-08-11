@@ -163,7 +163,10 @@ return [
 
     'attributes' => [
         'current_password' => 'současné heslo',
+        'abilities' => 'oprávnění',
+        'abilities.*' => 'oprávnění',
         'email' => 'e-mail',
+        'expires_at' => 'platnost do',
         'family_name' => 'název rodiny',
         'image' => 'obrázek',
         'piece_count' => 'počet kusů v balení',

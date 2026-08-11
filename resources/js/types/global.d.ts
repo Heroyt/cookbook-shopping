@@ -1,5 +1,7 @@
+import type { AgentCredentialSecret } from '@/types/agent-credential';
 import type { Auth } from '@/types/auth';
 import type { FamilySummary } from '@/types/family';
+import type { FlashToast } from '@/types/ui';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -16,6 +18,10 @@ declare module 'vite/client' {
 
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
+        flashDataType: {
+            toast?: FlashToast;
+            agentCredentialSecret?: AgentCredentialSecret;
+        };
         sharedPageProps: {
             name: string;
             auth: Auth;

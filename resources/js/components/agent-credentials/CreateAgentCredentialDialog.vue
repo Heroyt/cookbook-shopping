@@ -1,0 +1,192 @@
+<script setup lang="ts">
+import { Link, useForm } from '@inertiajs/vue3';
+import { KeyRoundIcon, PlusIcon } from '@lucide/vue';
+import { shallowRef } from 'vue';
+import AgentCredentialController from '@/actions/App/AgentIntegration/Http/Controllers/AgentCredentialController';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+    Field,
+    FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+import type { AgentCredentialAbility } from '@/types';
+
+const { passwordConfirmed } = defineProps<{ passwordConfirmed: boolean }>();
+const open = shallowRef(false);
+const form = useForm<{
+    name: string;
+    abilities: AgentCredentialAbility[];
+    expires_at: string;
+}>({
+    name: '',
+    abilities: [],
+    expires_at: '',
+});
+
+const abilityOptions: Array<{
+    value: Exclude<AgentCredentialAbility, 'content:read'>;
+    label: string;
+    description: string;
+}> = [
+    {
+        value: 'cookbook:write',
+        label: 'Úpravy kuchařky',
+        description: 'Vytváření a úpravy surovin, obchodů a receptů.',
+    },
+    {
+        value: 'planning:write',
+        label: 'Úpravy plánování',
+        description: 'Vytváření a úpravy záznamů v kalendáři.',
+    },
+    {
+        value: 'destructive:write',
+        label: 'Destruktivní změny',
+        description: 'Archivace, obnovení a mazání podporovaných položek.',
+    },
+];
+
+const toggleAbility = (
+    ability: AgentCredentialAbility,
+    checked: boolean,
+): void => {
+    form.abilities = checked
+        ? [...form.abilities, ability]
+        : form.abilities.filter((item) => item !== ability);
+};
+
+const submit = (): void => {
+    form.post(AgentCredentialController.store().url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            open.value = false;
+            form.reset();
+        },
+    });
+};
+</script>
+
+<template>
+    <Dialog v-model:open="open">
+        <DialogTrigger as-child>
+            <Button><PlusIcon data-icon="inline-start" /> Nový přístup</Button>
+        </DialogTrigger>
+        <DialogContent class="sm:max-w-xl">
+            <DialogHeader>
+                <DialogTitle>Vytvořit přístup pro agenta</DialogTitle>
+                <DialogDescription>
+                    Přístup bude trvale omezený na aktuální rodinu. Čtení obsahu
+                    je součástí každého přístupu.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div v-if="!passwordConfirmed" class="space-y-4">
+                <p class="text-sm text-muted-foreground">
+                    Před vytvořením přístupu potvrďte své heslo. Po ověření se
+                    vrátíte na tuto stránku.
+                </p>
+                <Button as-child>
+                    <Link :href="AgentCredentialController.confirmed()">
+                        <KeyRoundIcon data-icon="inline-start" /> Potvrdit heslo
+                    </Link>
+                </Button>
+            </div>
+
+            <form v-else @submit.prevent="submit">
+                <FieldGroup>
+                    <Field :data-invalid="Boolean(form.errors.name)">
+                        <FieldLabel for="agent-credential-name"
+                            >Název přístupu</FieldLabel
+                        >
+                        <Input
+                            id="agent-credential-name"
+                            v-model="form.name"
+                            required
+                            maxlength="255"
+                            autocomplete="off"
+                            placeholder="Kuchyňský pomocník"
+                            :aria-invalid="Boolean(form.errors.name)"
+                        />
+                        <FieldDescription>
+                            Název pomůže rodině poznat, který agent přístup
+                            používá.
+                        </FieldDescription>
+                        <FieldError :errors="[form.errors.name]" />
+                    </Field>
+
+                    <fieldset class="space-y-3">
+                        <legend class="text-sm font-medium">Oprávnění</legend>
+                        <label
+                            v-for="option in abilityOptions"
+                            :key="option.value"
+                            class="flex items-start gap-3 rounded-md border p-3"
+                        >
+                            <Checkbox
+                                :model-value="
+                                    form.abilities.includes(option.value)
+                                "
+                                :aria-label="option.label"
+                                @update:model-value="
+                                    (checked) =>
+                                        toggleAbility(
+                                            option.value,
+                                            checked === true,
+                                        )
+                                "
+                            />
+                            <span class="grid gap-1 text-sm">
+                                <span class="font-medium">{{
+                                    option.label
+                                }}</span>
+                                <span class="text-muted-foreground">{{
+                                    option.description
+                                }}</span>
+                            </span>
+                        </label>
+                        <FieldError :errors="[form.errors.abilities]" />
+                    </fieldset>
+
+                    <Field :data-invalid="Boolean(form.errors.expires_at)">
+                        <FieldLabel for="agent-credential-expiry"
+                            >Platnost do</FieldLabel
+                        >
+                        <Input
+                            id="agent-credential-expiry"
+                            v-model="form.expires_at"
+                            type="date"
+                            :aria-invalid="Boolean(form.errors.expires_at)"
+                        />
+                        <FieldDescription>
+                            Bez data přístup vyprší za 90 dní. Nejdelší povolená
+                            platnost je jeden rok.
+                        </FieldDescription>
+                        <FieldError :errors="[form.errors.expires_at]" />
+                    </Field>
+                </FieldGroup>
+
+                <DialogFooter class="mt-6">
+                    <Button type="submit" :disabled="form.processing">
+                        <Spinner
+                            v-if="form.processing"
+                            data-icon="inline-start"
+                        />
+                        Vytvořit přístup
+                    </Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
+</template>
