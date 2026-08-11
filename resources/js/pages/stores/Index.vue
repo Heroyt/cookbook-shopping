@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import CreateStoreForm from '@/components/stores/CreateStoreForm.vue';
-import CreateStoreSectionForm from '@/components/stores/CreateStoreSectionForm.vue';
+import CreateStoreDialog from '@/components/stores/CreateStoreDialog.vue';
+import CreateStoreSectionDialog from '@/components/stores/CreateStoreSectionDialog.vue';
 import StoreList from '@/components/stores/StoreList.vue';
 import StoreSectionList from '@/components/stores/StoreSectionList.vue';
 import {
@@ -35,27 +35,21 @@ defineOptions({
     <Head title="Obchody" />
 
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
-        <div>
-            <h1 class="text-2xl font-semibold tracking-tight">Obchody</h1>
-            <p class="mt-1 text-sm text-muted-foreground">
-                Spravujte obchody pro nákupy aktuální rodiny.
-            </p>
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">Obchody</h1>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Spravujte obchody pro nákupy aktuální rodiny.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <CreateStoreSectionDialog />
+                <CreateStoreDialog />
+            </div>
         </div>
 
-        <div class="grid items-start gap-6 lg:grid-cols-3">
+        <div class="grid items-start gap-6 xl:grid-cols-2">
             <Card>
-                <CardHeader>
-                    <CardTitle>Vytvořit obchod</CardTitle>
-                    <CardDescription>
-                        Přidejte místo, kde rodina nakupuje.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <CreateStoreForm />
-                </CardContent>
-            </Card>
-
-            <Card class="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Obchody aktuální rodiny</CardTitle>
                     <CardDescription>
@@ -69,22 +63,7 @@ defineOptions({
                     />
                 </CardContent>
             </Card>
-        </div>
-
-        <div class="grid items-start gap-6 lg:grid-cols-3">
             <Card>
-                <CardHeader>
-                    <CardTitle>Vytvořit část obchodu</CardTitle>
-                    <CardDescription>
-                        Přidejte opakovaně použitelnou část s vlastní barvou.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <CreateStoreSectionForm />
-                </CardContent>
-            </Card>
-
-            <Card class="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>Části obchodů aktuální rodiny</CardTitle>
                     <CardDescription>

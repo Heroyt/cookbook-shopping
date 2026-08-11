@@ -18,6 +18,15 @@ describe('Recipe UI', () => {
         expect(readSource('./CreateRecipeForm.vue')).toContain(
             'RecipeController.store.form()',
         );
+        expect(readSource('../../pages/recipes/Index.vue')).toContain(
+            '<CreateRecipeDialog',
+        );
+        expect(readSource('./CreateRecipeDialog.vue')).toContain(
+            '@success="open = false"',
+        );
+        expect(readSource('../../pages/recipes/Index.vue')).toContain(
+            '<ManageRecipeTagsDialog :tags="tags" />',
+        );
         expect(readSource('./EditRecipeDialog.vue')).toContain(
             'RecipeController.update.form(recipe.id)',
         );

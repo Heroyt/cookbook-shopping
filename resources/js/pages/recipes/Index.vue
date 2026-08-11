@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 import RecipeController from '@/actions/App/Cookbook/Http/Controllers/RecipeController';
-import CreateRecipeForm from '@/components/recipes/CreateRecipeForm.vue';
+import CreateRecipeDialog from '@/components/recipes/CreateRecipeDialog.vue';
+import ManageRecipeTagsDialog from '@/components/recipes/ManageRecipeTagsDialog.vue';
 import RecipeList from '@/components/recipes/RecipeList.vue';
-import RecipeTagManager from '@/components/recipes/RecipeTagManager.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -37,50 +37,30 @@ defineOptions({
 <template>
     <Head title="Recepty" />
     <div class="flex flex-1 flex-col gap-6 p-4 md:p-6">
-        <div>
-            <h1 class="text-2xl font-semibold tracking-tight">Recepty</h1>
-            <p class="mt-1 text-sm text-muted-foreground">
-                Spravujte úplné recepty aktuální rodiny včetně surovin, postupu
-                a výživy.
-            </p>
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold tracking-tight">Recepty</h1>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Spravujte úplné recepty aktuální rodiny včetně surovin,
+                    postupu a výživy.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <ManageRecipeTagsDialog :tags="tags" />
+                <CreateRecipeDialog :ingredients="ingredients" :tags="tags" />
+            </div>
         </div>
 
-        <div
-            class="grid items-start gap-6 xl:grid-cols-[minmax(22rem,1fr)_2fr]"
-        >
-            <div class="space-y-6">
-                <Card
-                    ><CardHeader
-                        ><CardTitle>Vytvořit recept</CardTitle
-                        ><CardDescription
-                            >Recept se uloží najednou jako jeden
-                            celek.</CardDescription
-                        ></CardHeader
-                    ><CardContent
-                        ><CreateRecipeForm
-                            :ingredients="ingredients"
-                            :tags="tags" /></CardContent
-                ></Card>
-                <Card
-                    ><CardHeader
-                        ><CardTitle>Štítky receptů</CardTitle
-                        ><CardDescription
-                            >Štítky jsou společné pro aktuální
-                            rodinu.</CardDescription
-                        ></CardHeader
-                    ><CardContent><RecipeTagManager :tags="tags" /></CardContent
-                ></Card>
-            </div>
-
-            <Card>
-                <CardHeader
-                    ><CardTitle>Recepty aktuální rodiny</CardTitle
-                    ><CardDescription
-                        >Každý člen rodiny má stejná práva ke čtení i
-                        úpravám.</CardDescription
-                    ></CardHeader
-                >
-                <CardContent class="space-y-4">
+        <Card>
+            <CardHeader
+                ><CardTitle>Recepty aktuální rodiny</CardTitle
+                ><CardDescription
+                    >Každý člen rodiny má stejná práva ke čtení i
+                    úpravám.</CardDescription
+                ></CardHeader
+            >
+            <CardContent>
+                <div class="flex flex-col gap-4">
                     <Form
                         v-bind="RecipeController.index.form()"
                         class="flex gap-2"
@@ -140,8 +120,8 @@ defineOptions({
                         :tags="tags"
                         :edit-recipe-id="editRecipeId"
                     />
-                </CardContent>
-            </Card>
-        </div>
+                </div>
+            </CardContent>
+        </Card>
     </div>
 </template>

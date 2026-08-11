@@ -8,6 +8,8 @@ defineProps<{
     ingredients: RecipeIngredientOption[];
     tags: RecipeTagOption[];
 }>();
+
+const emit = defineEmits<{ success: [] }>();
 </script>
 
 <template>
@@ -15,6 +17,7 @@ defineProps<{
         v-bind="RecipeController.store.form()"
         reset-on-success
         v-slot="{ errors, processing }"
+        @success="emit('success')"
     >
         <RecipeFormFields
             :ingredients="ingredients"

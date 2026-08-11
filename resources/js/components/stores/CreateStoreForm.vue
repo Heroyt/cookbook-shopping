@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+
+const emit = defineEmits<{ success: [] }>();
 </script>
 
 <template>
@@ -18,6 +20,7 @@ import { Spinner } from '@/components/ui/spinner';
         v-bind="StoreController.store.form()"
         reset-on-success
         v-slot="{ errors, processing }"
+        @success="emit('success')"
     >
         <FieldGroup>
             <Field :data-invalid="Boolean(errors.name)">

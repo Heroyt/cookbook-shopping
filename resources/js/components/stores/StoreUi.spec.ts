@@ -20,7 +20,10 @@ describe('Store UI contract', () => {
     it('keeps the route page thin and delegates Store presentation', () => {
         const page = readSource('../../pages/stores/Index.vue');
 
-        expect(page).toContain('<CreateStoreForm />');
+        expect(page).toContain('<CreateStoreDialog />');
+        expect(readSource('./CreateStoreDialog.vue')).toContain(
+            '@success="open = false"',
+        );
         expect(page).toContain('<StoreList');
         expect(page).toContain(':stores="stores"');
         expect(page).toContain(':store-sections="storeSections"');

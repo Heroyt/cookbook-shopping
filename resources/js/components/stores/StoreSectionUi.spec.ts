@@ -23,7 +23,13 @@ describe('Store Section UI', () => {
         );
 
         expect(form).toContain('StoreSectionController.store.form()');
-        expect(page).toContain('<CreateStoreSectionForm />');
+        expect(page).toContain('<CreateStoreSectionDialog />');
+        expect(
+            readFileSync(
+                new URL('./CreateStoreSectionDialog.vue', import.meta.url),
+                'utf8',
+            ),
+        ).toContain('@success="open = false"');
         expect(page).toContain(
             '<StoreSectionList :store-sections="storeSections" />',
         );

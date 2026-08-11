@@ -5,6 +5,8 @@ import IngredientFormFields from '@/components/ingredients/IngredientFormFields.
 import type { IngredientPlacementStore } from '@/types';
 
 defineProps<{ stores: IngredientPlacementStore[] }>();
+
+const emit = defineEmits<{ success: [] }>();
 </script>
 
 <template>
@@ -12,6 +14,7 @@ defineProps<{ stores: IngredientPlacementStore[] }>();
         v-bind="IngredientController.store.form()"
         reset-on-success
         v-slot="{ errors, processing }"
+        @success="emit('success')"
     >
         <IngredientFormFields
             :errors="errors"

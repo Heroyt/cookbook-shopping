@@ -43,7 +43,10 @@ describe('Ingredient UI', () => {
         expect(readSource('./IngredientAlternatives.vue')).toContain(
             'IngredientAlternativeController.destroy',
         );
-        expect(page).toContain('<CreateIngredientForm :stores="stores" />');
+        expect(page).toContain('<CreateIngredientDialog :stores="stores" />');
+        expect(readSource('./CreateIngredientDialog.vue')).toContain(
+            '@success="open = false"',
+        );
         expect(page).toContain(':stores="stores"');
         expect(page).toContain(':alternative-options="alternativeOptions"');
         expect(readSource('./IngredientList.vue')).toContain(
