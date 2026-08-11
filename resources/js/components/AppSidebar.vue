@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
+    CalendarDaysIcon,
     ClipboardListIcon,
     FolderGit2,
     LayoutGrid,
@@ -26,6 +27,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as calendarIndex } from '@/routes/calendar';
 import { index as familiesIndex } from '@/routes/families';
 import { index as ingredientsIndex } from '@/routes/ingredients';
 import { index as recipesIndex } from '@/routes/recipes';
@@ -48,6 +50,11 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(page.props.currentFamily === null
         ? []
         : [
+              {
+                  title: 'Kalendář',
+                  href: calendarIndex(),
+                  icon: CalendarDaysIcon,
+              },
               {
                   title: 'Rychlý plán',
                   href: simplePlanIndex(),

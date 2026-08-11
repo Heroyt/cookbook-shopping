@@ -56,17 +56,18 @@ final class RecipeNutritionCalculator
             $totals['proteinGrams'] = $totals['proteinGrams']->plus(BigRational::of($profile->protein_grams)->multipliedBy($factor));
             $totals['carbohydrateGrams'] = $totals['carbohydrateGrams']->plus(BigRational::of($profile->carbohydrate_grams)->multipliedBy($factor));
         }
-        if ($missing !== []) {
-            return new RecipeNutrition('incomplete', null, array_values(array_unique($missing)));
-        }
         $servings = BigRational::of($recipe->base_servings);
-
-        return new RecipeNutrition('calculated', [
+        $perServing = [
             'energyKcal' => (string) $totals['energyKcal']->dividedBy($servings)->toScale(6, RoundingMode::HalfUp),
             'fatGrams' => (string) $totals['fatGrams']->dividedBy($servings)->toScale(6, RoundingMode::HalfUp),
             'proteinGrams' => (string) $totals['proteinGrams']->dividedBy($servings)->toScale(6, RoundingMode::HalfUp),
             'carbohydrateGrams' => (string) $totals['carbohydrateGrams']->dividedBy($servings)->toScale(6, RoundingMode::HalfUp),
-        ], []);
+        ];
+        if ($missing !== []) {
+            return new RecipeNutrition('incomplete', $perServing, array_values(array_unique($missing)));
+        }
+
+        return new RecipeNutrition('calculated', $perServing, []);
     }
 
     private function lineFactor(RecipeIngredient $line, Ingredient $ingredient, IngredientNutritionProfile $profile): ?BigRational

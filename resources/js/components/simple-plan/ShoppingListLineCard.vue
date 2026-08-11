@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
 import { ChevronDownIcon, ReplaceIcon, RotateCcwIcon } from '@lucide/vue';
+import { computed } from 'vue';
 import {
-    destroyAlternative,
-    storeAlternative,
+    destroyAlternative as destroyCalendarAlternative,
+    storeAlternative as storeCalendarAlternative,
+} from '@/actions/App/MealPlanning/Http/Controllers/CalendarController';
+import {
+    destroyAlternative as destroySimplePlanAlternative,
+    storeAlternative as storeSimplePlanAlternative,
 } from '@/actions/App/MealPlanning/Http/Controllers/SimplePlanController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +22,24 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { ShoppingListLinePresentation } from '@/types';
 
-defineProps<{ line: ShoppingListLinePresentation }>();
+const props = withDefaults(
+    defineProps<{
+        line: ShoppingListLinePresentation;
+        generationSource?: 'simple-plan' | 'calendar';
+    }>(),
+    { generationSource: 'simple-plan' },
+);
+
+const storeAlternative = computed(() =>
+    props.generationSource === 'calendar'
+        ? storeCalendarAlternative
+        : storeSimplePlanAlternative,
+);
+const destroyAlternative = computed(() =>
+    props.generationSource === 'calendar'
+        ? destroyCalendarAlternative
+        : destroySimplePlanAlternative,
+);
 </script>
 
 <template>

@@ -14,10 +14,19 @@ import { index as ingredientsIndex } from '@/routes/ingredients';
 import { index as recipesIndex } from '@/routes/recipes';
 import type { ShoppingListPresentation, ShoppingListProblem } from '@/types';
 
-defineProps<{
-    shoppingList: ShoppingListPresentation | null;
-    problems: ShoppingListProblem[];
-}>();
+withDefaults(
+    defineProps<{
+        shoppingList: ShoppingListPresentation | null;
+        problems: ShoppingListProblem[];
+        generationSource?: 'simple-plan' | 'calendar';
+        preservedSourceText?: string;
+    }>(),
+    {
+        generationSource: 'simple-plan',
+        preservedSourceText:
+            'Rychlý plán zůstal zachovaný. Opravte všechny uvedené problémy a zkuste vytvoření znovu.',
+    },
+);
 </script>
 
 <template>
@@ -32,8 +41,7 @@ defineProps<{
                 Nákupní seznam nelze úplně vypočítat
             </AlertTitle>
             <AlertDescription>
-                Rychlý plán zůstal zachovaný. Opravte všechny uvedené problémy a
-                zkuste vytvoření znovu.
+                {{ preservedSourceText }}
             </AlertDescription>
         </Alert>
         <ul class="flex flex-col gap-3">
@@ -53,10 +61,13 @@ defineProps<{
                         <Link
                             :href="
                                 recipesIndex({
-                                    query: { edit: problem.recipeId },
+                                    query: {
+                                        edit: problem.recipeId,
+                                        filter: 'all',
+                                    },
                                 })
                             "
-                            >Upravit recept</Link
+                            >Zobrazit recept</Link
                         >
                     </Button>
                     <Button as-child variant="outline" size="sm">
@@ -103,6 +114,7 @@ defineProps<{
                         v-for="line in section.lines"
                         :key="line.ingredientId"
                         :line="line"
+                        :generation-source="generationSource"
                     />
                 </div>
             </section>
@@ -118,6 +130,7 @@ defineProps<{
                         v-for="line in store.unsectionedLines"
                         :key="line.ingredientId"
                         :line="line"
+                        :generation-source="generationSource"
                     />
                 </div>
             </section>
@@ -133,6 +146,7 @@ defineProps<{
                     v-for="line in shoppingList.unplacedLines"
                     :key="line.ingredientId"
                     :line="line"
+                    :generation-source="generationSource"
                 />
             </div>
         </section>

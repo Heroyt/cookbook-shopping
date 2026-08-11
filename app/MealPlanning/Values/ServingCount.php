@@ -13,7 +13,7 @@ final readonly class ServingCount
 
     public static function from(string $value): self
     {
-        if (preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $value) !== 1) {
+        if (preg_match('/^(?:0|[1-9]\d{0,13})(?:\.\d{1,6})?$/', $value) !== 1) {
             throw new InvalidArgumentException('Serving Count must be a canonical DECIMAL(20,6).');
         }
 

@@ -187,7 +187,7 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('Mouka');
         expect(html).toContain('Vejce');
         expect(html).toContain('Zadáno: 50 ml.');
-        expect(html).toContain('Upravit recept');
+        expect(html).toContain('Zobrazit recept');
         expect(html).toContain('Zobrazit surovinu');
         const view = readSource('./ShoppingListView.vue');
         expect(view).toContain('edit: problem.recipeId');

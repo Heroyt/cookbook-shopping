@@ -65,7 +65,46 @@ final class RecipeNutritionCalculatorTest extends TestCase
         ]);
         $incomplete = app(RecipeNutritionCalculator::class)->calculate($recipe);
         $this->assertSame('incomplete', $incomplete->status);
-        $this->assertNull($incomplete->perServing);
+        $this->assertSame([
+            'energyKcal' => '0.000000',
+            'fatGrams' => '0.000000',
+            'proteinGrams' => '0.000000',
+            'carbohydrateGrams' => '0.000000',
+        ], $incomplete->perServing);
         $this->assertSame(['Tajemná surovina'], $incomplete->missingIngredientNames);
+    }
+
+    public function test_incomplete_nutrition_preserves_known_per_serving_totals(): void
+    {
+        $family = Family::factory()->create();
+        $known = Ingredient::factory()->for($family)->create(['name' => 'Mouka', 'weight_grams' => '500']);
+        IngredientNutritionProfile::factory()->for($known)->create([
+            'basis_kind' => 'grams',
+            'basis_quantity' => '100',
+            'energy_kcal' => '200',
+            'fat_grams' => '2',
+            'protein_grams' => '10',
+            'carbohydrate_grams' => '40',
+        ]);
+        $missing = Ingredient::factory()->for($family)->create(['name' => 'Tajemství', 'weight_grams' => '100']);
+        $recipe = Recipe::factory()->for($family)->create(['base_servings' => '2']);
+        RecipeIngredient::factory()->for($recipe)->for($known)->create([
+            'family_id' => $family->id, 'position' => 1, 'quantity' => '100', 'quantity_kind' => 'grams',
+        ]);
+        RecipeIngredient::factory()->for($recipe)->for($missing)->create([
+            'family_id' => $family->id, 'position' => 2, 'quantity' => '1', 'quantity_kind' => 'grams',
+        ]);
+        $recipe->load('ingredients.ingredient.nutritionProfile');
+
+        $result = app(RecipeNutritionCalculator::class)->calculate($recipe);
+
+        $this->assertSame('incomplete', $result->status);
+        $this->assertSame([
+            'energyKcal' => '100.000000',
+            'fatGrams' => '1.000000',
+            'proteinGrams' => '5.000000',
+            'carbohydrateGrams' => '20.000000',
+        ], $result->perServing);
+        $this->assertSame(['Tajemství'], $result->missingIngredientNames);
     }
 }

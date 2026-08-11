@@ -10,6 +10,7 @@ use App\Cookbook\Models\RecipeIngredient;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\Models\Family;
+use App\MealPlanning\Values\GenerationRequestSource;
 use App\MealPlanning\Values\SimplePlan;
 use App\ShoppingGeneration\Values\AlternativeChoice;
 use App\ShoppingGeneration\Values\AlternativeIngredientDefinition;
@@ -30,8 +31,12 @@ use Illuminate\Validation\ValidationException;
 final class BuildCurrentFamilyGenerationRequest
 {
     /** @param array<int, int> $alternativeChoices */
-    public function handle(Family $family, SimplePlan $simplePlan, array $alternativeChoices = []): GenerationRequest
-    {
+    public function handle(
+        Family $family,
+        SimplePlan $simplePlan,
+        array $alternativeChoices = [],
+        GenerationRequestSource $source = GenerationRequestSource::SimplePlan,
+    ): GenerationRequest {
         if ($simplePlan->isEmpty()) {
             throw ValidationException::withMessages(['plan' => __('Add at least one Recipe to the Simple Plan.')]);
         }
@@ -39,13 +44,13 @@ final class BuildCurrentFamilyGenerationRequest
         $recipes = Recipe::query()
             ->whereBelongsTo($family)
             ->whereKey($simplePlan->recipeIds())
-            ->whereNull('archived_at')
+            ->when( ! $source->includesArchivedRecipes(), fn ($query) => $query->whereNull('archived_at'))
             ->with('ingredients')
             ->get()
             ->keyBy('id');
         if ($recipes->count() !== count($simplePlan->recipeIds())) {
             throw ValidationException::withMessages([
-                'plan' => __('The Simple Plan contains a Recipe that is no longer available in the Current Family.'),
+                $source->validationField() => $source->unavailableRecipeMessage(),
             ]);
         }
 
@@ -65,7 +70,7 @@ final class BuildCurrentFamilyGenerationRequest
             }
             if ($lines === []) {
                 throw ValidationException::withMessages([
-                    'plan' => __('The Simple Plan contains a Recipe without Ingredients. Update the Recipe and try again.'),
+                    $source->validationField() => $source->recipeWithoutIngredientsMessage(),
                 ]);
             }
             $linesByRecipe[$recipe->id] = $lines;
@@ -98,7 +103,7 @@ final class BuildCurrentFamilyGenerationRequest
                 $quantityKind = QuantityKind::tryFrom($line->quantity_kind);
                 if ( ! $ingredient instanceof Ingredient || $quantityKind === null) {
                     throw ValidationException::withMessages([
-                        'plan' => __('The Simple Plan contains an unavailable Ingredient. Update the Recipe and try again.'),
+                        $source->validationField() => $source->unavailableIngredientMessage(),
                     ]);
                 }
                 $inputs[] = new RecipeIngredientInput(
