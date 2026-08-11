@@ -31,4 +31,14 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    server: {
+        host: '0.0.0.0',
+        origin: 'https://nginx.cook-book-shopping-list.orb.local',
+        ws: {
+            protocol: 'wss',
+            host: 'nginx.cook-book-shopping-list.orb.local',
+            clientPort: 443,
+            path: '/@vite/ws',
+        },
+    },
 });
