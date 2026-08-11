@@ -62,9 +62,11 @@ describe('Store Section ordering UI', () => {
     it('keeps the route page thin and delegates Store association management', () => {
         const page = readSource('../../pages/stores/Index.vue');
         const storeList = readSource('./StoreList.vue');
+        const editDialog = readSource('./EditStoreDialog.vue');
 
         expect(page).toContain('<StoreList');
         expect(page).toContain(':store-sections="storeSections"');
-        expect(storeList).toContain('<StoreSectionOrderManager');
+        expect(storeList).toContain('<EditStoreDialog');
+        expect(editDialog).toContain('<StoreSectionOrderManager');
     });
 });
