@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\AgentIntegration\Models\AgentCredential;
+use App\AgentIntegration\OpenApi\AgentOpenApiDocument;
 use Carbon\CarbonImmutable;
+use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -21,7 +23,10 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void {}
+    public function register(): void
+    {
+        Scramble::ignoreDefaultRoutes();
+    }
 
     /**
      * Bootstrap any application services.
@@ -29,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(AgentCredential::class);
+        Scramble::configure()
+            ->expose('/docs/agent-api/v1', '/docs/agent-api/v1/openapi.json')
+            ->withDocumentTransformers([AgentOpenApiDocument::class]);
         $this->configureAgentRateLimits();
 
         $this->configureDefaults();

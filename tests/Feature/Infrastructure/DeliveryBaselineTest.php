@@ -83,6 +83,7 @@ SH);
         $developmentDockerfile = File::get(base_path('docker/dev/Dockerfile'));
         $productionDockerfile = File::get(base_path('docker/production/Dockerfile'));
         $dockerIgnore = File::get(base_path('.dockerignore'));
+        $scrambleConfiguration = File::get(base_path('config/scramble.php'));
 
         $this->assertSame('pnpm@11.17.0', $packageManifest['packageManager']);
         $this->assertStringContainsString("touch('database/database.sqlite')", $setupCommands);
@@ -97,6 +98,8 @@ SH);
         $this->assertStringNotContainsString('pnpm@latest', $productionDockerfile);
         $this->assertStringNotContainsString('COPY .env', $productionDockerfile);
         $this->assertStringNotContainsString('php artisan config:cache', $productionDockerfile);
+        $this->assertStringContainsString("'hideTryIt' => env('APP_ENV', 'production') === 'production'", $scrambleConfiguration);
+        $this->assertStringContainsString('php artisan scramble:cache --api=default', File::get(base_path('docker/production/start')));
         $this->assertStringContainsString("\n.env*\n", "\n{$dockerIgnore}\n");
         $this->assertStringContainsString("\n!.env.example\n", "\n{$dockerIgnore}\n");
     }

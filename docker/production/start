@@ -44,6 +44,9 @@ php artisan storage:link
 echo "Running migrations..."
 php artisan migrate --force --no-interaction
 
+echo "Caching Agent API contract..."
+php artisan scramble:cache --api=default
+
 # Start crond in the background
 echo "Starting scheduler (crond)..."
 crond -b -l 2
