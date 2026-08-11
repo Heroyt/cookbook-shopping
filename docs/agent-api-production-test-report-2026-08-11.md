@@ -261,7 +261,9 @@ Resume at Gate 4 using the deployed contract rather than hand-written guesses:
    Verify the created preview is visible through both Change Set list and detail.
 8. Retry the identical preview request with the same `client_request_id` and
    require the documented idempotent HTTP 200 response with the same Change Set
-   identifier and digest. Do not repeat the earlier conflicting-payload test.
+   identifier and digest. Then reuse that `client_request_id` with a different
+   payload and require the documented idempotency-conflict response without a
+   second preview or Catalog mutation.
 
 Complete Gate 5 only from that successful preview:
 
