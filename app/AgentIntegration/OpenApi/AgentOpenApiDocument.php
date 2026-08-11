@@ -23,6 +23,8 @@ use LogicException;
 
 final readonly class AgentOpenApiDocument implements DocumentTransformer
 {
+    private const ULID_PATTERN = '^[0-7][0-9A-HJKMNP-TV-Z]{25}$';
+
     public function handle(OpenApi $document, OpenApiContext $context): void
     {
         $operationSchemas = new AgentOperationOpenApiSchemas();
@@ -76,7 +78,7 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         $schema->addProperty('title', $this->string(nullable: true));
         $schema->addProperty('source_urls', $this->arrayOf($this->string(format: 'uri', max: 2048)));
         $schema->addProperty('note', $this->string(nullable: true));
-        $schema->addProperty('supersedes_id', $this->string(nullable: true, format: 'uuid'));
+        $schema->addProperty('supersedes_id', $this->ulid(nullable: true));
         $schema->addProperty('operations', $this->arrayOf($operation, min: 1, max: 250));
         $schema->setRequired(['version', 'client_request_id', 'operations']);
 
@@ -127,7 +129,7 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
     private function changeSetSchema(): ObjectType
     {
         $schema = new ObjectType();
-        $schema->addProperty('id', $this->string(format: 'uuid'));
+        $schema->addProperty('id', $this->ulid());
         $schema->addProperty('status', $this->string(enum: ['previewed', 'applied', 'expired', 'invalidated', 'stale']));
         $schema->addProperty('document_version', $this->integer(const: 1));
         $schema->addProperty('client_request_id', new StringType());
@@ -137,7 +139,7 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         $schema->addProperty('title', $this->string(nullable: true));
         $schema->addProperty('source_urls', $this->arrayOf($this->string(format: 'uri')));
         $schema->addProperty('note', $this->string(nullable: true));
-        $schema->addProperty('supersedes_id', $this->string(nullable: true, format: 'uuid'));
+        $schema->addProperty('supersedes_id', $this->ulid(nullable: true));
         $schema->addProperty('resource_types', $this->arrayOf($this->string(enum: CatalogResourceType::values())));
         $schema->addProperty('outcome', $this->string(nullable: true));
         $schema->addProperty('operation_count', new IntegerType());
@@ -231,6 +233,16 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         }
 
         return $type;
+    }
+
+    private function ulid(bool $nullable = false): StringType
+    {
+        return $this->string(
+            nullable: $nullable,
+            min: 26,
+            max: 26,
+            pattern: self::ULID_PATTERN,
+        );
     }
 
     private function openObject(bool $nullable = false, ?Type $additional = null): ObjectType
