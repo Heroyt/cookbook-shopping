@@ -115,6 +115,100 @@ final class StoreSectionManagementTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_each_member_can_update_a_store_section_within_the_current_family(): void
+    {
+        $firstMember = User::factory()->create();
+        $secondMember = User::factory()->create();
+        $family = $this->createFamilyWithMembers($firstMember, $secondMember);
+        $otherFamily = $this->createFamilyWithMembers(User::factory()->create());
+        $this->selectCurrentFamily($firstMember, $family);
+        $this->selectCurrentFamily($secondMember, $family);
+        $section = StoreSection::factory()->for($family)->create([
+            'name' => 'Původní část',
+            'colour' => '#2F855A',
+            'icon' => 'package',
+        ]);
+        $foreignSection = StoreSection::factory()->for($otherFamily)->create();
+
+        $this
+            ->actingAs($secondMember)
+            ->patch(route('store-sections.update', $section), [
+                'name' => '  Mléko   a sýry ',
+                'colour' => '#2563EB',
+                'icon' => 'milk',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Část obchodu byla upravena.',
+            ])
+            ->assertRedirect(route('stores.index'));
+
+        $this->assertDatabaseHas('store_sections', [
+            'id' => $section->id,
+            'family_id' => $family->id,
+            'name' => 'Mléko a sýry',
+            'normalized_name' => 'mléko a sýry',
+            'colour' => '#2563EB',
+            'icon' => 'milk',
+        ]);
+
+        $this
+            ->actingAs($firstMember)
+            ->patch(route('store-sections.update', $foreignSection), [
+                'name' => 'Cizí část',
+                'colour' => '#DC2626',
+                'icon' => 'fish',
+            ])
+            ->assertNotFound();
+
+        $this->assertDatabaseMissing('store_sections', [
+            'id' => $foreignSection->id,
+            'name' => 'Cizí část',
+        ]);
+    }
+
+    public function test_each_member_can_change_only_a_store_section_colour_from_ingredient_edit(): void
+    {
+        $firstMember = User::factory()->create();
+        $secondMember = User::factory()->create();
+        $family = $this->createFamilyWithMembers($firstMember, $secondMember);
+        $otherFamily = $this->createFamilyWithMembers(User::factory()->create());
+        $this->selectCurrentFamily($firstMember, $family);
+        $this->selectCurrentFamily($secondMember, $family);
+        $section = StoreSection::factory()->for($family)->create([
+            'name' => 'Mléčné výrobky',
+            'colour' => '#2F855A',
+            'icon' => 'milk',
+        ]);
+        $foreignSection = StoreSection::factory()->for($otherFamily)->create();
+
+        $this
+            ->actingAs($secondMember)
+            ->patch(route('store-sections.colour.update', $section), [
+                'colour' => '#7C3AED',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Barva části obchodu byla změněna.',
+            ]);
+
+        $this->assertDatabaseHas('store_sections', [
+            'id' => $section->id,
+            'name' => 'Mléčné výrobky',
+            'colour' => '#7C3AED',
+            'icon' => 'milk',
+        ]);
+
+        $this
+            ->actingAs($firstMember)
+            ->patch(route('store-sections.colour.update', $foreignSection), [
+                'colour' => '#DC2626',
+            ])
+            ->assertNotFound();
+    }
+
     public function test_store_section_icon_changes_require_authentication_and_an_allowlisted_icon(): void
     {
         $user = User::factory()->create();
@@ -134,6 +228,42 @@ final class StoreSectionManagementTest extends TestCase
         $this->assertDatabaseHas('store_sections', [
             'id' => $section->id,
             'icon' => 'package',
+        ]);
+    }
+
+    public function test_store_section_updates_require_complete_valid_fields(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $section = StoreSection::factory()->for($family)->create([
+            'name' => 'Pečivo',
+            'colour' => '#D97706',
+            'icon' => 'croissant',
+        ]);
+
+        $this
+            ->actingAs($user)
+            ->patch(route('store-sections.update', $section), [
+                'name' => 'Pekařství',
+                'colour' => '#7C3AED',
+            ])
+            ->assertSessionHasErrors('icon');
+
+        $this
+            ->actingAs($user)
+            ->patch(route('store-sections.colour.update', $section), [
+                'colour' => '7C3AED',
+            ])
+            ->assertSessionHasErrors([
+                'colour' => 'Barva musí být šestimístný hexadecimální kód.',
+            ]);
+
+        $this->assertDatabaseHas('store_sections', [
+            'id' => $section->id,
+            'name' => 'Pečivo',
+            'colour' => '#D97706',
+            'icon' => 'croissant',
         ]);
     }
 

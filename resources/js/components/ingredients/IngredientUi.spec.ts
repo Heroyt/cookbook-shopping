@@ -88,6 +88,36 @@ describe('Ingredient UI', () => {
         expect(html).toContain('Bílkoviny (g)');
     });
 
+    it('offers a shared Store Section colour editor for the selected placement', async () => {
+        const stores = [
+            {
+                id: 1,
+                name: 'Tržiště',
+                sections: [{ id: 2, name: 'Zelenina', colour: '#16A34A' }],
+            },
+        ];
+        const html = await render(IngredientFormFields, {
+            stores,
+            ingredient: {
+                storeId: 1,
+                storeSectionId: 2,
+            },
+        });
+        const fields = readSource('./IngredientFormFields.vue');
+        const dialog = readSource('./EditStoreSectionColourDialog.vue');
+
+        expect(fields).toContain('<EditStoreSectionColourDialog');
+        expect(html).toContain('Změnit barvu části');
+        expect(dialog).toContain(
+            'StoreSectionController.updateColour.form(storeSection.id)',
+        );
+        expect(dialog).toContain(
+            'Změna se projeví u všech surovin přiřazených k této části.',
+        );
+        expect(dialog).toContain(':default-value="storeSection.colour"');
+        expect(dialog).toContain('@success="open = false"');
+    });
+
     it('renders accessible explicit metric units, description, and Czech guidance', async () => {
         const html = await render(IngredientFormFields);
         const source = readSource('./IngredientFormFields.vue');

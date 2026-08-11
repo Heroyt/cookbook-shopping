@@ -4,7 +4,7 @@ import { Settings2Icon } from '@lucide/vue';
 import { shallowRef } from 'vue';
 import StoreSectionController from '@/actions/App/Cookbook/Http/Controllers/StoreSectionController';
 import DeleteStoreSectionAlertDialog from '@/components/stores/DeleteStoreSectionAlertDialog.vue';
-import StoreSectionIconPicker from '@/components/stores/StoreSectionIconPicker.vue';
+import StoreSectionFormFields from '@/components/stores/StoreSectionFormFields.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,7 +15,6 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Spinner } from '@/components/ui/spinner';
 import type { StoreSectionSummary } from '@/types';
 
 defineProps<{ storeSection: StoreSectionSummary }>();
@@ -36,25 +35,23 @@ const open = shallowRef(false);
                     Spravovat část {{ storeSection.name }}
                 </DialogTitle>
                 <DialogDescription>
-                    Zvolte ikonu, která část obchodu rychle odliší.
+                    Změňte název, barvu nebo ikonu této části obchodu.
                 </DialogDescription>
             </DialogHeader>
             <Form
-                v-bind="StoreSectionController.updateIcon.form(storeSection.id)"
-                class="flex flex-col gap-4"
+                v-bind="StoreSectionController.update.form(storeSection.id)"
                 v-slot="{ errors, processing }"
                 @success="open = false"
             >
-                <StoreSectionIconPicker
-                    :default-value="storeSection.icon"
-                    :error="errors.icon"
+                <StoreSectionFormFields
+                    :default-name="storeSection.name"
+                    :default-colour="storeSection.colour"
+                    :default-icon="storeSection.icon"
+                    :errors="errors"
+                    :processing="processing"
+                    :id-prefix="`edit-store-section-${storeSection.id}`"
+                    submit-label="Uložit změny"
                 />
-                <div>
-                    <Button type="submit" :disabled="processing">
-                        <Spinner v-if="processing" data-icon="inline-start" />
-                        Uložit ikonu
-                    </Button>
-                </div>
             </Form>
             <Separator />
             <section class="flex items-center justify-between gap-4">

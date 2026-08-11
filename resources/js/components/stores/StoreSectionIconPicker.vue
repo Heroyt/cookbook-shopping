@@ -17,8 +17,13 @@ withDefaults(
     defineProps<{
         defaultValue?: StoreSectionIconName;
         error?: string;
+        idPrefix?: string;
     }>(),
-    { defaultValue: 'package', error: undefined },
+    {
+        defaultValue: 'package',
+        error: undefined,
+        idPrefix: 'store-section-icon',
+    },
 );
 </script>
 
@@ -38,7 +43,7 @@ withDefaults(
             <FieldLabel
                 v-for="option in storeSectionIconOptions"
                 :key="option.value"
-                :for="`store-section-icon-${option.value}`"
+                :for="`${idPrefix}-${option.value}`"
                 class="cursor-pointer"
             >
                 <Field
@@ -48,7 +53,7 @@ withDefaults(
                     <StoreSectionIcon :name="option.value" class="size-5" />
                     <FieldTitle class="flex-1">{{ option.label }}</FieldTitle>
                     <RadioGroupItem
-                        :id="`store-section-icon-${option.value}`"
+                        :id="`${idPrefix}-${option.value}`"
                         :value="option.value"
                         :aria-invalid="Boolean(error)"
                     />

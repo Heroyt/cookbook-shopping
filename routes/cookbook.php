@@ -47,6 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::put('stores/{store}/store-sections', [StoreSectionAssociationController::class, 'update'])
         ->name('stores.store-sections.update');
     Route::post('store-sections', [StoreSectionController::class, 'store'])->name('store-sections.store');
+    Route::patch('store-sections/{storeSection}', [StoreSectionController::class, 'update'])
+        ->name('store-sections.update');
+    Route::patch('store-sections/{storeSection}/colour', [StoreSectionController::class, 'updateColour'])
+        ->name('store-sections.colour.update');
     Route::patch('store-sections/{storeSection}/icon', [StoreSectionController::class, 'updateIcon'])
         ->name('store-sections.icon.update');
     Route::delete('store-sections/{storeSection}', [StoreSectionController::class, 'destroy'])

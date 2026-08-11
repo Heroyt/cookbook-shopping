@@ -10,28 +10,42 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import type { StoreSectionIconName } from '@/types';
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
+        defaultColour?: string;
+        defaultIcon?: StoreSectionIconName;
+        defaultName?: string;
         errors?: Partial<Record<'name' | 'colour' | 'icon', string>>;
+        idPrefix?: string;
         processing?: boolean;
+        submitLabel?: string;
     }>(),
     {
+        defaultColour: '#2F855A',
+        defaultIcon: 'package',
+        defaultName: '',
         errors: () => ({}),
+        idPrefix: 'store-section',
         processing: false,
+        submitLabel: 'Vytvořit část obchodu',
     },
 );
+
+const fieldId = (field: string): string => `${props.idPrefix}-${field}`;
 </script>
 
 <template>
     <FieldGroup>
         <Field :data-invalid="Boolean(errors.name)">
-            <FieldLabel for="store-section-name">
+            <FieldLabel :for="fieldId('name')">
                 Název části obchodu
             </FieldLabel>
             <Input
-                id="store-section-name"
+                :id="fieldId('name')"
                 name="name"
+                :default-value="defaultName"
                 required
                 maxlength="255"
                 autocomplete="off"
@@ -45,15 +59,15 @@ withDefaults(
         </Field>
 
         <Field :data-invalid="Boolean(errors.colour)">
-            <FieldLabel for="store-section-colour">
+            <FieldLabel :for="fieldId('colour')">
                 Barva části obchodu
             </FieldLabel>
             <Input
-                id="store-section-colour"
+                :id="fieldId('colour')"
                 class="max-w-24 cursor-pointer"
                 name="colour"
                 type="color"
-                value="#2F855A"
+                :default-value="defaultColour"
                 required
                 :aria-invalid="Boolean(errors.colour)"
             />
@@ -63,12 +77,16 @@ withDefaults(
             <FieldError :errors="[errors.colour]" />
         </Field>
 
-        <StoreSectionIconPicker :error="errors.icon" />
+        <StoreSectionIconPicker
+            :default-value="defaultIcon"
+            :error="errors.icon"
+            :id-prefix="`${idPrefix}-icon`"
+        />
 
         <Field orientation="horizontal">
             <Button type="submit" :disabled="processing">
                 <Spinner v-if="processing" data-icon="inline-start" />
-                Vytvořit část obchodu
+                {{ submitLabel }}
             </Button>
         </Field>
     </FieldGroup>

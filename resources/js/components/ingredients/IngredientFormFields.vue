@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, shallowRef, watch } from 'vue';
+import EditStoreSectionColourDialog from '@/components/ingredients/EditStoreSectionColourDialog.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -61,21 +62,28 @@ const props = withDefaults(
     },
 );
 
-const storeSelection = ref(
+const storeSelection = shallowRef(
     props.ingredient?.storeId === null ||
         props.ingredient?.storeId === undefined
         ? 'none'
         : String(props.ingredient.storeId),
 );
-const sectionSelection = ref(
+const sectionSelection = shallowRef(
     props.ingredient?.storeSectionId === null ||
         props.ingredient?.storeSectionId === undefined
         ? 'none'
         : String(props.ingredient.storeSectionId),
 );
-const nutritionBasis = ref(props.ingredient?.nutrition?.basisKind ?? 'none');
+const nutritionBasis = shallowRef(
+    props.ingredient?.nutrition?.basisKind ?? 'none',
+);
 const selectedStore = computed(() =>
     props.stores.find((store) => String(store.id) === storeSelection.value),
+);
+const selectedSection = computed(() =>
+    selectedStore.value?.sections.find(
+        (section) => String(section.id) === sectionSelection.value,
+    ),
 );
 
 watch(storeSelection, () => {
@@ -272,6 +280,11 @@ watch(storeSelection, () => {
                 </Select>
                 <FieldError :errors="[errors.store_section_id]" />
             </Field>
+
+            <EditStoreSectionColourDialog
+                v-if="ingredient && selectedSection"
+                :store-section="selectedSection"
+            />
         </FieldSet>
 
         <FieldSet>
