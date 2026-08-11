@@ -17,6 +17,24 @@ use Symfony\Component\Process\Process;
 
 final class AgentChangeSetMariaDbConcurrencyTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if ($this->usesMariaDb()) {
+            $this->artisan('migrate:fresh', ['--drop-views' => true]);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->usesMariaDb()) {
+            $this->artisan('migrate:fresh', ['--drop-views' => true]);
+        }
+
+        parent::tearDown();
+    }
+
     public function test_concurrent_preview_and_apply_retries_converge_on_one_immutable_result(): void
     {
         $driver = DB::connection()->getDriverName();
@@ -78,6 +96,17 @@ final class AgentChangeSetMariaDbConcurrencyTest extends TestCase
             'status' => 'applied',
             'outcome' => 'applied',
         ]);
+    }
+
+    private function usesMariaDb(): bool
+    {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return false;
+        }
+
+        $databaseVersion = DB::scalar('select version()');
+
+        return is_string($databaseVersion) && str_contains($databaseVersion, 'MariaDB');
     }
 
     /** @return list<Process> */

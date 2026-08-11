@@ -15,6 +15,24 @@ use Symfony\Component\Process\Process;
 
 final class CalendarMariaDbConcurrencyTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if ($this->usesMariaDb()) {
+            $this->artisan('migrate:fresh', ['--drop-views' => true]);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->usesMariaDb()) {
+            $this->artisan('migrate:fresh', ['--drop-views' => true]);
+        }
+
+        parent::tearDown();
+    }
+
     public function test_concurrent_duplicate_creates_converge_on_one_exact_total(): void
     {
         $driver = DB::connection()->getDriverName();
@@ -41,8 +59,9 @@ final class CalendarMariaDbConcurrencyTest extends TestCase
             $script = sprintf(
                 'require %s; $app = require %s; $app->make(\\Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); '
                 . '$user = \\App\\Models\\User::query()->findOrFail(%d); '
-                . '$app->make(\\App\\MealPlanning\\Actions\\CreateCalendarEntry::class)->handle('
-                . '$user, %d, "2026-08-12", null, \\App\\MealPlanning\\Values\\ServingCount::from("1.25"));',
+                . '$app->make(\\App\\FamilyAccess\\CurrentFamilyScope::class)->withinContext('
+                . '$user, fn ($context) => $app->make(\\App\\MealPlanning\\Actions\\CreateCalendarEntry::class)->handle('
+                . '$context, %d, "2026-08-12", null, \\App\\MealPlanning\\Values\\ServingCount::from("1.25")));',
                 var_export(base_path('vendor/autoload.php'), true),
                 var_export(base_path('bootstrap/app.php'), true),
                 $userId,
@@ -66,5 +85,16 @@ final class CalendarMariaDbConcurrencyTest extends TestCase
             ->get();
         $this->assertCount(1, $entries);
         $this->assertSame('2.500000', $entries->firstOrFail()->serving_count);
+    }
+
+    private function usesMariaDb(): bool
+    {
+        if (DB::connection()->getDriverName() !== 'mysql') {
+            return false;
+        }
+
+        $databaseVersion = DB::scalar('select version()');
+
+        return is_string($databaseVersion) && str_contains($databaseVersion, 'MariaDB');
     }
 }
