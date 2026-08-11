@@ -16,6 +16,7 @@ use App\Cookbook\Http\Requests\IngredientUpdateRequest;
 use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
+use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
@@ -42,10 +43,16 @@ final class IngredientController extends Controller
             function (Family $family) use ($filter): array {
                 $catalog = Ingredient::query()
                     ->whereBelongsTo($family)
-                    ->select(['id', 'name', 'description', 'weight_grams', 'volume_millilitres', 'piece_count', 'store_id', 'store_section_id', 'archived_at'])
+                    ->select(['id', 'name', 'normalized_name', 'description', 'weight_grams', 'volume_millilitres', 'piece_count', 'store_id', 'store_section_id', 'archived_at'])
                     ->with(['store:id,name', 'storeSection:id,name', 'nutritionProfile'])
-                    ->orderBy('name')
-                    ->get();
+                    ->get()
+                    ->sort(fn (Ingredient $left, Ingredient $right): int => NormalizedName::compare(
+                        $left->normalized_name,
+                        $left->id,
+                        $right->normalized_name,
+                        $right->id,
+                    ))
+                    ->values();
                 $alternativeIds = [];
 
                 foreach (DB::table('ingredient_alternatives')->where('family_id', $family->id)->get() as $edge) {
@@ -85,13 +92,17 @@ final class IngredientController extends Controller
                                 ? null
                                 : implode(' · ', array_filter([$ingredient->store->name, $ingredient->storeSection?->name])),
                             'archived' => $ingredient->archived_at !== null,
-                            'alternatives' => collect($alternativeIds[$ingredient->id] ?? [])
-                                ->map(fn (int $id): array => [
-                                    'id' => $id,
-                                    'name' => $catalog->firstWhere('id', $id)?->name,
-                                    'archived' => $catalog->firstWhere('id', $id)?->archived_at !== null,
+                            'alternatives' => $catalog
+                                ->filter(fn (Ingredient $candidate): bool => in_array(
+                                    $candidate->id,
+                                    $alternativeIds[$ingredient->id] ?? [],
+                                    true,
+                                ))
+                                ->map(fn (Ingredient $candidate): array => [
+                                    'id' => $candidate->id,
+                                    'name' => $candidate->name,
+                                    'archived' => $candidate->archived_at !== null,
                                 ])
-                                ->sortBy('name')
                                 ->values()
                                 ->all(),
                             'alternativeOptions' => $catalog
@@ -114,10 +125,16 @@ final class IngredientController extends Controller
                     'filter' => $filter,
                     'stores' => Store::query()
                         ->whereBelongsTo($family)
-                        ->select(['id', 'name'])
+                        ->select(['id', 'name', 'normalized_name'])
                         ->with('storeSections:id,name,colour')
-                        ->orderBy('name')
                         ->get()
+                        ->sort(fn (Store $left, Store $right): int => NormalizedName::compare(
+                            $left->normalized_name,
+                            $left->id,
+                            $right->normalized_name,
+                            $right->id,
+                        ))
+                        ->values()
                         ->map(fn (Store $store): array => [
                             'id' => $store->id,
                             'name' => $store->name,

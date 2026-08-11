@@ -13,6 +13,7 @@ use App\Cookbook\Http\Requests\StoreStoreRequest;
 use App\Cookbook\Http\Requests\StoreUpdateRequest;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
+use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Http\Controllers\Controller;
@@ -39,10 +40,16 @@ final class StoreController extends Controller
             fn (Family $family): array => [
                 'stores' => Store::query()
                     ->whereBelongsTo($family)
-                    ->select(['id', 'name', 'section_order_version'])
+                    ->select(['id', 'name', 'normalized_name', 'section_order_version'])
                     ->with('storeSections:id,name,colour')
-                    ->orderBy('name')
                     ->get()
+                    ->sort(fn (Store $left, Store $right): int => NormalizedName::compare(
+                        $left->normalized_name,
+                        $left->id,
+                        $right->normalized_name,
+                        $right->id,
+                    ))
+                    ->values()
                     ->map(fn (Store $store): array => [
                         'id' => $store->id,
                         'name' => $store->name,
@@ -64,13 +71,19 @@ final class StoreController extends Controller
                     ]),
                 'storeSections' => StoreSection::query()
                     ->whereBelongsTo($family)
-                    ->select(['id', 'name', 'colour'])
+                    ->select(['id', 'name', 'normalized_name', 'colour'])
                     ->withCount([
                         'stores' => fn (Builder $stores): Builder => $stores->whereBelongsTo($family),
                         'ingredients' => fn (Builder $ingredients): Builder => $ingredients->whereBelongsTo($family),
                     ])
-                    ->orderBy('name')
                     ->get()
+                    ->sort(fn (StoreSection $left, StoreSection $right): int => NormalizedName::compare(
+                        $left->normalized_name,
+                        $left->id,
+                        $right->normalized_name,
+                        $right->id,
+                    ))
+                    ->values()
                     ->map(fn (StoreSection $storeSection): array => [
                         'id' => $storeSection->id,
                         'name' => $storeSection->name,

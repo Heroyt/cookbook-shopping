@@ -19,4 +19,15 @@ final readonly class NormalizedName
 
         return new self($display, Str::lower($display));
     }
+
+    public static function compare(
+        string $leftKey,
+        int $leftId,
+        string $rightKey,
+        int $rightId,
+    ): int {
+        $keyComparison = strcmp($leftKey, $rightKey);
+
+        return $keyComparison !== 0 ? $keyComparison : $leftId <=> $rightId;
+    }
 }
