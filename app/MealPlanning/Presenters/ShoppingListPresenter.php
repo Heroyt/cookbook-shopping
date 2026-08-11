@@ -27,7 +27,11 @@ final class ShoppingListPresenter
         if ($result->shoppingList === null) {
             return [
                 'shoppingList' => null,
-                'problems' => array_map(fn (CalculationProblem $problem): array => $this->problem($problem), $result->problems),
+                'problems' => array_map(
+                    fn (CalculationProblem $problem, int $index): array => $this->problem($problem, $index),
+                    $result->problems,
+                    array_keys($result->problems),
+                ),
             ];
         }
 
@@ -74,7 +78,9 @@ final class ShoppingListPresenter
             'contributions' => array_map(fn (RecipeContribution $contribution): array => [
                 'recipeId' => $contribution->recipeId,
                 'recipeName' => $contribution->recipeName,
+                'originalIngredientId' => $contribution->originalIngredientId,
                 'originalIngredientName' => $contribution->originalIngredientName,
+                'quantityKind' => $contribution->quantityKind->value,
                 'required' => $this->quantity($contribution->required, $contribution->quantityKind),
             ], $line->contributions),
             'eligibleAlternatives' => array_map(static fn (AlternativeIngredientDefinition $alternative): array => [
@@ -120,9 +126,16 @@ final class ShoppingListPresenter
     }
 
     /** @return array<string, mixed> */
-    private function problem(CalculationProblem $problem): array
+    private function problem(CalculationProblem $problem, int $index): array
     {
         return [
+            'problemKey' => implode(':', [
+                $problem->recipeId,
+                $problem->ingredientId,
+                $problem->unit,
+                $problem->reason->value,
+                $index,
+            ]),
             'recipeId' => $problem->recipeId,
             'recipeName' => $problem->recipeName,
             'ingredientId' => $problem->ingredientId,

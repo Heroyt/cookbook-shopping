@@ -83,23 +83,26 @@ final class SimplePlanController extends Controller
 
     public function generate(SimplePlanGenerateRequest $request): RedirectResponse
     {
-        $successful = $this->scope->within($request->authenticatedUser(), function (Family $family) use ($request): bool {
+        $outcome = $this->scope->within($request->authenticatedUser(), function (Family $family) use ($request): array {
             $simplePlan = $this->simplePlanSession->load($request->session(), $family->id);
             $alternatives = $this->simplePlanSession->alternatives($request->session(), $family->id);
+            $alternativesReset = false;
             try {
                 $result = $this->regenerate($request, $family, $simplePlan, $alternatives);
             } catch (InvalidArgumentException) {
-                throw ValidationException::withMessages([
-                    'plan' => __('One or more selected Alternatives are no longer available. Revert them to their original Ingredients and try again.'),
-                ]);
+                $result = $this->regenerate($request, $family, $simplePlan, []);
+                $this->simplePlanSession->saveAlternatives($request->session(), $family->id, []);
+                $alternativesReset = true;
             }
 
-            return $result->isSuccessful();
+            return ['successful' => $result->isSuccessful(), 'alternativesReset' => $alternativesReset];
         });
 
         Inertia::flash('toast', [
-            'type' => $successful ? 'success' : 'error',
-            'message' => $successful ? __('Shopping List generated.') : __('The Shopping List requires corrections.'),
+            'type' => $outcome['alternativesReset'] ? 'warning' : ($outcome['successful'] ? 'success' : 'error'),
+            'message' => $outcome['alternativesReset']
+                ? __('Unavailable Alternatives were reverted and the Shopping List was generated again.')
+                : ($outcome['successful'] ? __('Shopping List generated.') : __('The Shopping List requires corrections.')),
         ]);
 
         return to_route('simple-plan.generated');

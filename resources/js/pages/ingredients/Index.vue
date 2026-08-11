@@ -22,6 +22,7 @@ defineProps<{
     alternativeOptions: IngredientAlternativeOption[];
     stores: IngredientPlacementStore[];
     filter: 'active' | 'archived' | 'all';
+    editIngredientId: number | null;
 }>();
 
 defineOptions({
@@ -112,6 +113,7 @@ defineOptions({
                         :ingredients="ingredients"
                         :alternative-options="alternativeOptions"
                         :stores="stores"
+                        :edit-ingredient-id="editIngredientId"
                     />
                 </CardContent>
             </Card>

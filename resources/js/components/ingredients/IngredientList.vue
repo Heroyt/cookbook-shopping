@@ -31,6 +31,7 @@ defineProps<{
     ingredients: IngredientSummary[];
     alternativeOptions: IngredientAlternativeOption[];
     stores: IngredientPlacementStore[];
+    editIngredientId?: number | null;
 }>();
 </script>
 
@@ -113,6 +114,9 @@ defineProps<{
                             <EditIngredientDialog
                                 :ingredient="ingredient"
                                 :stores="stores"
+                                :open-initially="
+                                    editIngredientId === ingredient.id
+                                "
                             />
                             <ArchiveIngredientAlertDialog
                                 :ingredient="ingredient"

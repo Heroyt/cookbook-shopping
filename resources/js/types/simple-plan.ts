@@ -30,7 +30,9 @@ export type ShoppingListLinePresentation = {
     contributions: Array<{
         recipeId: number;
         recipeName: string;
+        originalIngredientId: number;
         originalIngredientName: string;
+        quantityKind: 'grams' | 'millilitres' | 'piece';
         required: QuantityDisplay;
     }>;
     eligibleAlternatives: Array<{
@@ -60,6 +62,7 @@ export type ShoppingListPresentation = {
 };
 
 export type ShoppingListProblem = {
+    problemKey: string;
     recipeId: number;
     recipeName: string;
     ingredientId: number;

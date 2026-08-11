@@ -13,7 +13,10 @@ final class IngredientIndexRequest extends AuthenticatedRequest
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
-        return ['filter' => ['sometimes', 'string', Rule::in(['active', 'archived', 'all'])]];
+        return [
+            'filter' => ['sometimes', 'string', Rule::in(['active', 'archived', 'all'])],
+            'edit' => ['nullable', 'integer', 'min:1'],
+        ];
     }
 
     public function ingredientFilter(): string
@@ -21,5 +24,12 @@ final class IngredientIndexRequest extends AuthenticatedRequest
         $filter = $this->validated('filter', 'active');
 
         return is_string($filter) ? $filter : 'active';
+    }
+
+    public function editIngredientId(): ?int
+    {
+        $ingredientId = $this->validated('edit');
+
+        return is_numeric($ingredientId) ? (int) $ingredientId : null;
     }
 }

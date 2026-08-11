@@ -19,12 +19,16 @@ import type {
     RecipeTagOption,
 } from '@/types';
 
-defineProps<{
-    recipe: RecipeSummary;
-    ingredients: RecipeIngredientOption[];
-    tags: RecipeTagOption[];
-}>();
-const open = ref(false);
+const props = withDefaults(
+    defineProps<{
+        recipe: RecipeSummary;
+        ingredients: RecipeIngredientOption[];
+        tags: RecipeTagOption[];
+        openInitially?: boolean;
+    }>(),
+    { openInitially: false },
+);
+const open = ref(props.openInitially);
 </script>
 
 <template>

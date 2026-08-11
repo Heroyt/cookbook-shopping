@@ -26,6 +26,11 @@ describe('Ingredient UI', () => {
             'IngredientController.update.form(ingredient.id)',
         );
         expect(edit).toContain('@success="open = false"');
+        expect(edit).toContain('shallowRef(props.openInitially)');
+        expect(readSource('./IngredientList.vue')).toContain(':open-initially');
+        expect(readSource('./IngredientList.vue')).toContain(
+            'editIngredientId === ingredient.id',
+        );
         expect(readSource('./ArchiveIngredientAlertDialog.vue')).toContain(
             'IngredientController.archive(ingredient.id)',
         );

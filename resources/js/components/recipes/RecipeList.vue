@@ -27,6 +27,7 @@ defineProps<{
     recipes: RecipeSummary[];
     ingredients: RecipeIngredientOption[];
     tags: RecipeTagOption[];
+    editRecipeId?: number | null;
 }>();
 
 const format = (value: string): string =>
@@ -158,6 +159,7 @@ const kindLabel = (kind: 'grams' | 'millilitres' | 'piece'): string =>
                     v-if="!recipe.archived"
                     :recipe="recipe"
                     :ingredients="ingredients"
+                    :open-initially="editRecipeId === recipe.id"
                     :tags="tags" /><RecipeLifecycleButton :recipe="recipe"
             /></CardFooter>
         </Card>

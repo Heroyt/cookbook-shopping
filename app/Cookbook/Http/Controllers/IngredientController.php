@@ -40,7 +40,10 @@ final class IngredientController extends Controller
             fn (Family $family): array => $this->currentFamilyIngredientManagement->handle($family, $filter),
         );
 
-        return Inertia::render('ingredients/Index', $managementData);
+        return Inertia::render('ingredients/Index', [
+            ...$managementData,
+            'editIngredientId' => $request->editIngredientId(),
+        ]);
     }
 
     public function archive(IngredientArchiveRequest $request, int $ingredient): RedirectResponse

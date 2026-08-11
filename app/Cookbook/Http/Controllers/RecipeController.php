@@ -34,6 +34,7 @@ final class RecipeController extends Controller
     public function index(RecipeIndexRequest $request): Response
     {
         $data = $this->scope->within($request->authenticatedUser(), fn (Family $family): array => $this->management->handle($family, $request->recipeFilter(), $request->search()));
+        $data['editRecipeId'] = $request->editRecipeId();
 
         return Inertia::render('recipes/Index', $data);
     }

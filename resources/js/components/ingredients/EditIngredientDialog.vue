@@ -18,12 +18,16 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
-defineProps<{
-    ingredient: IngredientSummary;
-    stores: IngredientPlacementStore[];
-}>();
+const props = withDefaults(
+    defineProps<{
+        ingredient: IngredientSummary;
+        stores: IngredientPlacementStore[];
+        openInitially?: boolean;
+    }>(),
+    { openInitially: false },
+);
 
-const open = shallowRef(false);
+const open = shallowRef(props.openInitially);
 </script>
 
 <template>

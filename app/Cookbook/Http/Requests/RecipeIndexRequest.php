@@ -14,7 +14,11 @@ final class RecipeIndexRequest extends AuthenticatedRequest
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
-        return ['filter' => ['nullable', Rule::in(['active', 'archived', 'all'])], 'search' => ['nullable', 'string', 'max:255']];
+        return [
+            'filter' => ['nullable', Rule::in(['active', 'archived', 'all'])],
+            'search' => ['nullable', 'string', 'max:255'],
+            'edit' => ['nullable', 'integer', 'min:1'],
+        ];
     }
 
     public function recipeFilter(): string
@@ -29,6 +33,13 @@ final class RecipeIndexRequest extends AuthenticatedRequest
         $search = $this->validated('search');
 
         return is_string($search) ? trim($search) : '';
+    }
+
+    public function editRecipeId(): ?int
+    {
+        $recipeId = $this->validated('edit');
+
+        return is_numeric($recipeId) ? (int) $recipeId : null;
     }
 
     protected function prepareForValidation(): void

@@ -21,6 +21,12 @@ describe('Recipe UI', () => {
         expect(readSource('./EditRecipeDialog.vue')).toContain(
             'RecipeController.update.form(recipe.id)',
         );
+        expect(readSource('./EditRecipeDialog.vue')).toContain(
+            'ref(props.openInitially)',
+        );
+        expect(readSource('./RecipeList.vue')).toContain(
+            ':open-initially="editRecipeId === recipe.id"',
+        );
         expect(readSource('./RecipeLifecycleButton.vue')).toContain(
             'RecipeController.archive',
         );

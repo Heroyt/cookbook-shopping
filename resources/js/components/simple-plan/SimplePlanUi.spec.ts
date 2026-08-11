@@ -89,11 +89,26 @@ describe('Simple Plan UI', () => {
                                             {
                                                 recipeId: 4,
                                                 recipeName: 'Lívance',
+                                                originalIngredientId: 3,
                                                 originalIngredientName: 'Mouka',
+                                                quantityKind: 'grams',
                                                 required: {
                                                     label: '175 g',
                                                     value: '175',
                                                     unit: 'g',
+                                                    approximate: false,
+                                                },
+                                            },
+                                            {
+                                                recipeId: 4,
+                                                recipeName: 'Lívance',
+                                                originalIngredientId: 3,
+                                                originalIngredientName: 'Mouka',
+                                                quantityKind: 'piece',
+                                                required: {
+                                                    label: '1 ks',
+                                                    value: '1',
+                                                    unit: 'ks',
                                                     approximate: false,
                                                 },
                                             },
@@ -125,6 +140,7 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('175 g');
         expect(html).toContain('300 g');
         expect(html).toContain('125 g');
+        expect(html).toContain('Příspěvky receptů (2)');
         expect(html).toContain('Dostupné alternativy');
         expect(html).toContain('Špaldová mouka');
         expect(html).toContain('Použít alternativu Špaldová mouka');
@@ -144,6 +160,7 @@ describe('Simple Plan UI', () => {
             shoppingList: null,
             problems: [
                 {
+                    problemKey: '1:2:millilitres:missing:0',
                     recipeId: 1,
                     recipeName: 'Omáčka',
                     ingredientId: 2,
@@ -152,9 +169,10 @@ describe('Simple Plan UI', () => {
                     message: 'Balení neobsahuje požadované množství.',
                 },
                 {
-                    recipeId: 3,
+                    problemKey: '3:4:grams:missing:1',
+                    recipeId: 1,
                     recipeName: 'Těsto',
-                    ingredientId: 4,
+                    ingredientId: 2,
                     ingredientName: 'Vejce',
                     quantityLabel: '100 g',
                     message: 'Balení neobsahuje požadované množství.',
@@ -172,9 +190,17 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('Upravit recept');
         expect(html).toContain('Upravit surovinu');
         const view = readSource('./ShoppingListView.vue');
-        expect(view).toContain("from '@/routes/recipes'");
-        expect(view).toContain("from '@/routes/ingredients'");
+        expect(view).toContain('edit: problem.recipeId');
+        expect(view).toContain('edit: problem.ingredientId');
+        expect(view).not.toContain('search: problem.ingredientName');
         expect(view).not.toContain('problem.unit');
+        expect(view).toContain(':key="problem.problemKey"');
+        expect(readSource('./ShoppingListLineCard.vue')).toContain(
+            'contribution.quantityKind',
+        );
+        expect(readSource('./ShoppingListLineCard.vue')).toContain(
+            '<FieldError :errors="[errors.alternative_ingredient_id]" />',
+        );
     });
 
     it('follows shadcn composition and spacing contracts', () => {

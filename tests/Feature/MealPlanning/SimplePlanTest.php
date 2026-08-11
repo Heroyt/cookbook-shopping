@@ -345,11 +345,16 @@ final class SimplePlanTest extends TestCase
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->where('shoppingList', null)
                 ->has('problems', 2)
+                ->where('problems.0.problemKey', "{$firstRecipe->id}:{$weightOnly->id}:millilitres:missing_package_quantity:0")
                 ->where('problems.0.message', 'Balení suroviny neobsahuje požadovaný druh množství.')
                 ->where('problems.0.quantityLabel', '50 ml')
                 ->where('problems.1.message', 'Balení suroviny neobsahuje požadovaný druh množství.'));
 
         $this->assertSame($plan, session("meal_planning.simple_plan.{$family->id}"));
+        $this->get(route('recipes.index', ['edit' => $firstRecipe->id]))
+            ->assertInertia(fn (Assert $page): Assert => $page->where('editRecipeId', $firstRecipe->id));
+        $this->get(route('ingredients.index', ['edit' => $weightOnly->id]))
+            ->assertInertia(fn (Assert $page): Assert => $page->where('editIngredientId', $weightOnly->id));
     }
 
     public function test_direct_alternatives_recalculate_globally_and_can_be_reverted(): void
@@ -449,9 +454,14 @@ final class SimplePlanTest extends TestCase
 
         $this->withSession([
             "meal_planning.alternatives.{$family->id}" => [$ingredient->id => $foreignAlternative->id],
-        ])->post(route('simple-plan.generate'))->assertSessionHasErrors([
-            'plan' => 'Jedna nebo více vybraných alternativ už není dostupná. Vraťte ji na původní surovinu a zkuste to znovu.',
-        ]);
+        ])->post(route('simple-plan.generate'))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('simple-plan.generated'))
+            ->assertInertiaFlash('toast', [
+                'type' => 'warning',
+                'message' => 'Nedostupné alternativy byly vráceny a nákupní seznam byl vytvořen znovu.',
+            ]);
+        $this->assertSame([], session("meal_planning.alternatives.{$family->id}"));
     }
 
     /** @param list<User> $members */

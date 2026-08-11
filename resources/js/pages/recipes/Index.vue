@@ -26,6 +26,7 @@ defineProps<{
     tags: RecipeTagOption[];
     filter: 'active' | 'archived' | 'all';
     search: string;
+    editRecipeId: number | null;
 }>();
 
 defineOptions({
@@ -137,6 +138,7 @@ defineOptions({
                         :recipes="recipes"
                         :ingredients="ingredients"
                         :tags="tags"
+                        :edit-recipe-id="editRecipeId"
                     />
                 </CardContent>
             </Card>

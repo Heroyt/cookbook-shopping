@@ -39,7 +39,7 @@ defineProps<{
         <ul class="flex flex-col gap-3">
             <li
                 v-for="problem in problems"
-                :key="`${problem.recipeId}:${problem.ingredientId}`"
+                :key="problem.problemKey"
                 class="rounded-lg border border-destructive/40 p-4"
             >
                 <p class="font-medium">
@@ -53,7 +53,7 @@ defineProps<{
                         <Link
                             :href="
                                 recipesIndex({
-                                    query: { search: problem.recipeName },
+                                    query: { edit: problem.recipeId },
                                 })
                             "
                             >Upravit recept</Link
@@ -63,7 +63,7 @@ defineProps<{
                         <Link
                             :href="
                                 ingredientsIndex({
-                                    query: { search: problem.ingredientName },
+                                    query: { edit: problem.ingredientId },
                                 })
                             "
                             >Upravit surovinu</Link

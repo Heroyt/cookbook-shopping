@@ -12,6 +12,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { FieldError } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { ShoppingListLinePresentation } from '@/types';
@@ -83,7 +84,7 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                         v-bind="
                             destroyAlternative.form(choice.originalIngredientId)
                         "
-                        v-slot="{ processing }"
+                        v-slot="{ errors, processing }"
                     >
                         <Button
                             type="submit"
@@ -99,6 +100,9 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                             <RotateCcwIcon v-else data-icon="inline-start" />
                             Vrátit původní surovinu
                         </Button>
+                        <FieldError
+                            :errors="[errors.alternative_ingredient_id]"
+                        />
                     </Form>
                 </div>
             </template>
@@ -112,7 +116,7 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                     v-for="alternative in line.eligibleAlternatives"
                     :key="alternative.ingredientId"
                     v-bind="storeAlternative.form()"
-                    v-slot="{ processing }"
+                    v-slot="{ errors, processing }"
                 >
                     <input
                         type="hidden"
@@ -138,6 +142,7 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                         <ReplaceIcon v-else data-icon="inline-start" />
                         Použít alternativu {{ alternative.ingredientName }}
                     </Button>
+                    <FieldError :errors="[errors.alternative_ingredient_id]" />
                 </Form>
             </div>
 
@@ -152,7 +157,7 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                     <ul class="mt-2 flex flex-col gap-2 border-l pl-4">
                         <li
                             v-for="contribution in line.contributions"
-                            :key="`${contribution.recipeId}:${contribution.originalIngredientName}`"
+                            :key="`${contribution.recipeId}:${contribution.originalIngredientId}:${contribution.quantityKind}`"
                         >
                             <span class="font-medium">{{
                                 contribution.recipeName

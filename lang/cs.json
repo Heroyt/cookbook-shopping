@@ -103,7 +103,7 @@
     "Shopping List generated.": "Nákupní seznam byl vytvořen.",
     "The Shopping List requires corrections.": "Nákupní seznam vyžaduje opravy.",
     "The selected Alternative is no longer available for this Ingredient.": "Vybraná alternativa už není dostupná pro tuto surovinu.",
-    "One or more selected Alternatives are no longer available. Revert them to their original Ingredients and try again.": "Jedna nebo více vybraných alternativ už není dostupná. Vraťte ji na původní surovinu a zkuste to znovu.",
+    "Unavailable Alternatives were reverted and the Shopping List was generated again.": "Nedostupné alternativy byly vráceny a nákupní seznam byl vytvořen znovu.",
     "Alternative applied.": "Alternativa byla použita.",
     "The Alternative was reverted to the original Ingredient.": "Alternativa byla vrácena na původní surovinu."
 }
