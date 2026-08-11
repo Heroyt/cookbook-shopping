@@ -75,6 +75,7 @@ defineOptions({
 
     <AgentCredentialSecretDialog
         v-if="credentialSecret !== undefined"
+        :key="credentialSecret.secret"
         :credential-secret="credentialSecret"
     />
 </template>

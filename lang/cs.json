@@ -1,5 +1,6 @@
 {
     "Your session expired. Refresh the page and try again.": "Platnost relace vypršela. Obnovte stránku a zkuste to znovu.",
+    "The provided password was incorrect.": "Zadané heslo není správné.",
     "Agent Credential created.": "Přístup agenta byl vytvořen.",
     "Agent Credential rotated.": "Tajemství přístupu agenta bylo nahrazeno.",
     "Agent Credential revoked.": "Přístup agenta byl odvolán.",

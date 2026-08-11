@@ -16,6 +16,7 @@ describe('Agent Credential UI contract', () => {
         expect(page).toContain('<CreateAgentCredentialDialog');
         expect(page).toContain('<AgentCredentialList');
         expect(page).toContain('<AgentCredentialSecretDialog');
+        expect(page).toContain(':key="credentialSecret.secret"');
         expect(list).toContain('sm:grid-cols-2');
         expect(list).toContain('xl:grid-cols-2');
         expect(sidebar).toContain("title: 'Přístupy agentů'");
