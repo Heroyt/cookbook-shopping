@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\AgentIntegration\Exceptions\AgentApiException;
 use App\AgentIntegration\Http\AgentApiErrorResponse;
+use App\AgentIntegration\Http\Middleware\LimitAgentChangeSetPayload;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Auth\AuthenticationException;
@@ -19,6 +21,7 @@ use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'abilities' => CheckAbilities::class,
+            'agent.payload' => LimitAgentChangeSetPayload::class,
         ]);
 
         $middleware->web(append: [
@@ -41,6 +45,35 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AgentApiException $exception, Request $request): ?JsonResponse {
+            if ( ! $request->is('api/v1/*')) {
+                return null;
+            }
+
+            return AgentApiErrorResponse::make(
+                $exception->errorCode,
+                $exception->getMessage(),
+                $exception->status,
+                $exception->path,
+                $exception->operationId,
+                $exception->details,
+                $exception->retryable,
+            );
+        });
+        $exceptions->render(function (TooManyRequestsHttpException $exception, Request $request): ?JsonResponse {
+            if ( ! $request->is('api/v1/*')) {
+                return null;
+            }
+
+            return AgentApiErrorResponse::make(
+                'rate_limit_exceeded',
+                'The per-credential request rate limit was exceeded.',
+                429,
+                details: ['guidance' => 'Retry after the number of seconds in the Retry-After header.'],
+                retryable: true,
+                headers: $exception->getHeaders(),
+            );
+        });
         $exceptions->render(function (AuthenticationException $exception, Request $request): ?JsonResponse {
             if ( ! $request->is('api/v1/*')) {
                 return null;

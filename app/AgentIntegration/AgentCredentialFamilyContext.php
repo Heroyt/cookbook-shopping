@@ -15,6 +15,24 @@ final readonly class AgentCredentialFamilyContext
 {
     public function resolve(Request $request): AuthorizedFamilyContext
     {
+        $credential = $this->credential($request);
+        $user = $request->user();
+
+        if ( ! $user instanceof User) {
+            throw new AuthenticationException();
+        }
+
+        $family = $credential->family()->first();
+
+        if ( ! $family instanceof Family) {
+            throw new AuthenticationException();
+        }
+
+        return new AuthorizedFamilyContext($user, $family);
+    }
+
+    public function credential(Request $request): AgentCredential
+    {
         $user = $request->user();
 
         if ( ! $user instanceof User) {
@@ -27,12 +45,6 @@ final readonly class AgentCredentialFamilyContext
             throw new AuthenticationException();
         }
 
-        $family = $credential->family()->first();
-
-        if ( ! $family instanceof Family) {
-            throw new AuthenticationException();
-        }
-
-        return new AuthorizedFamilyContext($user, $family);
+        return $credential;
     }
 }

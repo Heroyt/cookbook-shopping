@@ -8,7 +8,10 @@ use Illuminate\Http\JsonResponse;
 
 final class AgentApiErrorResponse
 {
-    /** @param array<string, mixed> $details */
+    /**
+     * @param  array<string, mixed>  $details
+     * @param  array<mixed>  $headers
+     */
     public static function make(
         string $code,
         string $message,
@@ -17,6 +20,7 @@ final class AgentApiErrorResponse
         ?string $operationId = null,
         array $details = [],
         bool $retryable = false,
+        array $headers = [],
     ): JsonResponse {
         return response()->json([
             'error' => [
@@ -27,6 +31,6 @@ final class AgentApiErrorResponse
                 'details' => $details,
                 'retryable' => $retryable,
             ],
-        ], $status);
+        ], $status, $headers);
     }
 }

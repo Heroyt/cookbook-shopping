@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\AgentIntegration\Actions;
 
+use App\AgentIntegration\ChangeSets\InvalidateCredentialPreviews;
 use App\AgentIntegration\Models\AgentCredential;
 use App\FamilyAccess\AuthorizedFamilyContext;
 
 final readonly class RevokeAgentCredential
 {
+    public function __construct(private InvalidateCredentialPreviews $invalidateCredentialPreviews) {}
+
     public function handle(
         AuthorizedFamilyContext $context,
         int $credentialId,
@@ -27,6 +30,7 @@ final readonly class RevokeAgentCredential
             'revoked_by_user_id' => $context->user->id,
             'revocation_reason' => $reason,
         ])->save();
+        $this->invalidateCredentialPreviews->handle($credential);
 
         return $credential;
     }

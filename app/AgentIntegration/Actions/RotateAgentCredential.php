@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\AgentIntegration\Actions;
 
 use App\AgentIntegration\AgentCredentialAbility;
+use App\AgentIntegration\ChangeSets\InvalidateCredentialPreviews;
 use App\AgentIntegration\Models\AgentCredential;
 use App\AgentIntegration\Values\IssuedAgentCredential;
 use App\FamilyAccess\AuthorizedFamilyContext;
@@ -14,7 +15,10 @@ use LogicException;
 
 final readonly class RotateAgentCredential
 {
-    public function __construct(private IssueAgentCredential $issueAgentCredential) {}
+    public function __construct(
+        private IssueAgentCredential $issueAgentCredential,
+        private InvalidateCredentialPreviews $invalidateCredentialPreviews,
+    ) {}
 
     public function handle(AuthorizedFamilyContext $context, int $credentialId): IssuedAgentCredential
     {
@@ -51,6 +55,7 @@ final readonly class RotateAgentCredential
                 'revocation_reason' => 'rotated',
                 'rotated_to_id' => $replacement->credential->id,
             ])->save();
+            $this->invalidateCredentialPreviews->handle($credential);
 
             return $replacement;
         });

@@ -6,8 +6,12 @@ namespace App\Providers;
 
 use App\AgentIntegration\Models\AgentCredential;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\Sanctum;
@@ -25,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(AgentCredential::class);
+        $this->configureAgentRateLimits();
 
         $this->configureDefaults();
     }
@@ -49,5 +54,27 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    private function configureAgentRateLimits(): void
+    {
+        RateLimiter::for('agent-catalog', fn (Request $request): Limit => Limit::perMinute(
+            Config::integer('agent-integration.rates.catalog_per_minute'),
+        )->by($this->agentRateKey($request)));
+        RateLimiter::for('agent-preview', fn (Request $request): Limit => Limit::perMinute(
+            Config::integer('agent-integration.rates.preview_per_minute'),
+        )->by($this->agentRateKey($request)));
+        RateLimiter::for('agent-apply', fn (Request $request): Limit => Limit::perMinute(
+            Config::integer('agent-integration.rates.apply_per_minute'),
+        )->by($this->agentRateKey($request)));
+    }
+
+    private function agentRateKey(Request $request): string
+    {
+        $credential = $request->user()?->currentAccessToken();
+
+        return $credential instanceof AgentCredential
+            ? 'agent-credential:' . $credential->id
+            : 'agent-source:' . $request->ip();
     }
 }
