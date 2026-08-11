@@ -2,7 +2,11 @@
 import { Form } from '@inertiajs/vue3';
 import { PlusIcon, ShoppingCartIcon, Trash2Icon } from '@lucide/vue';
 import { ref } from 'vue';
-import SimplePlanController from '@/actions/App/MealPlanning/Http/Controllers/SimplePlanController';
+import {
+    destroy,
+    generate,
+    store,
+} from '@/actions/App/MealPlanning/Http/Controllers/SimplePlanController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +35,7 @@ import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
@@ -58,9 +63,9 @@ const selectedRecipeId = ref('');
             </CardHeader>
             <CardContent>
                 <Form
-                    v-bind="SimplePlanController.store.form()"
+                    v-bind="store.form()"
                     reset-on-success
-                    class="space-y-4"
+                    class="flex flex-col gap-4"
                     @success="selectedRecipeId = ''"
                     v-slot="{ errors, processing }"
                 >
@@ -81,13 +86,15 @@ const selectedRecipeId = ref('');
                                     <SelectValue placeholder="Vyberte recept" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem
-                                        v-for="recipe in recipes"
-                                        :key="recipe.id"
-                                        :value="String(recipe.id)"
-                                    >
-                                        {{ recipe.name }}
-                                    </SelectItem>
+                                    <SelectGroup>
+                                        <SelectItem
+                                            v-for="recipe in recipes"
+                                            :key="recipe.id"
+                                            :value="String(recipe.id)"
+                                        >
+                                            {{ recipe.name }}
+                                        </SelectItem>
+                                    </SelectGroup>
                                 </SelectContent>
                             </Select>
                             <FieldError :errors="[errors.recipe_id]" />
@@ -119,7 +126,11 @@ const selectedRecipeId = ref('');
                         type="submit"
                         :disabled="processing || recipes.length === 0"
                     >
-                        <Spinner v-if="processing" aria-hidden="true" />
+                        <Spinner
+                            v-if="processing"
+                            data-icon="inline-start"
+                            aria-hidden="true"
+                        />
                         <PlusIcon v-else data-icon="inline-start" />
                         Přidat do plánu
                     </Button>
@@ -131,11 +142,11 @@ const selectedRecipeId = ref('');
             <CardHeader>
                 <CardTitle>Vybrané recepty</CardTitle>
                 <CardDescription>
-                    Rychlý plán je dočasný a po úspěšném vytvoření nákupního
-                    seznamu se neukládá.
+                    Rychlý plán je dočasný a zůstává v této relaci pro opakované
+                    vytvoření nákupního seznamu.
                 </CardDescription>
             </CardHeader>
-            <CardContent class="space-y-4">
+            <CardContent class="flex flex-col gap-4">
                 <Empty v-if="selections.length === 0">
                     <EmptyHeader>
                         <EmptyMedia variant="icon">
@@ -151,7 +162,7 @@ const selectedRecipeId = ref('');
 
                 <ul
                     v-else
-                    class="space-y-3"
+                    class="flex flex-col gap-3"
                     aria-label="Recepty v rychlém plánu"
                 >
                     <li
@@ -176,11 +187,7 @@ const selectedRecipeId = ref('');
                             </Badge>
                         </div>
                         <Form
-                            v-bind="
-                                SimplePlanController.destroy.form(
-                                    selection.recipeId,
-                                )
-                            "
+                            v-bind="destroy.form(selection.recipeId)"
                             v-slot="{ processing }"
                         >
                             <Button
@@ -190,7 +197,11 @@ const selectedRecipeId = ref('');
                                 :disabled="processing"
                                 :aria-label="`Odebrat recept ${selection.recipeName} z rychlého plánu`"
                             >
-                                <Spinner v-if="processing" aria-hidden="true" />
+                                <Spinner
+                                    v-if="processing"
+                                    data-icon="inline-start"
+                                    aria-hidden="true"
+                                />
                                 <Trash2Icon v-else data-icon="inline-start" />
                                 Odebrat
                             </Button>
@@ -200,13 +211,17 @@ const selectedRecipeId = ref('');
 
                 <Form
                     v-if="selections.length > 0"
-                    v-bind="SimplePlanController.generate.form()"
+                    v-bind="generate.form()"
                     v-slot="{ errors, processing }"
-                    class="space-y-3 border-t pt-4"
+                    class="flex flex-col gap-3 border-t pt-4"
                 >
                     <FieldError :errors="[errors.plan]" />
                     <Button type="submit" size="lg" :disabled="processing">
-                        <Spinner v-if="processing" aria-hidden="true" />
+                        <Spinner
+                            v-if="processing"
+                            data-icon="inline-start"
+                            aria-hidden="true"
+                        />
                         <ShoppingCartIcon v-else data-icon="inline-start" />
                         Vytvořit nákupní seznam
                     </Button>

@@ -11,6 +11,7 @@ use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\Models\Family;
 use App\MealPlanning\Values\SimplePlan;
+use App\ShoppingGeneration\Values\AlternativeChoice;
 use App\ShoppingGeneration\Values\AlternativeIngredientDefinition;
 use App\ShoppingGeneration\Values\GenerationRequest;
 use App\ShoppingGeneration\Values\IngredientDefinition;
@@ -28,7 +29,8 @@ use Illuminate\Validation\ValidationException;
 
 final class BuildCurrentFamilyGenerationRequest
 {
-    public function handle(Family $family, SimplePlan $simplePlan): GenerationRequest
+    /** @param array<int, int> $alternativeChoices */
+    public function handle(Family $family, SimplePlan $simplePlan, array $alternativeChoices = []): GenerationRequest
     {
         if ($simplePlan->isEmpty()) {
             throw ValidationException::withMessages(['plan' => __('Add at least one Recipe to the Simple Plan.')]);
@@ -119,7 +121,12 @@ final class BuildCurrentFamilyGenerationRequest
             );
         }
 
-        return new GenerationRequest($selections);
+        $choices = [];
+        foreach ($alternativeChoices as $originalIngredientId => $alternativeIngredientId) {
+            $choices[] = new AlternativeChoice($originalIngredientId, $alternativeIngredientId);
+        }
+
+        return new GenerationRequest($selections, $choices);
     }
 
     /**

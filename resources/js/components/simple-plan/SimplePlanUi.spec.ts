@@ -15,10 +15,11 @@ const render = (component: Component, props = {}): Promise<string> =>
 describe('Simple Plan UI', () => {
     it('uses generated Wayfinder actions for every plan intent and sidebar navigation', () => {
         const builder = readSource('./SimplePlanBuilder.vue');
-        expect(builder).toContain('SimplePlanController.store.form()');
-        expect(builder).toContain('SimplePlanController.destroy.form(');
+        expect(builder).toContain('store.form()');
+        expect(builder).toContain('destroy.form(');
         expect(builder).toContain('selection.recipeId');
-        expect(builder).toContain('SimplePlanController.generate.form()');
+        expect(builder).toContain('generate.form()');
+        expect(builder).not.toContain('import SimplePlanController from');
         expect(readSource('../../pages/simple-plan/Index.vue')).toContain(
             "from '@/routes/simple-plan'",
         );
@@ -126,6 +127,10 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('125 g');
         expect(html).toContain('Dostupné alternativy');
         expect(html).toContain('Špaldová mouka');
+        expect(html).toContain('Použít alternativu Špaldová mouka');
+        const lineCard = readSource('./ShoppingListLineCard.vue');
+        expect(lineCard).toContain('storeAlternative.form()');
+        expect(lineCard).toContain('destroyAlternative.form(');
         expect(readSource('./ShoppingListView.vue')).toContain(
             'sm:grid-cols-2 xl:grid-cols-3',
         );
@@ -143,8 +148,7 @@ describe('Simple Plan UI', () => {
                     recipeName: 'Omáčka',
                     ingredientId: 2,
                     ingredientName: 'Mouka',
-                    quantity: '50',
-                    unit: 'millilitres',
+                    quantityLabel: '50 ml',
                     message: 'Balení neobsahuje požadované množství.',
                 },
                 {
@@ -152,8 +156,7 @@ describe('Simple Plan UI', () => {
                     recipeName: 'Těsto',
                     ingredientId: 4,
                     ingredientName: 'Vejce',
-                    quantity: '100',
-                    unit: 'grams',
+                    quantityLabel: '100 g',
                     message: 'Balení neobsahuje požadované množství.',
                 },
             ],
@@ -165,5 +168,25 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('Těsto');
         expect(html).toContain('Mouka');
         expect(html).toContain('Vejce');
+        expect(html).toContain('Zadáno: 50 ml.');
+        expect(html).toContain('Upravit recept');
+        expect(html).toContain('Upravit surovinu');
+        const view = readSource('./ShoppingListView.vue');
+        expect(view).toContain("from '@/routes/recipes'");
+        expect(view).toContain("from '@/routes/ingredients'");
+        expect(view).not.toContain('problem.unit');
+    });
+
+    it('follows shadcn composition and spacing contracts', () => {
+        const sources = [
+            readSource('./SimplePlanBuilder.vue'),
+            readSource('./ShoppingListLineCard.vue'),
+            readSource('./ShoppingListView.vue'),
+        ].join('\n');
+        expect(sources).not.toMatch(/space-y-/);
+        expect(readSource('./SimplePlanBuilder.vue')).toContain(
+            '<SelectGroup>',
+        );
+        expect(sources).not.toMatch(/<Spinner(?![^>]*data-icon)/);
     });
 });

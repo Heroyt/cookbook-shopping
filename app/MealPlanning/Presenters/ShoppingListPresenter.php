@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\MealPlanning\Presenters;
 
+use App\ShoppingGeneration\Values\AlternativeChoiceProvenance;
+use App\ShoppingGeneration\Values\AlternativeIngredientDefinition;
 use App\ShoppingGeneration\Values\CalculationProblem;
 use App\ShoppingGeneration\Values\CalculationProblemReason;
 use App\ShoppingGeneration\Values\ExactQuantity;
@@ -75,12 +77,14 @@ final class ShoppingListPresenter
                 'originalIngredientName' => $contribution->originalIngredientName,
                 'required' => $this->quantity($contribution->required, $contribution->quantityKind),
             ], $line->contributions),
-            'eligibleAlternatives' => array_map(static fn ($alternative): array => [
+            'eligibleAlternatives' => array_map(static fn (AlternativeIngredientDefinition $alternative): array => [
                 'ingredientId' => $alternative->id,
                 'ingredientName' => $alternative->name,
             ], $line->eligibleAlternatives),
-            'alternativeChoices' => array_map(static fn ($choice): array => [
+            'alternativeChoices' => array_map(static fn (AlternativeChoiceProvenance $choice): array => [
+                'originalIngredientId' => $choice->originalIngredientId,
                 'originalIngredientName' => $choice->originalIngredientName,
+                'alternativeIngredientId' => $choice->alternativeIngredientId,
                 'alternativeIngredientName' => $choice->alternativeIngredientName,
             ], $line->alternativeChoices),
         ];
@@ -123,8 +127,7 @@ final class ShoppingListPresenter
             'recipeName' => $problem->recipeName,
             'ingredientId' => $problem->ingredientId,
             'ingredientName' => $problem->ingredientName,
-            'quantity' => $problem->quantity,
-            'unit' => $problem->unit,
+            'quantityLabel' => $this->problemQuantityLabel($problem->quantity, $problem->unit),
             'message' => match ($problem->reason) {
                 CalculationProblemReason::NonPositiveRequestedServings,
                 CalculationProblemReason::InvalidRequestedServings => __('The requested Serving Count is invalid.'),
@@ -136,6 +139,19 @@ final class ShoppingListPresenter
                 CalculationProblemReason::InvalidPackageDefinition => __('The Ingredient package definition is invalid.'),
             },
         ];
+    }
+
+    private function problemQuantityLabel(string $quantity, string $unit): string
+    {
+        $unitLabel = match ($unit) {
+            'servings' => 'porce',
+            'grams' => 'g',
+            'millilitres' => 'ml',
+            'piece' => 'ks',
+            default => 'jednotek',
+        };
+
+        return str_replace('.', ',', $this->normalizeDecimal($quantity)) . ' ' . $unitLabel;
     }
 
     private function normalizeDecimal(string $value): string

@@ -99,5 +99,10 @@
     "A Recipe Ingredient quantity is invalid.": "Množství suroviny v receptu je neplatné.",
     "The Ingredient package is missing the required quantity kind.": "Balení suroviny neobsahuje požadovaný druh množství.",
     "The Ingredient package definition is invalid.": "Definice balení suroviny je neplatná.",
-    "Recipe :recipe was removed from the Simple Plan.": "Recept :recipe byl z rychlého plánu odebrán."
+    "Recipe :recipe was removed from the Simple Plan.": "Recept :recipe byl z rychlého plánu odebrán.",
+    "Shopping List generated.": "Nákupní seznam byl vytvořen.",
+    "The Shopping List requires corrections.": "Nákupní seznam vyžaduje opravy.",
+    "The selected Alternative is no longer available for this Ingredient.": "Vybraná alternativa už není dostupná pro tuto surovinu.",
+    "Alternative applied.": "Alternativa byla použita.",
+    "The Alternative was reverted to the original Ingredient.": "Alternativa byla vrácena na původní surovinu."
 }

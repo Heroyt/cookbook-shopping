@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { ChevronDownIcon } from '@lucide/vue';
+import { Form } from '@inertiajs/vue3';
+import { ChevronDownIcon, ReplaceIcon, RotateCcwIcon } from '@lucide/vue';
+import {
+    destroyAlternative,
+    storeAlternative,
+} from '@/actions/App/MealPlanning/Http/Controllers/SimplePlanController';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -8,6 +13,7 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
 import type { ShoppingListLinePresentation } from '@/types';
 
 defineProps<{ line: ShoppingListLinePresentation }>();
@@ -21,8 +27,8 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                 {{ line.purchasePackages }} balení
             </p>
         </CardHeader>
-        <CardContent class="space-y-4 text-sm">
-            <dl class="space-y-3">
+        <CardContent class="flex flex-col gap-4 text-sm">
+            <dl class="flex flex-col gap-3">
                 <div
                     v-for="quantity in line.quantities"
                     :key="quantity.kind"
@@ -63,28 +69,77 @@ defineProps<{ line: ShoppingListLinePresentation }>();
 
             <template v-if="line.alternativeChoices.length > 0">
                 <Separator />
-                <p
+                <div
                     v-for="choice in line.alternativeChoices"
-                    :key="`${choice.originalIngredientName}:${choice.alternativeIngredientName}`"
-                    class="text-muted-foreground"
+                    :key="choice.originalIngredientId"
+                    class="flex flex-col items-start gap-2"
                 >
-                    Použita alternativa
-                    {{ choice.alternativeIngredientName }} místo
-                    {{ choice.originalIngredientName }}.
-                </p>
+                    <p class="text-muted-foreground">
+                        Použita alternativa
+                        {{ choice.alternativeIngredientName }} místo
+                        {{ choice.originalIngredientName }}.
+                    </p>
+                    <Form
+                        v-bind="
+                            destroyAlternative.form(choice.originalIngredientId)
+                        "
+                        v-slot="{ processing }"
+                    >
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            size="sm"
+                            :disabled="processing"
+                        >
+                            <Spinner
+                                v-if="processing"
+                                data-icon="inline-start"
+                                aria-hidden="true"
+                            />
+                            <RotateCcwIcon v-else data-icon="inline-start" />
+                            Vrátit původní surovinu
+                        </Button>
+                    </Form>
+                </div>
             </template>
 
-            <p
+            <div
                 v-if="line.eligibleAlternatives.length > 0"
-                class="text-muted-foreground"
+                class="flex flex-col items-start gap-2"
             >
-                Dostupné alternativy:
-                {{
-                    line.eligibleAlternatives
-                        .map((item) => item.ingredientName)
-                        .join(', ')
-                }}
-            </p>
+                <p class="text-muted-foreground">Dostupné alternativy</p>
+                <Form
+                    v-for="alternative in line.eligibleAlternatives"
+                    :key="alternative.ingredientId"
+                    v-bind="storeAlternative.form()"
+                    v-slot="{ processing }"
+                >
+                    <input
+                        type="hidden"
+                        name="original_ingredient_id"
+                        :value="line.ingredientId"
+                    />
+                    <input
+                        type="hidden"
+                        name="alternative_ingredient_id"
+                        :value="alternative.ingredientId"
+                    />
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        :disabled="processing"
+                    >
+                        <Spinner
+                            v-if="processing"
+                            data-icon="inline-start"
+                            aria-hidden="true"
+                        />
+                        <ReplaceIcon v-else data-icon="inline-start" />
+                        Použít alternativu {{ alternative.ingredientName }}
+                    </Button>
+                </Form>
+            </div>
 
             <Collapsible v-if="line.contributions.length > 0">
                 <CollapsibleTrigger as-child>
@@ -94,7 +149,7 @@ defineProps<{ line: ShoppingListLinePresentation }>();
                     </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                    <ul class="mt-2 space-y-2 border-l pl-4">
+                    <ul class="mt-2 flex flex-col gap-2 border-l pl-4">
                         <li
                             v-for="contribution in line.contributions"
                             :key="`${contribution.recipeId}:${contribution.originalIngredientName}`"

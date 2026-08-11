@@ -164,7 +164,7 @@ final class SimplePlanTest extends TestCase
         $this->assertDatabaseHas('recipes', ['id' => $recipe->id, 'name' => 'Polévka']);
     }
 
-    public function test_fractional_servings_generate_the_expected_package_count_without_persisting_a_plan(): void
+    public function test_fractional_servings_generate_a_refresh_safe_result_without_durable_plan_persistence(): void
     {
         $user = User::factory()->create();
         $family = $this->createFamilyWithMembers($user);
@@ -191,19 +191,25 @@ final class SimplePlanTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $this->post(route('simple-plan.generate'))
-            ->assertRedirect(route('simple-plan.generated'));
-        $this->get(route('simple-plan.generated'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page): Assert => $page
-                ->component('simple-plan/Generated')
-                ->where('shoppingList.unplacedLines.0.ingredientName', 'Mouka')
-                ->where('shoppingList.unplacedLines.0.purchasePackages', '2')
-                ->where('shoppingList.unplacedLines.0.quantities.0.required.label', '175 g')
-                ->where('shoppingList.unplacedLines.0.contributions.0.recipeName', 'Lívance'));
+            ->assertRedirect(route('simple-plan.generated'))
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Nákupní seznam byl vytvořen.',
+            ]);
+        foreach (range(1, 2) as $refresh) {
+            $this->get(route('simple-plan.generated'))
+                ->assertOk()
+                ->assertInertia(fn (Assert $page): Assert => $page
+                    ->component('simple-plan/Generated')
+                    ->where('shoppingList.unplacedLines.0.ingredientName', 'Mouka')
+                    ->where('shoppingList.unplacedLines.0.purchasePackages', '2')
+                    ->where('shoppingList.unplacedLines.0.quantities.0.required.label', '175 g')
+                    ->where('shoppingList.unplacedLines.0.contributions.0.recipeName', 'Lívance'));
+        }
 
         $this->assertSame($tableNamesBefore, Schema::getTableListing());
         $this->assertFalse(Schema::hasTable('simple_plans'));
-        $this->assertFalse(session()->has("meal_planning.simple_plan.{$family->id}"));
+        $this->assertSame([(string) $recipe->id => '2.5'], session("meal_planning.simple_plan.{$family->id}"));
         $this->assertDatabaseCount('recipes', 1);
         $this->assertDatabaseCount('recipe_ingredients', 1);
     }
@@ -329,16 +335,117 @@ final class SimplePlanTest extends TestCase
         $this->actingAs($user)->withSession([
             "meal_planning.simple_plan.{$family->id}" => $plan,
         ])->post(route('simple-plan.generate'))
-            ->assertRedirect(route('simple-plan.generated'));
+            ->assertRedirect(route('simple-plan.generated'))
+            ->assertInertiaFlash('toast', [
+                'type' => 'error',
+                'message' => 'Nákupní seznam vyžaduje opravy.',
+            ]);
         $this->get(route('simple-plan.generated'))
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->where('shoppingList', null)
                 ->has('problems', 2)
                 ->where('problems.0.message', 'Balení suroviny neobsahuje požadovaný druh množství.')
+                ->where('problems.0.quantityLabel', '50 ml')
                 ->where('problems.1.message', 'Balení suroviny neobsahuje požadovaný druh množství.'));
 
         $this->assertSame($plan, session("meal_planning.simple_plan.{$family->id}"));
+    }
+
+    public function test_direct_alternatives_recalculate_globally_and_can_be_reverted(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $first = Ingredient::factory()->for($family)->create(['name' => 'První mouka', 'weight_grams' => '100']);
+        $second = Ingredient::factory()->for($family)->create(['name' => 'Druhá mouka', 'weight_grams' => '100']);
+        $alternative = Ingredient::factory()->for($family)->create(['name' => 'Společná mouka', 'weight_grams' => '150']);
+        foreach ([$first, $second] as $ingredient) {
+            DB::table('ingredient_alternatives')->insert([
+                'family_id' => $family->id,
+                'lower_ingredient_id' => min($ingredient->id, $alternative->id),
+                'higher_ingredient_id' => max($ingredient->id, $alternative->id),
+            ]);
+        }
+        $recipes = [];
+        foreach ([$first, $second] as $position => $ingredient) {
+            $recipe = Recipe::factory()->for($family)->create(['base_servings' => '1']);
+            RecipeIngredient::factory()->for($recipe)->for($ingredient)->create([
+                'family_id' => $family->id,
+                'position' => 1,
+                'quantity' => '70',
+                'quantity_kind' => 'grams',
+            ]);
+            $recipes[] = $recipe;
+        }
+        $plan = [
+            (string) $recipes[0]->id => '1',
+            (string) $recipes[1]->id => '1',
+        ];
+
+        $this->actingAs($user)->withSession([
+            "meal_planning.simple_plan.{$family->id}" => $plan,
+        ])->post(route('simple-plan.generate'))->assertSessionHasNoErrors();
+
+        foreach ([$first, $second] as $ingredient) {
+            $this->post(route('simple-plan.alternatives.store'), [
+                'original_ingredient_id' => $ingredient->id,
+                'alternative_ingredient_id' => $alternative->id,
+            ])->assertSessionHasNoErrors()
+                ->assertRedirect(route('simple-plan.generated'));
+        }
+
+        $this->get(route('simple-plan.generated'))->assertInertia(fn (Assert $page): Assert => $page
+            ->has('shoppingList.unplacedLines', 1)
+            ->where('shoppingList.unplacedLines.0.ingredientName', 'Společná mouka')
+            ->where('shoppingList.unplacedLines.0.purchasePackages', '1')
+            ->where('shoppingList.unplacedLines.0.quantities.0.required.label', '140 g')
+            ->has('shoppingList.unplacedLines.0.alternativeChoices', 2));
+        $this->assertSame([
+            (string) $first->id => $alternative->id,
+            (string) $second->id => $alternative->id,
+        ], session("meal_planning.alternatives.{$family->id}"));
+
+        $this->delete(route('simple-plan.alternatives.destroy', $first))
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Alternativa byla vrácena na původní surovinu.',
+            ]);
+        $this->get(route('simple-plan.generated'))->assertInertia(fn (Assert $page): Assert => $page
+            ->has('shoppingList.unplacedLines', 2)
+            ->where('shoppingList.unplacedLines.1.alternativeChoices.0.originalIngredientId', $second->id));
+    }
+
+    public function test_invalid_alternative_is_a_czech_field_error_and_keeps_the_previous_result(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $otherFamily = $this->createFamilyWithMembers(User::factory()->create());
+        $this->selectCurrentFamily($user, $family);
+        $ingredient = Ingredient::factory()->for($family)->create(['weight_grams' => '100']);
+        $foreignAlternative = Ingredient::factory()->for($otherFamily)->create(['weight_grams' => '100']);
+        $recipe = Recipe::factory()->for($family)->create(['base_servings' => '1']);
+        RecipeIngredient::factory()->for($recipe)->for($ingredient)->create([
+            'family_id' => $family->id,
+            'quantity' => '50',
+            'quantity_kind' => 'grams',
+        ]);
+
+        $this->actingAs($user)->withSession([
+            "meal_planning.simple_plan.{$family->id}" => [(string) $recipe->id => '1'],
+        ])->post(route('simple-plan.generate'))->assertSessionHasNoErrors();
+        $generated = session("meal_planning.generated.{$family->id}");
+
+        $this->post(route('simple-plan.alternatives.store'), [
+            'original_ingredient_id' => $ingredient->id,
+            'alternative_ingredient_id' => $foreignAlternative->id,
+        ])->assertSessionHasErrors([
+            'alternative_ingredient_id' => 'Vybraná alternativa už není dostupná pro tuto surovinu.',
+        ]);
+
+        $this->assertSame($generated, session("meal_planning.generated.{$family->id}"));
+        $this->assertFalse(session()->has("meal_planning.alternatives.{$family->id}"));
     }
 
     /** @param list<User> $members */

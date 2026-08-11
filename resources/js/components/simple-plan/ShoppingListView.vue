@@ -1,13 +1,17 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
 import { TriangleAlertIcon } from '@lucide/vue';
 import ShoppingListLineCard from '@/components/simple-plan/ShoppingListLineCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
     EmptyHeader,
     EmptyTitle,
 } from '@/components/ui/empty';
+import { index as ingredientsIndex } from '@/routes/ingredients';
+import { index as recipesIndex } from '@/routes/recipes';
 import type { ShoppingListPresentation, ShoppingListProblem } from '@/types';
 
 defineProps<{
@@ -20,7 +24,7 @@ defineProps<{
     <section
         v-if="problems.length > 0"
         aria-labelledby="calculation-problems"
-        class="space-y-4"
+        class="flex flex-col gap-4"
     >
         <Alert variant="destructive">
             <TriangleAlertIcon />
@@ -32,19 +36,40 @@ defineProps<{
                 zkuste vytvoření znovu.
             </AlertDescription>
         </Alert>
-        <ul class="space-y-3">
+        <ul class="flex flex-col gap-3">
             <li
                 v-for="problem in problems"
-                :key="`${problem.recipeId}:${problem.ingredientId}:${problem.unit}`"
+                :key="`${problem.recipeId}:${problem.ingredientId}`"
                 class="rounded-lg border border-destructive/40 p-4"
             >
                 <p class="font-medium">
                     {{ problem.recipeName }} — {{ problem.ingredientName }}
                 </p>
                 <p class="text-sm text-muted-foreground">
-                    {{ problem.message }} Zadáno: {{ problem.quantity }}
-                    {{ problem.unit }}.
+                    {{ problem.message }} Zadáno: {{ problem.quantityLabel }}.
                 </p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <Button as-child variant="outline" size="sm">
+                        <Link
+                            :href="
+                                recipesIndex({
+                                    query: { search: problem.recipeName },
+                                })
+                            "
+                            >Upravit recept</Link
+                        >
+                    </Button>
+                    <Button as-child variant="outline" size="sm">
+                        <Link
+                            :href="
+                                ingredientsIndex({
+                                    query: { search: problem.ingredientName },
+                                })
+                            "
+                            >Upravit surovinu</Link
+                        >
+                    </Button>
+                </div>
             </li>
         </ul>
     </section>
@@ -52,12 +77,12 @@ defineProps<{
     <section
         v-else-if="shoppingList"
         aria-label="Vygenerovaný nákupní seznam"
-        class="space-y-8"
+        class="flex flex-col gap-8"
     >
         <section
             v-for="store in shoppingList.storeGroups"
             :key="store.storeId"
-            class="space-y-5"
+            class="flex flex-col gap-5"
         >
             <h2 class="text-xl font-semibold tracking-tight">
                 {{ store.storeName }}
@@ -65,7 +90,7 @@ defineProps<{
             <section
                 v-for="section in store.sections"
                 :key="section.sectionId"
-                class="space-y-3"
+                class="flex flex-col gap-3"
             >
                 <h3 class="font-medium text-muted-foreground">
                     {{ section.sectionName }}
@@ -78,7 +103,10 @@ defineProps<{
                     />
                 </div>
             </section>
-            <section v-if="store.unsectionedLines.length > 0" class="space-y-3">
+            <section
+                v-if="store.unsectionedLines.length > 0"
+                class="flex flex-col gap-3"
+            >
                 <h3 class="font-medium text-muted-foreground">
                     Mimo části obchodu
                 </h3>
@@ -92,7 +120,10 @@ defineProps<{
             </section>
         </section>
 
-        <section v-if="shoppingList.unplacedLines.length > 0" class="space-y-3">
+        <section
+            v-if="shoppingList.unplacedLines.length > 0"
+            class="flex flex-col gap-3"
+        >
             <h2 class="text-xl font-semibold tracking-tight">Bez obchodu</h2>
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <ShoppingListLineCard

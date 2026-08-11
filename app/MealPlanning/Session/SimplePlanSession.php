@@ -19,17 +19,46 @@ final class SimplePlanSession
     public function save(Session $session, int $familyId, SimplePlan $simplePlan): void
     {
         $session->put($this->key($familyId), $simplePlan->toArray());
+        $session->forget([$this->generatedKey($familyId), $this->alternativesKey($familyId)]);
     }
 
     public function forget(Session $session, int $familyId): void
     {
-        $session->forget($this->key($familyId));
+        $session->forget([
+            $this->key($familyId),
+            $this->generatedKey($familyId),
+            $this->alternativesKey($familyId),
+        ]);
     }
 
     /** @param array<string, mixed> $presentation */
-    public function flashGenerated(Session $session, int $familyId, array $presentation): void
+    public function saveGenerated(Session $session, int $familyId, array $presentation): void
     {
-        $session->flash($this->generatedKey($familyId), $presentation);
+        $session->put($this->generatedKey($familyId), $presentation);
+    }
+
+    /** @return array<int, int> */
+    public function alternatives(Session $session, int $familyId): array
+    {
+        $value = $session->get($this->alternativesKey($familyId), []);
+        if ( ! is_array($value)) {
+            return [];
+        }
+
+        $alternatives = [];
+        foreach ($value as $originalId => $alternativeId) {
+            if (is_numeric($originalId) && is_numeric($alternativeId)) {
+                $alternatives[(int) $originalId] = (int) $alternativeId;
+            }
+        }
+
+        return $alternatives;
+    }
+
+    /** @param array<int, int> $alternatives */
+    public function saveAlternatives(Session $session, int $familyId, array $alternatives): void
+    {
+        $session->put($this->alternativesKey($familyId), $alternatives);
     }
 
     /** @return array<string, mixed>|null */
@@ -59,5 +88,10 @@ final class SimplePlanSession
     private function generatedKey(int $familyId): string
     {
         return "meal_planning.generated.{$familyId}";
+    }
+
+    private function alternativesKey(int $familyId): string
+    {
+        return "meal_planning.alternatives.{$familyId}";
     }
 }

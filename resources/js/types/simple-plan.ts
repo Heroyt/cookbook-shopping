@@ -38,7 +38,9 @@ export type ShoppingListLinePresentation = {
         ingredientName: string;
     }>;
     alternativeChoices: Array<{
+        originalIngredientId: number;
         originalIngredientName: string;
+        alternativeIngredientId: number;
         alternativeIngredientName: string;
     }>;
 };
@@ -62,7 +64,6 @@ export type ShoppingListProblem = {
     recipeName: string;
     ingredientId: number;
     ingredientName: string;
-    quantity: string;
-    unit: string;
+    quantityLabel: string;
     message: string;
 };

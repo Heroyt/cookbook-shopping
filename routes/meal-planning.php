@@ -18,4 +18,11 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('simple-plan/generate', [SimplePlanController::class, 'generate'])
         ->block(10, 10)
         ->name('simple-plan.generate');
+    Route::post('simple-plan/alternatives', [SimplePlanController::class, 'storeAlternative'])
+        ->block(10, 10)
+        ->name('simple-plan.alternatives.store');
+    Route::delete('simple-plan/alternatives/{originalIngredient}', [SimplePlanController::class, 'destroyAlternative'])
+        ->whereNumber('originalIngredient')
+        ->block(10, 10)
+        ->name('simple-plan.alternatives.destroy');
 });
