@@ -1,8 +1,8 @@
 # Stores and shopping order
 
-The Store, reusable Store Section, and ordered association tracers are implemented. Authenticated members can list, create, rename, and delete Stores; list, create, and delete reusable Store Sections; and maintain each Store's ordered Section traversal in the Current Family from the responsive Stores page. Store and Store Section names squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)` in each table, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the trade-off. Store, Store Section, and association commands resolve their records through `CurrentFamilyScope` and accept no Family identifier. Database unique-key collisions become field validation errors. Tests prove equal member rights, two-Family isolation, normalization, malformed-input rejection, duplicate handling, client input that cannot redirect ownership, entity-deletion cleanup, contiguous association positions, exact complete reorders, and stale-version rejection. The current Store, Store Section, deletion, and association suites pass 37 tests and 365 assertions on the default SQLite test connection. Separately, a full migration and the earlier rename-inclusive Store suite of 13 tests and 109 assertions passed against a disposable MariaDB 11.8 database. That earlier local compatibility check predates Store Section and association persistence and is not evidence about the external Komodo deployment.
+The Store, reusable Store Section, and ordered association tracers are implemented. Authenticated members can list, create, rename, and delete Stores; list, create, and delete reusable Store Sections; and maintain each Store's ordered Section traversal in the Current Family from the responsive Stores page. Store and Store Section names squish repeated whitespace and enforce a 255-character limit. A PHP-generated lowercase `normalized_name`, stored as bytes and constrained by `(family_id, normalized_name)` in each table, makes name uniqueness race-safe and independent of SQLite/MariaDB text collations; PHP also compares those stored UTF-8 bytes with stable identity as a tie-breaker for deterministic list output. [ADR 0007](../adr/0007-use-application-normalized-keys-for-scoped-name-uniqueness.md) records the key trade-off. Store, Store Section, and association commands resolve their records through `CurrentFamilyScope` and accept no Family identifier. Database unique-key collisions become field validation errors. Tests prove equal member rights, two-Family isolation, normalization, malformed-input rejection, duplicate handling, client input that cannot redirect ownership, entity-deletion cleanup, contiguous association positions, exact complete reorders, and stale-version rejection. The complete Cookbook feature and unit suite passes 79 tests and 680 assertions against a disposable MariaDB 11.8 database after a successful full migration. This local compatibility check is not evidence about the external Komodo deployment.
 
-Store logos, optional Store Section icons, Store Placements, and Shopping List grouping are not implemented. Store Section colour is stored only as presentation metadata. Canonical terms are in the final Domain Glossary chapter. The ownership model follows [ADR 0003](../adr/0003-scope-domain-data-to-families.md), while [Shopping List generation](shopping-generation.md) defines the calculated lines that placement will organize.
+Store Placements are implemented for Ingredients. Store logos, optional Store Section icons, and Shopping List grouping are not implemented. Store Section colour remains presentation metadata only. Canonical terms are in the final Domain Glossary chapter.
 
 ## Create and list Store Sections
 
@@ -12,11 +12,11 @@ The backend derives Family ownership only from the authenticated User through `C
 
 ## Delete a Store Section
 
-The User must be authenticated, belong to the selected Current Family, and choose a reusable Store Section in that Family. On the Stores page, choose **Smazat**, review the destructive AlertDialog, and choose **Smazat část obchodu**. The confirmation discloses the current Store-association count and an Ingredient-placement count of zero because Store Placement persistence does not exist. Choosing **Zrušit** closes the dialog without deleting anything.
+The User must be authenticated, belong to the selected Current Family, and choose a reusable Store Section in that Family. On the Stores page, choose **Smazat**, review the destructive AlertDialog, and choose **Smazat část obchodu**. The confirmation discloses the current Store-association and Ingredient-placement counts. Choosing **Zrušit** closes the dialog without deleting anything.
 
 The request supplies only the Store Section identifier. The backend derives Family context exclusively from the authenticated User through `CurrentFamilyScope`; a submitted Family identifier cannot redirect the operation, and a Section from another Family is not found. In one transaction, the action locks the Section, locks its affected Stores in identifier order, removes every association, closes each affected Store's positions contiguously, increments each affected Store's `section_order_version`, and deletes the reusable Section. Unaffected Stores do not change. The Section's normalized name becomes immediately reusable. [ADR 0012](../adr/0012-delete-store-sections-with-placement-preserving-cleanup.md) records the full lifecycle.
 
-After success, the Stores page no longer lists the Section and the application flashes **Část obchodu byla smazána.** Ingredients now exist, but Store Placement fields do not; placement cleanup remains pending until those records exist, and the current deletion tracer reports zero placements without altering Ingredients.
+After success, the Stores page no longer lists the Section and the application flashes **Část obchodu byla smazána.** Every affected Ingredient retains its Store and clears only its Section.
 
 ## Rename a Store
 
@@ -30,7 +30,7 @@ After a successful rename, the Dialog closes, the Stores page shows the persiste
 
 The User must be authenticated, belong to the selected Current Family, and choose an existing Store in that Family. On the Stores page, choose **Smazat** (Delete), review the permanent-deletion warning in the **Smazat obchod** confirmation AlertDialog, and choose **Smazat obchod**. Choosing **Zrušit** (Cancel) closes the AlertDialog without deleting anything.
 
-The request supplies only the Store identifier. The backend derives Family context from the authenticated User and returns not found for a Store in another Family; a submitted Family identifier cannot redirect the operation. A missing or already-deleted Store also returns not found, as does deletion without a valid Current Family. In those cases the success redirect and flash do not run: refresh a stale Stores page, or select a valid Current Family before retrying. The current implementation hard-deletes the Store, and its Store–Section associations cascade with it. Ingredients exist without Store Placement fields, so there are no placement references to clear in this tracer.
+The request supplies only the Store identifier. The backend derives Family context from the authenticated User and returns not found for a Store in another Family; a submitted Family identifier cannot redirect the operation. Before hard-deleting the Store, the transactional action clears both placement fields from affected Ingredients. Store–Section associations then cascade with the Store; Ingredients remain intact.
 
 After a successful deletion, the Stores page no longer lists the Store and the application flashes **Obchod byl smazán.**
 
@@ -48,21 +48,11 @@ Use **Odebrat … z obchodu** to remove only that association. Remaining positio
 
 ## Ingredient Store Placement
 
-> **Planned**
->
-> An Ingredient belongs to at most one Store and optionally to one Store Section associated with that Store. Both values are optional. A Section without its matching Store is invalid, and a Section associated only with another Store cannot be assigned.
->
-> Placement is guidance for grouping and walking order, not availability, inventory, or price data. Choosing an Alternative Ingredient replaces the final Ingredient and therefore uses that alternative's Store Placement.
+The Ingredient create/edit form offers an optional Current-Family Store and then only that Store's associated Sections. Store-only placement is valid. Request resolution rejects a Section without Store, an unassociated pair, and either record from another Family. A database check and composite foreign key independently enforce the same shape. Placement is guidance for future grouping and walking order, not availability, inventory, or price data.
 
 ## Removal behavior
 
-> **Planned**
->
-> Removing a Store Section from one Store clears that Section from Ingredient placements in that Store and leaves their Store assignment intact. Those Ingredients move to the Store's unsectioned group.
->
-> When Ingredients and Store Placements are implemented, deleting a Store must clear both Store and Store Section placement on affected Ingredients. It must not delete the Ingredients or alter Recipe composition; they move to the globally unplaced group.
->
-> The implemented reusable Store Section deletion already reports affected counts, removes every Store association, closes positions, and releases the Section name in one transaction. When Ingredients and Store Placements are implemented, extend that same transaction to clear the deleted Section from every affected placement while retaining each Ingredient's Store assignment. Ingredients and Recipes remain intact and no dangling placement may survive. [ADR 0012](../adr/0012-delete-store-sections-with-placement-preserving-cleanup.md) records this lifecycle.
+Removing a Section association clears that Section only from Ingredient placements in the selected Store and retains their Store. Deleting the reusable Section clears it from every affected placement while retaining each Store, then removes associations, closes positions, advances order versions, and releases the name. Deleting a Store clears both fields. All three operations are transactional and preserve Ingredients. [ADR 0012](../adr/0012-delete-store-sections-with-placement-preserving-cleanup.md) and [ADR 0015](../adr/0015-enforce-store-placement-through-the-store-section-association.md) record these invariants.
 
 ## Shopping List grouping and order
 

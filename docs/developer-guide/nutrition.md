@@ -1,14 +1,12 @@
 # Nutrition
 
-Nutrition profiles and calculations are not implemented. The canonical concepts are defined in the final Domain Glossary chapter. Ingredient package quantities used for conversion are covered by [Recipes and Ingredients](recipes-ingredients.md), and persistence options are outlined in [Data structure](data-structure.md).
+Ingredient Nutrition Profile persistence and editing are implemented. Recipe calculation, overrides, incomplete profiles, and Calendar totals remain planned. The canonical concepts are defined in the final Domain Glossary chapter.
 
 ## Ingredient nutrition basis
 
-> **Planned**
->
-> An Ingredient may define one Nutrition Profile containing energy in kilocalories and fat, protein, and carbohydrates for an explicit positive basis quantity normalized as grams, millilitres, piece count, or one whole package. Valid Czech displays include per `100 g`, `100 ml`, `1 ks`, or one package. A number without its basis is not usable nutrition data.
->
-> Input adapters normalize explicit metric units before persistence without retaining the input-unit preference. Display derives grams/kilograms or millilitres/litres using the same 1000 threshold as shopping quantities. Calculation uses the Ingredient's own package equivalence between its mutually exclusive metric quantity and optional piece count; it never treats grams and millilitres as interchangeable.
+An active Ingredient may define one complete Nutrition Profile containing energy in kilocalories and fat, protein, and carbohydrates for an explicit positive basis in canonical grams, millilitres, piece count, or exactly one whole package. All six values are supplied together or the profile is absent. Database checks restrict the basis kind, require positive basis quantity, require package basis quantity one, and reject negative energy or macros.
+
+The chosen grams, millilitres, or piece basis must exist on the Ingredient package. Editing cannot remove the depended-on package kind while retaining that profile. Clearing the profile removes the dependency. Recipe scaling and package/count conversion are not implemented yet.
 
 ## Recipe calculation
 
@@ -42,6 +40,4 @@ Nutrition profiles and calculations are not implemented. The canonical concepts 
 
 ## Verification focus
 
-> **Planned**
->
-> Cover same-dimension metric conversion, package/count equivalents, fractional Recipe and planned servings, complete overrides, missing profiles, missing conversions, repeated Ingredient lines, and propagation of incompleteness into Calendar-day totals. Keep these tests independent from Shopping List package-rounding tests.
+Current PHPUnit coverage proves create/list/remove, all-or-none validation, basis/package compatibility, quantity-kind removal protection, and database checks independently from Shopping Generation. Future Recipe and Calendar tests must cover scaling, overrides, missing conversions, repeated lines, and propagation of incompleteness without coupling them to package-rounding tests.

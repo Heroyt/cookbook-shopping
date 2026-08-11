@@ -19,8 +19,10 @@ and the Family Access collaboration workflow. Its working surfaces are:
 - Current-Family-scoped Store creation, listing, renaming, and deletion, plus
   reusable Store Section creation/listing/deletion with required colours and
   per-Store association, removal, and optimistic contiguous ordering;
-- Current-Family-scoped creation and listing of concrete packaged Ingredients
-  with canonical grams, millilitres, and piece counts;
+- Current-Family-scoped creation, editing, placement, filtering, archival, and
+  restoration of concrete packaged Ingredients, including explicit metric-unit
+  normalization, optional descriptions and Nutrition Profiles, and direct
+  symmetric Alternative links;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -46,11 +48,12 @@ text.
 
 > **Planned**
 >
-> Store logos, optional Store Section icons, Ingredient editing, Store
-> Placement, media, nutrition, alternatives and archival, Recipes, meal
+> Store logos, optional Store Section icons, Ingredient media, Recipes, meal
 > planning, and Shopping List generation remain approved domain
 > design rather than available behavior. Do not infer their models,
-> authorization, or persistence from the narrow Store, Store Section, and Ingredient tracers. The canonical vocabulary is in
+> authorization, or persistence from the implemented Cookbook tracers. Alternative
+> replacement remains part of pure planned Shopping Generation even though its direct
+> relationships and canonical-kind eligibility predicate exist. The canonical vocabulary is in
 > the final Domain Glossary chapter, and the architectural direction is recorded in
 > [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
@@ -164,12 +167,14 @@ The current schema contains:
 - Store–Section associations with a position unique within each Store and an
   optimistic Section-order version on the Store;
 - Ingredients with explicit Family ownership, normalized Family-scoped unique
-  names, and constrained canonical package quantities;
+  names across active and archived records, description, constrained canonical
+  package quantities, and association-backed Store Placement;
+- ordered direct Ingredient Alternative edges and one optional checked
+  Nutrition Profile per Ingredient;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Recipe, Calendar Entry, nutrition, or
-Shopping List tables. See the
+There are no Recipe, Calendar Entry, media, or Shopping List tables. See the
 [migration directory](../../database/migrations/).
 
 The default environment uses SQLite and database-backed sessions, cache, and

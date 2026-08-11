@@ -1,26 +1,18 @@
 # Recipes and Ingredients
 
-Concrete packaged Ingredient creation and listing are implemented. Recipes, Recipe Tags, Ingredient editing and archival, alternatives, placement, nutrition, and media are not implemented. This chapter separates that current tracer from approved intent in the final Domain Glossary chapter and the concrete-package decision in [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md). See [Data structure](data-structure.md) for persistence details and [Shopping List generation](shopping-generation.md) for planned quantity aggregation.
+Concrete packaged Ingredient management is implemented through editing, placement, archival/restoration, direct Alternatives, and optional Nutrition Profiles. Recipes, Recipe Tags, Ingredient media, and Shopping Generation remain planned. This chapter separates current behavior from approved intent in the final Domain Glossary chapter and [ADR 0001](../adr/0001-use-concrete-purchasable-ingredients.md).
 
 ## Concrete purchasable Ingredients
 
 An authenticated member creates a concrete purchasable package from the **Suroviny** page. The required name is squished, limited to 255 characters, and case-insensitively unique in the Current Family through the ADR 0007 normalized key and a database constraint. The server derives ownership only from the authenticated User through `CurrentFamilyScope`; all Family members have equal rights, another Family may reuse the name, and a uniqueness race becomes a Czech inline `name` error.
 
-Every current Ingredient defines either one positive weight entered and persisted in grams or one positive volume entered and persisted in millilitres, never both, and may additionally define one positive piece count. Piece count may also be the only package quantity, and it may be fractional. At least one quantity is required. All three fields use the approved `DECIMAL(20,6)` shape; the request rejects more than six fractional places, and a database check rejects missing, non-positive, or weight-plus-volume combinations. For example, one package may define `150 g` and `6 ks`, while another may define only `12,5 ks`. Creation redirects to the list and flashes **Surovina byla vytvořena.** [ADR 0026](../adr/0026-store-one-canonical-metric-package-quantity.md) records the package shape.
+Every Ingredient defines either one positive canonical weight in grams or one positive canonical volume in millilitres, never both, and may additionally define one positive piece count. The form accepts explicit `mg`, `g`, `kg`, `ml`, `cl`, and `l` inputs and normalizes them exactly before persistence without retaining a preference. Piece count may be the only package quantity. All values use `DECIMAL(20,6)` and database checks reject missing, non-positive, or weight-plus-volume combinations. Creation flashes **Surovina byla vytvořena.** and editing flashes **Surovina byla upravena.** Optional description is presentation metadata for the concrete package.
 
-The list is Current-Family-only and derives display values from canonical persistence. Weight below 1000 renders in `g` and from 1000 in `kg`; volume uses `ml` and `l` at the same threshold. Values are half-up rounded to at most two fractional digits with trailing zeroes removed, and piece count renders as `ks`. The current form deliberately accepts only canonical `g` and `ml` inputs and does not retain an input-unit preference.
-
-> **Planned**
->
-> Ingredient editing, description, photo, Store Placement, Nutrition Profile, Alternative Ingredients, and reversible archival/restoration remain unimplemented. Archival will keep the normalized name reserved across active and archived records.
+The Current-Family-only list derives `g`/`kg`, `ml`/`l`, and Czech `ks` display from canonical persistence. It also shows optional description, Store Placement, Nutrition Profile presence, direct Alternatives, and archive status. Another Family's records are neither offered nor accepted. Ingredient media remains unimplemented pending the approved upload policy.
 
 ## Measurement units and conversion
 
-> **Planned**
->
-> Future forms may accept explicit metric weight units such as `mg`, `g`, and `kg`, or metric volume units such as `ml`, `cl`, and `l`, but must normalize values at the application boundary. [ADR 0030](../adr/0030-derive-metric-display-units.md) records the display rule that the current canonical-input tracer already applies.
->
-> Future editing must block removal of weight, volume, or piece count while a Recipe Ingredient or nutrition basis depends on that canonical quantity kind, and an Ingredient must retain at least one quantity. Optional piece wording remains presentation only and never creates a distinct identity or affects calculation. Editing an existing package quantity will affect future Shopping List generation because Recipes retain normalized culinary quantities rather than package snapshots.
+Metric input normalization and derived display follow [ADR 0030](../adr/0030-derive-metric-display-units.md). Editing blocks removal of a quantity kind used by the saved Nutrition Profile. Slice 3 must extend that same guard when Recipe Ingredient dependencies exist. Removing the Nutrition Profile and its package kind in one edit is valid because no dependency remains after the transaction.
 
 ## Recipe composition
 
@@ -42,20 +34,10 @@ The list is Current-Family-only and derives display values from canonical persis
 
 ## Alternatives
 
-> **Planned**
->
-> Alternative Ingredient links are symmetric and explicitly non-transitive. Linking A to B makes B available from A, but an A–B and B–C chain does not imply A–C. Alternatives are manually selected after initial generation and never modify the source Recipe.
->
-> Persist each direct relationship once in a canonical self-referential many-to-many edge whose two Ingredient identifiers are ordered and unique for the pair. Both Ingredients must belong to the same Family; mirrored rows and equivalence groups are invalid representations.
->
-> Offer an Alternative only when its package defines every canonical quantity kind used by the replaced Recipe Ingredient contributions: grams, millilitres, or piece count. User-facing metric units have already been normalized, and no cross-kind conversion establishes eligibility. There is no manual replacement-quantity fallback. Each originally generated Ingredient permits at most one direct replacement; a substituted or merged result cannot be substituted again. A successful replacement adopts the Alternative's package and Store Placement and globally re-aggregates every line targeting that final Ingredient before package rounding while retaining independently reversible source-choice provenance. [ADR 0016](../adr/0016-require-canonical-quantity-kinds-for-alternative-replacement.md) and [ADR 0021](../adr/0021-keep-alternative-replacement-single-hop.md) record these rules; [Shopping List generation](shopping-generation.md#alternative-ingredients) defines the workflow.
+Members can link or unlink two active Current-Family Ingredients as direct Alternatives. Persistence orders the two identifiers and stores the pair once, so reads are symmetric and A–B plus B–C never implies A–C. Self-links, duplicates, archived candidates, and cross-Family candidates become field errors. Archiving preserves existing edges but removes that Ingredient from new link choices.
+
+The pure `AlternativeEligibility` boundary accepts an Alternative package and required canonical kinds and returns true only when every required grams, millilitres, or piece kind exists. It performs no cross-kind conversion. Applying a single-hop replacement, provenance, re-aggregation, and package rounding remain planned inside persistence-independent Shopping Generation. [ADR 0016](../adr/0016-require-canonical-quantity-kinds-for-alternative-replacement.md) and [ADR 0021](../adr/0021-keep-alternative-replacement-single-hop.md) record that future workflow.
 
 ## Archival
 
-> **Planned**
->
-> Recipes and Ingredients have reversible archival and restoration rather than individual hard deletion in the MVP. Archived Ingredients cannot be added to new Recipe Ingredient lines or offered for a new Alternative selection, but existing Recipes continue to use them and Alternative edges remain stored. A concurrently archived Alternative is rejected when a transient replacement is submitted. Archived Recipes cannot enter new Calendar Entries or Simple Plans, but existing Calendar Entries continue to resolve their current definition. Restoration makes the entity eligible for new use again; only Family deletion ultimately removes it and its media. [ADR 0022](../adr/0022-archive-and-restore-recipes-and-ingredients.md) records the lifecycle.
->
-> Recipe and Ingredient lists expose `Active`, `Archived`, and `All` filters. Archived records are read-only apart from restoration; a User must restore one before editing it. Archiving requires a consequence-stating confirmation and visible feedback. Restoration is non-destructive, requires no confirmation, and returns the User to an editable active record with visible feedback.
->
-> Archiving does not release a name for reuse. Saved Shopping List snapshots remain independent of later edits or archival because they retain immutable generated values rather than live projections.
+Ingredients use reversible archival rather than individual deletion. The list exposes **Aktivní**, **Archivované**, and **Všechny** filters. Archiving requires a consequence-stating confirmation and flashes **Surovina byla archivována.**; restoration needs no confirmation and flashes **Surovina byla obnovena.** Archived Ingredients are read-only until restored, retain direct Alternative edges and placement, and keep their normalized names reserved. Recipe archival and downstream retained-reference behavior remain planned with Slice 3. [ADR 0022](../adr/0022-archive-and-restore-recipes-and-ingredients.md) records the complete intended lifecycle.

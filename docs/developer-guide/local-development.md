@@ -1,13 +1,13 @@
 # Local Development
 
 This chapter covers the current authenticated Laravel/Inertia shell and Family
-Access workflow plus the Cookbook Store, Store Section, and packaged Ingredient tracers. Local setup
+Access workflow plus the non-media Slice 2 Cookbook implementation. Local setup
 and migrations create the Family, Store, Store Section, ordered-association,
-and Ingredient tables plus the Current Family preference; focused tests exercise provisioning, Family lifecycle, Store
-create/rename normalization and duplicate handling, Store deletion, Store
-Section creation/listing/deletion and colour validation, per-Store attach/removal/reorder,
-optimistic stale-order rejection, Ingredient creation/listing and package
-quantity constraints, equal rights, cross-Family isolation, and account-deletion
+Ingredient, Alternative-edge, and Nutrition Profile tables plus the Current
+Family preference. Focused tests exercise provisioning, Family lifecycle,
+Store and Store Section management and ordering, Ingredient creation and editing,
+Store Placement, archival/restoration, direct Alternatives, Nutrition Profiles,
+equal rights, cross-Family isolation, database constraints, and account-deletion
 protection. The rest of Cookbook,
 meal planning, and Shopping List generation do not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.
@@ -210,6 +210,7 @@ php artisan test --compact --filter=test_users_can_authenticate_using_the_login_
 php artisan test --compact tests/Feature/Cookbook/StoreManagementTest.php
 php artisan test --compact tests/Feature/Cookbook/StoreSectionManagementTest.php
 php artisan test --compact tests/Feature/Cookbook/IngredientManagementTest.php
+php artisan test --compact tests/Feature/Cookbook tests/Unit/Cookbook
 ```
 
 Before finalizing PHP changes, run the project-required checks:

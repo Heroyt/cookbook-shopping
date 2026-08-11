@@ -1,6 +1,6 @@
 # Domain model
 
-The repository implements the authenticated `User` and account-security shell, Family Access, and narrow Cookbook Store, Store Section, and packaged Ingredient tracers. The [`User` model](../../app/Models/User.php) exposes Current Family, Family Membership, and Family relationships, while `app/FamilyAccess` implements Family lifecycle and reusable Current Family scoping. `app/Cookbook` currently owns Store creation, listing, renaming, and deletion; reusable Store Section creation/listing/deletion and per-Store association/removal/ordering; and Ingredient creation/listing with core canonical package quantities. The rest of Cookbook, Meal Planning, and Shopping Generation remains unimplemented. See [Current application](current-application.md) for the implemented surface.
+The repository implements the authenticated `User` and account-security shell, Family Access, and Cookbook Store, Store Section, placement, and packaged Ingredient management. `app/Cookbook` owns Store/Section lifecycles and ordering plus Ingredient editing, archival, direct Alternatives, and Nutrition Profiles. Recipes, Meal Planning, and Shopping Generation remain unimplemented, and the generator boundary remains persistence-independent.
 
 The final Domain Glossary chapter is the canonical implementation-free vocabulary. These developer chapters explain relationships, invariants, and implementation consequences without replacing it.
 
@@ -51,7 +51,7 @@ See [Architecture and system boundaries](architecture.md) for framework placemen
 ## Capability chapters
 
 - [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores, Store Sections, and Ingredients; later aggregates must reuse it.
-- [Recipes and Ingredients](recipes-ingredients.md) — implemented concrete package creation/listing and canonical quantity display plus planned conversions, alternatives, Recipe composition, search, and archival.
+- [Recipes and Ingredients](recipes-ingredients.md) — implemented package management, metric normalization, placement, archival, direct Alternatives, and Nutrition Profiles plus planned Recipe composition and search.
 - [Nutrition](nutrition.md) — Ingredient bases, calculated per-serving values, overrides, incomplete profiles, and daily totals.
 - [Stores and shopping order](stores-shopping-order.md) — implemented Store lifecycle, reusable Store Section creation/listing/deletion, and per-Store association/order plus planned placement effects and final grouping.
 - [Calendar planning](calendar-planning.md) — Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.

@@ -77,23 +77,25 @@ The verified Slice 2 tracer now provides:
 - authenticated Current-Family-scoped Store creation, listing, renaming, and deletion; Store Section creation, listing, and deletion; and Store–Section association, removal, and reorder through the reusable Family Access scope;
 - Store rename resolution that accepts only the authenticated User, Store identifier, and proposed name, then resolves ownership inside `CurrentFamilyScope` without accepting a Family identifier;
 - Store deletion resolution that accepts only the authenticated User and Store identifier, returns not found for another Family, and does not accept a Family identifier;
-- Store Section deletion that removes all Store associations, closes affected positions, advances affected order versions, releases the normalized name, and reports zero Ingredient placements while that persistence is absent;
-- authenticated Current-Family-scoped creation and listing of concrete Ingredients with either positive canonical grams or positive canonical millilitres, never both, plus an optional positive piece count and at least one required quantity;
+- Store Section deletion that removes all Store associations, closes affected positions, advances affected order versions, releases the normalized name, and reports and clears affected Ingredient Sections while retaining their Stores;
+- authenticated Current-Family-scoped creation, editing, listing, placement, archival, restoration, Alternative management, and Nutrition Profile management for concrete Ingredients;
 - approved `DECIMAL(20,6)` package columns and database checks for positive, mutually exclusive metric quantities, with request-scale rejection and derived two-fractional-digit `g`/`kg`, `ml`/`l`, and `ks` presentation;
 - a responsive Inertia/Vue Stores page composed from shadcn-vue primitives and generated Wayfinder actions, including an accessible Store Section colour picker, non-colour-only list output, consequence-stating Section deletion, and accessible per-Store association/order controls; and
-- a responsive Inertia/Vue Ingredients page composed from the same conventions with labelled canonical quantity inputs, Czech validation, an empty state, and presentation-ready package quantities; and
+- a responsive Inertia/Vue Ingredients page composed from the same conventions with explicit metric units, placement, nutrition, alternatives, archive filters/actions, Czech validation, an empty state, and presentation-ready quantities; and
 - focused PHPUnit/Vitest coverage for equal member rights, cross-Family read/write isolation, validation, normalization, race-safe duplicate handling, success feedback, package and database invariants, deletion cleanup, exact complete ordering, stale-version rejection, generated action wiring, and rendered Store Section and Ingredient output.
+- Ingredient editing with optional description, exact normalization of `mg`, `g`, `kg`, `ml`, `cl`, and `l`, Store-only or association-backed Store Placement, reversible archive/filter/restore, direct symmetric/non-transitive Alternative edges, a pure canonical-kind eligibility predicate, and complete optional Nutrition Profiles;
+- database-backed placement, Alternative-pair, and Nutrition Profile invariants plus lifecycle cleanup for Store, association, and reusable Section removal; and
+- Czech shadcn-vue/Inertia controls for placement, nutrition, alternatives, filtering, archive confirmation, restoration, and restore-before-edit behavior.
 
 > **Planned**
 >
 > - Add optional Store logos and optional Store Section icons after their concrete media/catalogue prerequisites are approved.
-> - Extend Ingredients with optional Store Placement, media, description, nutrition, and direct symmetric/non-transitive alternatives.
-> - Add explicit non-canonical metric input units that normalize to the implemented grams or millilitres persistence without retaining a preference.
-> - Reversibly archive and restore Ingredients without individual hard deletion, and guard removal of units referenced by Recipe Ingredients.
+> - Add optional Ingredient media after its concrete upload-validation policy is approved.
+> - Extend the implemented quantity-kind removal guard to Recipe Ingredient dependencies when Slice 3 adds those records.
 >
 > Exclude photos and logos from the first Slice 2 tracer. Their implementation is blocked on the concrete upload-validation policy named in [Security and observability](security-observability.md#planned-photos-and-files).
 >
-> **Completion gate (not yet met):** every Planned Slice 2 invariant is proven. The current tracer proves that a Family can describe a package such as `150 g = 6 ks`, derive its display, and keep it isolated from another Family. Remaining evidence must place it only through a valid Store–Section association, archive/filter/restore it with restore-before-edit behavior, enforce direct symmetric Alternative edges and canonical-kind eligibility, and block removal of a referenced quantity kind. Tests must also prove Store deletion clears complete placement, reusable Section deletion retains Store placement while clearing Section, and the media replacement/archive/deletion lifecycle once its upload policy is approved. Ingredient placement, editing, archival, alternatives, nutrition, description, and media evidence remain absent.
+> **Completion gate:** the non-media Slice 2 invariants are implemented and verified. The media portion remains deliberately blocked rather than guessed: Store logos, optional Store Section icons, and Ingredient media require the approved MIME, byte, dimension, decode/corruption, temporary-file cleanup, and icon-catalogue policies. Recipe Ingredient quantity-kind dependencies cannot exist before Slice 3; the implemented Nutrition Profile dependency proves the current removal guard and must be extended when Recipe Ingredients are introduced. The live Slice 0 Komodo/MariaDB recreation gate remains incomplete and is not replaced by local test evidence.
 
 ## Slice 3: Recipes and nutrition
 
