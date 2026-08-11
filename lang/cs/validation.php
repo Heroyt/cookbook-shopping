@@ -165,6 +165,7 @@ return [
         'current_password' => 'současné heslo',
         'email' => 'e-mail',
         'family_name' => 'název rodiny',
+        'image' => 'obrázek',
         'piece_count' => 'počet kusů v balení',
         'quantities' => 'obsah balení',
         'name' => 'název',

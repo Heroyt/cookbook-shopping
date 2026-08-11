@@ -76,5 +76,11 @@
     "Recipe restored.": "Recept byl obnoven.",
     "Recipe name": "Název receptu",
     "Tag: :name": "Štítek: :name",
-    "Ingredient: :name": "Surovina: :name"
+    "Ingredient: :name": "Surovina: :name",
+    "Image saved.": "Obrázek byl uložen.",
+    "Select a JPEG or PNG image.": "Vyberte obrázek ve formátu JPEG nebo PNG.",
+    "The image must not be larger than 5 MB.": "Obrázek nesmí být větší než 5 MB.",
+    "The image could not be decoded safely.": "Obrázek se nepodařilo bezpečně načíst.",
+    "The image could not be saved. Please try again.": "Obrázek se nepodařilo uložit. Zkuste to znovu.",
+    "Restore the entity before changing its image.": "Před změnou obrázku obnovte položku z archivu."
 }

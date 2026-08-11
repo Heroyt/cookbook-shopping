@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Cookbook\Http\Controllers\EntityMediaController;
 use App\Cookbook\Http\Controllers\IngredientAlternativeController;
 use App\Cookbook\Http\Controllers\IngredientController;
 use App\Cookbook\Http\Controllers\RecipeController;
@@ -9,9 +10,18 @@ use App\Cookbook\Http\Controllers\RecipeTagController;
 use App\Cookbook\Http\Controllers\StoreController;
 use App\Cookbook\Http\Controllers\StoreSectionAssociationController;
 use App\Cookbook\Http\Controllers\StoreSectionController;
+use App\Cookbook\Values\EntityMediaType;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::post('entity-media/{mediaType}/{entity}', [EntityMediaController::class, 'store'])
+        ->whereIn('mediaType', EntityMediaType::values())
+        ->whereNumber('entity')
+        ->name('entity-media.store');
+    Route::get('entity-media/{mediaType}/{entity}/{variant}', [EntityMediaController::class, 'show'])
+        ->whereIn('mediaType', EntityMediaType::values())
+        ->whereNumber('entity')
+        ->name('entity-media.show');
     Route::get('recipes', [RecipeController::class, 'index'])->name('recipes.index');
     Route::post('recipes', [RecipeController::class, 'store'])->name('recipes.store');
     Route::put('recipes/{recipe}', [RecipeController::class, 'update'])->name('recipes.update');

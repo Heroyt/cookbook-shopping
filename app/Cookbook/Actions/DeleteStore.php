@@ -6,13 +6,19 @@ namespace App\Cookbook\Actions;
 
 use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Store;
+use App\Cookbook\Services\EntityMediaStorage;
+use App\Cookbook\Values\EntityMediaType;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 final readonly class DeleteStore
 {
-    public function __construct(private CurrentFamilyScope $currentFamilyScope) {}
+    public function __construct(
+        private CurrentFamilyScope $currentFamilyScope,
+        private EntityMediaStorage $entityMediaStorage,
+    ) {}
 
     public function handle(User $user, int $storeId): void
     {
@@ -29,6 +35,10 @@ final readonly class DeleteStore
                 ->update(['store_id' => null, 'store_section_id' => null]);
 
             $store->delete();
+
+            DB::afterCommit(function () use ($family, $storeId): void {
+                $this->entityMediaStorage->deleteEntity($family->id, EntityMediaType::StoreLogo, $storeId);
+            });
         });
     }
 }

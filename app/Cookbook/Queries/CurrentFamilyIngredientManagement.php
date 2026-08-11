@@ -7,6 +7,8 @@ namespace App\Cookbook\Queries;
 use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
+use App\Cookbook\Services\EntityMediaStorage;
+use App\Cookbook\Values\EntityMediaType;
 use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\Models\Family;
 use Illuminate\Support\Collection;
@@ -14,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 
 final readonly class CurrentFamilyIngredientManagement
 {
+    public function __construct(private EntityMediaStorage $entityMediaStorage) {}
+
     /** @return array<string, mixed> */
     public function handle(Family $family, string $filter): array
     {
@@ -25,6 +29,7 @@ final readonly class CurrentFamilyIngredientManagement
             'ingredients' => $catalog
                 ->filter(fn (Ingredient $ingredient): bool => $this->matchesFilter($ingredient, $filter))
                 ->map(fn (Ingredient $ingredient): array => $this->ingredient(
+                    $family,
                     $ingredient,
                     $catalogById,
                     $alternativeIds[$ingredient->id] ?? [],
@@ -90,7 +95,7 @@ final readonly class CurrentFamilyIngredientManagement
      * @param  array<int, true>  $alternativeIds
      * @return array<string, mixed>
      */
-    private function ingredient(Ingredient $ingredient, Collection $catalogById, array $alternativeIds): array
+    private function ingredient(Family $family, Ingredient $ingredient, Collection $catalogById, array $alternativeIds): array
     {
         $alternatives = collect(array_keys($alternativeIds))
             ->map(fn (int $alternativeId): ?Ingredient => $catalogById->get($alternativeId))
@@ -106,6 +111,7 @@ final readonly class CurrentFamilyIngredientManagement
         return [
             'id' => $ingredient->id,
             'name' => $ingredient->name,
+            'photoUrl' => $this->entityMediaStorage->url($family, EntityMediaType::IngredientPhoto, $ingredient->id),
             'description' => $ingredient->description,
             'metricQuantity' => $ingredient->weight_grams ?? $ingredient->volume_millilitres,
             'metricUnit' => $ingredient->volume_millilitres === null ? 'g' : 'ml',

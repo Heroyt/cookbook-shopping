@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\FamilyAccess\Actions;
 
 use App\FamilyAccess\CurrentFamily;
+use App\FamilyAccess\Events\FamilyDeleted;
 use App\FamilyAccess\Models\Family;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,6 +49,8 @@ final class DeleteFamily
 
             $lockedFamily->delete();
         }, 3);
+
+        FamilyDeleted::dispatch($currentFamily->id);
 
         $freshActor = $actor->fresh();
 

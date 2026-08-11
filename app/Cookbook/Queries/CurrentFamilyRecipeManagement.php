@@ -9,14 +9,19 @@ use App\Cookbook\Models\Recipe;
 use App\Cookbook\Models\RecipeIngredient;
 use App\Cookbook\Models\RecipeStep;
 use App\Cookbook\Models\RecipeTag;
+use App\Cookbook\Services\EntityMediaStorage;
 use App\Cookbook\Services\RecipeNutritionCalculator;
+use App\Cookbook\Values\EntityMediaType;
 use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\Models\Family;
 use Illuminate\Database\Eloquent\Collection;
 
 final class CurrentFamilyRecipeManagement
 {
-    public function __construct(private readonly RecipeNutritionCalculator $nutritionCalculator) {}
+    public function __construct(
+        private readonly RecipeNutritionCalculator $nutritionCalculator,
+        private readonly EntityMediaStorage $entityMediaStorage,
+    ) {}
 
     /** @return array<string, mixed> */
     public function handle(Family $family, string $filter, string $search): array
@@ -31,7 +36,7 @@ final class CurrentFamilyRecipeManagement
         $searchKey = $search === '' ? '' : NormalizedName::from($search)->key;
         $projected = [];
         foreach ($recipes as $recipe) {
-            $summary = $this->projectRecipe($recipe, $searchKey);
+            $summary = $this->projectRecipe($family, $recipe, $searchKey);
             if ($searchKey === '' || $summary['matchReasons'] !== []) {
                 $projected[] = $summary;
             }
@@ -66,7 +71,7 @@ final class CurrentFamilyRecipeManagement
     }
 
     /** @return array<string, mixed> */
-    private function projectRecipe(Recipe $recipe, string $searchKey): array
+    private function projectRecipe(Family $family, Recipe $recipe, string $searchKey): array
     {
         $ingredientLines = $recipe->getRelation('ingredients');
         $steps = $recipe->getRelation('steps');
@@ -119,6 +124,7 @@ final class CurrentFamilyRecipeManagement
 
         return [
             'id' => $recipe->id, 'name' => $recipe->name, 'baseServings' => $recipe->base_servings, 'version' => $recipe->version,
+            'coverUrl' => $this->entityMediaStorage->url($family, EntityMediaType::RecipeCover, $recipe->id),
             'sourceUrl' => $recipe->source_url, 'preparationMinutes' => $recipe->preparation_minutes, 'cookingMinutes' => $recipe->cooking_minutes,
             'notes' => $recipe->notes, 'archived' => $recipe->archived_at !== null,
             'ingredients' => $lineData, 'steps' => $stepData, 'tags' => $tagData, 'matchReasons' => $reasons, 'matchLayer' => $layer,

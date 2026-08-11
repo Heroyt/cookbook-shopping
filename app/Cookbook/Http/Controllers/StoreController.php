@@ -13,6 +13,8 @@ use App\Cookbook\Http\Requests\StoreStoreRequest;
 use App\Cookbook\Http\Requests\StoreUpdateRequest;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
+use App\Cookbook\Services\EntityMediaStorage;
+use App\Cookbook\Values\EntityMediaType;
 use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
@@ -31,6 +33,7 @@ final class StoreController extends Controller
         private readonly CreateStore $createStore,
         private readonly RenameStore $renameStore,
         private readonly DeleteStore $deleteStore,
+        private readonly EntityMediaStorage $entityMediaStorage,
     ) {}
 
     public function index(StoreIndexRequest $request): Response
@@ -53,6 +56,7 @@ final class StoreController extends Controller
                     ->map(fn (Store $store): array => [
                         'id' => $store->id,
                         'name' => $store->name,
+                        'logoUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreLogo, $store->id),
                         'sectionOrderVersion' => $store->section_order_version,
                         'sections' => $store->storeSections->map(function (StoreSection $storeSection): array {
                             $pivot = $storeSection->getRelation('pivot');
@@ -88,6 +92,7 @@ final class StoreController extends Controller
                         'id' => $storeSection->id,
                         'name' => $storeSection->name,
                         'colour' => $storeSection->colour,
+                        'iconUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreSectionIcon, $storeSection->id),
                         'associationCount' => $storeSection->stores_count,
                         'placementCount' => $storeSection->ingredients_count,
                     ]),

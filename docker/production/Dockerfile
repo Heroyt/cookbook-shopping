@@ -7,7 +7,7 @@ LABEL maintainer="Tomáš Vojík <vojik@esoul.cz>"
 RUN apk add --no-cache dcron
 
 # Add composer and required PHP extensions
-RUN install-php-extensions @composer
+RUN install-php-extensions @composer gd
 
 
 FROM base AS php_builder
