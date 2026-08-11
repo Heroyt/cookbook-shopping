@@ -25,8 +25,11 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
 {
     public function handle(OpenApi $document, OpenApiContext $context): void
     {
-        $operation = $this->addSchema($document, 'AgentChangeSetOperation', $this->operationSchema());
-        $previewRequest = $this->addSchema($document, 'AgentChangeSetDocument', $this->previewRequestSchema($operation));
+        $operationSchemas = new AgentOperationOpenApiSchemas();
+        $operation = $operationSchemas->register($document);
+        $previewDocument = $this->previewRequestSchema($operation);
+        $previewDocument->examples($operationSchemas->documentExamples());
+        $previewRequest = $this->addSchema($document, 'AgentChangeSetDocument', $previewDocument);
         $applyRequest = $this->addSchema($document, 'ApplyAgentChangeSetDocument', $this->applyRequestSchema());
         $error = $this->addSchema($document, 'AgentApiError', $this->errorSchema());
         $catalogResource = $this->addSchema($document, 'CatalogResource', $this->catalogResourceSchema());
@@ -63,23 +66,6 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
                 }
             }
         }
-    }
-
-    private function operationSchema(): ObjectType
-    {
-        $schema = new ObjectType();
-        $schema->addProperty('operation_id', $this->string(min: 1, max: 255));
-        $schema->addProperty('resource_type', $this->string(enum: CatalogResourceType::values()));
-        $schema->addProperty('action', $this->string(enum: ['create', 'update', 'archive', 'restore', 'delete']));
-        $schema->addProperty('local_ref', $this->string(nullable: true, min: 1, max: 255));
-        $schema->addProperty('resource_id', $this->integer(nullable: true));
-        $schema->addProperty('expected_updated_at', $this->string(nullable: true, format: 'date-time'));
-        $schema->addProperty('data', $this->openObject(nullable: true));
-        $schema->addProperty('set', $this->openObject(nullable: true));
-        $schema->addProperty('unset', $this->arrayOf(new StringType()));
-        $schema->setRequired(['operation_id', 'resource_type', 'action']);
-
-        return $schema;
     }
 
     private function previewRequestSchema(Reference $operation): ObjectType

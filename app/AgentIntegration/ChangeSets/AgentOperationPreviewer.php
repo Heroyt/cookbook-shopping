@@ -176,7 +176,7 @@ final readonly class AgentOperationPreviewer
         }
 
         $data = $operation['data'] ?? null;
-        if ( ! is_array($data) || array_is_list($data)) {
+        if ( ! is_array($data) || ($data !== [] && array_is_list($data))) {
             throw new AgentApiException('validation_failed', 'A create operation requires a data object.', 422, "/operations/{$index}/data", $operationId);
         }
         $data = $this->stringObject($data, "/operations/{$index}/data", $operationId);

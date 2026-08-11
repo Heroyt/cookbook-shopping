@@ -28,7 +28,7 @@ final class AgentApiErrorResponse
                 'message' => $message,
                 'path' => $path,
                 'operation_id' => $operationId,
-                'details' => $details,
+                'details' => $details === [] ? (object) [] : $details,
                 'retryable' => $retryable,
             ],
         ], $status, $headers);
