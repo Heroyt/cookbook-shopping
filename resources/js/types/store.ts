@@ -10,7 +10,20 @@ export type StoreSectionIconName =
     | 'cookie'
     | 'package'
     | 'sparkles'
-    | 'cross';
+    | 'cross'
+    | 'banana'
+    | 'egg'
+    | 'nut'
+    | 'wheat'
+    | 'soup'
+    | 'cake-slice'
+    | 'cup-soda'
+    | 'ham'
+    | 'drumstick'
+    | 'salad'
+    | 'broom'
+    | 'cooking-pot'
+    | 'cheese';
 
 export type StoreSummary = {
     id: number;

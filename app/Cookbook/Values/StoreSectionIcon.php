@@ -18,4 +18,17 @@ enum StoreSectionIcon: string
     case Package = 'package';
     case Sparkles = 'sparkles';
     case Cross = 'cross';
+    case Banana = 'banana';
+    case Egg = 'egg';
+    case Nut = 'nut';
+    case Wheat = 'wheat';
+    case Soup = 'soup';
+    case CakeSlice = 'cake-slice';
+    case CupSoda = 'cup-soda';
+    case Ham = 'ham';
+    case Drumstick = 'drumstick';
+    case Salad = 'salad';
+    case Broom = 'broom';
+    case CookingPot = 'cooking-pot';
+    case Cheese = 'cheese';
 }

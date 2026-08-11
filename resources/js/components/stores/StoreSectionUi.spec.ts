@@ -62,7 +62,7 @@ describe('Store Section UI', () => {
         expect(list).not.toContain('<EntityImageUpload');
     });
 
-    it('offers an accessible SVG icon pack for create and edit forms', async () => {
+    it('offers the complete Store Section fields for create and edit forms', async () => {
         const html = await render(StoreSectionFormFields);
         const editDialog = readFileSync(
             new URL('./EditStoreSectionDialog.vue', import.meta.url),
@@ -75,9 +75,27 @@ describe('Store Section UI', () => {
         expect(html).toContain('Zelenina');
         expect(html).toContain('Pečivo');
         expect(html).toContain('Drogerie');
+        expect(html).toContain('Banány');
+        expect(html).toContain('Vejce');
+        expect(html).toContain('Ořechy');
+        expect(html).toContain('Obiloviny a těstoviny');
+        expect(html).toContain('Konzervy a hotová jídla');
+        expect(html).toContain('Pečení');
+        expect(html).toContain('Jogurty');
+        expect(html).toContain('Uzeniny');
+        expect(html).toContain('Drůbež');
+        expect(html).toContain('Saláty');
+        expect(html).toContain('Úklid');
+        expect(html).toContain('Koření a vaření');
+        expect(html).toContain('Sýry');
         expect(editDialog).toContain(
-            'StoreSectionController.updateIcon.form(storeSection.id)',
+            'StoreSectionController.update.form(storeSection.id)',
         );
+        expect(editDialog).toContain('<StoreSectionFormFields');
+        expect(editDialog).toContain(':default-name="storeSection.name"');
+        expect(editDialog).toContain(':default-colour="storeSection.colour"');
+        expect(editDialog).toContain(':default-icon="storeSection.icon"');
+        expect(editDialog).toContain('Uložit změny');
         expect(editDialog).toContain('@success="open = false"');
     });
 
@@ -90,6 +108,15 @@ describe('Store Section UI', () => {
         expect(html).toContain('type="color"');
         expect(html).toContain('required');
         expect(html).toContain('aria-invalid="false"');
+    });
+
+    it('renders the supplied colour as the editable picker value', async () => {
+        const html = await render(StoreSectionFormFields, {
+            defaultColour: '#D97706',
+        });
+
+        expect(html).toMatch(/type="color"[^>]*value="#D97706"/);
+        expect(html).not.toMatch(/type="color"[^>]*value="#2F855A"/);
     });
 
     it('renders the colour as text as well as a visual swatch', async () => {

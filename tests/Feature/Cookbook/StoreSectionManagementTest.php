@@ -267,6 +267,40 @@ final class StoreSectionManagementTest extends TestCase
         ]);
     }
 
+    public function test_extended_grocery_icon_catalogue_is_allowlisted(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $section = StoreSection::factory()->for($family)->create();
+
+        foreach ([
+            'banana',
+            'egg',
+            'nut',
+            'wheat',
+            'soup',
+            'cake-slice',
+            'cup-soda',
+            'ham',
+            'drumstick',
+            'salad',
+            'broom',
+            'cooking-pot',
+            'cheese',
+        ] as $icon) {
+            $this
+                ->actingAs($user)
+                ->patch(route('store-sections.icon.update', $section), ['icon' => $icon])
+                ->assertSessionHasNoErrors();
+
+            $this->assertDatabaseHas('store_sections', [
+                'id' => $section->id,
+                'icon' => $icon,
+            ]);
+        }
+    }
+
     public function test_store_section_reads_and_writes_are_scoped_to_the_current_family(): void
     {
         $user = User::factory()->create();
