@@ -36,6 +36,7 @@ final class StoreSectionManagementTest extends TestCase
             ->post(route('store-sections.store'), [
                 'name' => '  Čerstvá   zelenina  ',
                 'colour' => '#2F855A',
+                'icon' => 'apple',
             ])
             ->assertSessionHasNoErrors()
             ->assertInertiaFlash('toast', [
@@ -49,6 +50,7 @@ final class StoreSectionManagementTest extends TestCase
             'name' => 'Čerstvá zelenina',
             'normalized_name' => 'čerstvá zelenina',
             'colour' => '#2F855A',
+            'icon' => 'apple',
         ]);
 
         $this
@@ -75,8 +77,64 @@ final class StoreSectionManagementTest extends TestCase
                 ->has('storeSections', 2)
                 ->where('storeSections.0.name', 'Pečivo')
                 ->where('storeSections.0.colour', '#D97706')
+                ->where('storeSections.0.icon', 'package')
                 ->where('storeSections.1.name', 'Čerstvá zelenina')
-                ->where('storeSections.1.colour', '#2F855A'));
+                ->where('storeSections.1.colour', '#2F855A')
+                ->where('storeSections.1.icon', 'apple'));
+    }
+
+    public function test_each_member_can_change_a_store_section_icon_within_the_current_family(): void
+    {
+        $firstMember = User::factory()->create();
+        $secondMember = User::factory()->create();
+        $family = $this->createFamilyWithMembers($firstMember, $secondMember);
+        $otherFamily = $this->createFamilyWithMembers(User::factory()->create());
+        $this->selectCurrentFamily($firstMember, $family);
+        $this->selectCurrentFamily($secondMember, $family);
+        $section = StoreSection::factory()->for($family)->create();
+        $foreignSection = StoreSection::factory()->for($otherFamily)->create();
+
+        $this
+            ->actingAs($secondMember)
+            ->patch(route('store-sections.icon.update', $section), ['icon' => 'carrot'])
+            ->assertSessionHasNoErrors()
+            ->assertInertiaFlash('toast', [
+                'type' => 'success',
+                'message' => 'Ikona části obchodu byla změněna.',
+            ])
+            ->assertRedirect(route('stores.index'));
+
+        $this->assertDatabaseHas('store_sections', [
+            'id' => $section->id,
+            'icon' => 'carrot',
+        ]);
+
+        $this
+            ->actingAs($firstMember)
+            ->patch(route('store-sections.icon.update', $foreignSection), ['icon' => 'fish'])
+            ->assertNotFound();
+    }
+
+    public function test_store_section_icon_changes_require_authentication_and_an_allowlisted_icon(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $section = StoreSection::factory()->for($family)->create();
+
+        $this
+            ->patch(route('store-sections.icon.update', $section), ['icon' => 'carrot'])
+            ->assertRedirect(route('login'));
+
+        $this
+            ->actingAs($user)
+            ->patch(route('store-sections.icon.update', $section), ['icon' => 'uploaded-file.svg'])
+            ->assertSessionHasErrors('icon');
+
+        $this->assertDatabaseHas('store_sections', [
+            'id' => $section->id,
+            'icon' => 'package',
+        ]);
     }
 
     public function test_store_section_reads_and_writes_are_scoped_to_the_current_family(): void
@@ -187,6 +245,14 @@ final class StoreSectionManagementTest extends TestCase
             ->actingAs($user)
             ->post(route('store-sections.store'), ['name' => 'Zelenina'])
             ->assertSessionHasErrors('colour');
+        $this
+            ->actingAs($user)
+            ->post(route('store-sections.store'), [
+                'name' => 'Zelenina',
+                'colour' => '#123456',
+                'icon' => 'uploaded-file.svg',
+            ])
+            ->assertSessionHasErrors('icon');
 
         foreach (['123456', '#12345', '#1234567', '#GGGGGG'] as $invalidColour) {
             $this

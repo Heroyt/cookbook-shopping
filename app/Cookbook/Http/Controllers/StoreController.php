@@ -44,7 +44,7 @@ final class StoreController extends Controller
                 'stores' => Store::query()
                     ->whereBelongsTo($family)
                     ->select(['id', 'name', 'normalized_name', 'section_order_version'])
-                    ->with('storeSections:id,name,colour')
+                    ->with('storeSections:id,name,colour,icon')
                     ->get()
                     ->sort(fn (Store $left, Store $right): int => NormalizedName::compare(
                         $left->normalized_name,
@@ -69,13 +69,14 @@ final class StoreController extends Controller
                                 'id' => $storeSection->id,
                                 'name' => $storeSection->name,
                                 'colour' => $storeSection->colour,
+                                'icon' => $storeSection->icon->value,
                                 'position' => $pivot->getAttribute('position'),
                             ];
                         }),
                     ]),
                 'storeSections' => StoreSection::query()
                     ->whereBelongsTo($family)
-                    ->select(['id', 'name', 'normalized_name', 'colour'])
+                    ->select(['id', 'name', 'normalized_name', 'colour', 'icon'])
                     ->withCount([
                         'stores' => fn (Builder $stores): Builder => $stores->whereBelongsTo($family),
                         'ingredients' => fn (Builder $ingredients): Builder => $ingredients->whereBelongsTo($family),
@@ -92,6 +93,7 @@ final class StoreController extends Controller
                         'id' => $storeSection->id,
                         'name' => $storeSection->name,
                         'colour' => $storeSection->colour,
+                        'icon' => $storeSection->icon->value,
                         'iconUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreSectionIcon, $storeSection->id),
                         'associationCount' => $storeSection->stores_count,
                         'placementCount' => $storeSection->ingredients_count,

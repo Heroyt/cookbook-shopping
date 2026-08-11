@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StoreSectionIconPicker from '@/components/stores/StoreSectionIconPicker.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -12,7 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 withDefaults(
     defineProps<{
-        errors?: Partial<Record<'name' | 'colour', string>>;
+        errors?: Partial<Record<'name' | 'colour' | 'icon', string>>;
         processing?: boolean;
     }>(),
     {
@@ -61,6 +62,8 @@ withDefaults(
             </FieldDescription>
             <FieldError :errors="[errors.colour]" />
         </Field>
+
+        <StoreSectionIconPicker :error="errors.icon" />
 
         <Field orientation="horizontal">
             <Button type="submit" :disabled="processing">

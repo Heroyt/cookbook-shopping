@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PaletteIcon } from '@lucide/vue';
-import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
-import DeleteStoreSectionAlertDialog from '@/components/stores/DeleteStoreSectionAlertDialog.vue';
+import EditStoreSectionDialog from '@/components/stores/EditStoreSectionDialog.vue';
+import StoreSectionIcon from '@/components/stores/StoreSectionIcon.vue';
 import {
     Empty,
     EmptyDescription,
@@ -50,13 +50,19 @@ defineProps<{ storeSections: StoreSectionSummary[] }>();
                 :key="storeSection.id"
             >
                 <TableCell>{{ storeSection.name }}</TableCell>
-                <TableCell class="w-56">
-                    <EntityImageUpload
-                        media-type="store-section-icon"
-                        :entity-id="storeSection.id"
-                        :image-url="storeSection.iconUrl"
-                        :image-alt="`Ikona části obchodu ${storeSection.name}`"
-                    />
+                <TableCell>
+                    <span
+                        class="flex size-10 items-center justify-center rounded-md border"
+                        :style="{ color: storeSection.colour }"
+                    >
+                        <StoreSectionIcon
+                            :name="storeSection.icon"
+                            class="size-6"
+                        />
+                        <span class="sr-only">
+                            Ikona části {{ storeSection.name }}
+                        </span>
+                    </span>
                 </TableCell>
                 <TableCell>
                     <div class="flex items-center gap-2">
@@ -73,9 +79,7 @@ defineProps<{ storeSections: StoreSectionSummary[] }>();
                     </div>
                 </TableCell>
                 <TableCell class="text-right">
-                    <DeleteStoreSectionAlertDialog
-                        :store-section="storeSection"
-                    />
+                    <EditStoreSectionDialog :store-section="storeSection" />
                 </TableCell>
             </TableRow>
         </TableBody>

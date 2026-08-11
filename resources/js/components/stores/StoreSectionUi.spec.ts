@@ -44,6 +44,10 @@ describe('Store Section UI', () => {
             new URL('./StoreSectionList.vue', import.meta.url),
             'utf8',
         );
+        const managementDialog = readFileSync(
+            new URL('./EditStoreSectionDialog.vue', import.meta.url),
+            'utf8',
+        );
 
         expect(dialog).toContain(
             'StoreSectionController.destroy(storeSection.id).url',
@@ -52,8 +56,29 @@ describe('Store Section UI', () => {
         expect(dialog).toContain('Přiřazení k obchodům:');
         expect(dialog).toContain('storeSection.placementCount');
         expect(dialog).toContain('Tuto akci nelze vrátit zpět.');
-        expect(list).toContain('<DeleteStoreSectionAlertDialog');
-        expect(list).toContain(':store-section="storeSection"');
+        expect(managementDialog).toContain('<DeleteStoreSectionAlertDialog');
+        expect(managementDialog).toContain(':store-section="storeSection"');
+        expect(list).toContain('<EditStoreSectionDialog');
+        expect(list).not.toContain('<EntityImageUpload');
+    });
+
+    it('offers an accessible SVG icon pack for create and edit forms', async () => {
+        const html = await render(StoreSectionFormFields);
+        const editDialog = readFileSync(
+            new URL('./EditStoreSectionDialog.vue', import.meta.url),
+            'utf8',
+        );
+
+        expect(html).toContain('Ikona části obchodu');
+        expect(html).toContain('name="icon"');
+        expect(html).toContain('Ovoce');
+        expect(html).toContain('Zelenina');
+        expect(html).toContain('Pečivo');
+        expect(html).toContain('Drogerie');
+        expect(editDialog).toContain(
+            'StoreSectionController.updateIcon.form(storeSection.id)',
+        );
+        expect(editDialog).toContain('@success="open = false"');
     });
 
     it('renders an accessible required colour picker with Czech guidance', async () => {
@@ -74,7 +99,10 @@ describe('Store Section UI', () => {
                     id: 1,
                     name: 'Čerstvá zelenina',
                     colour: '#2F855A',
+                    icon: 'carrot',
+                    iconUrl: null,
                     associationCount: 2,
+                    placementCount: 1,
                 },
             ],
         });

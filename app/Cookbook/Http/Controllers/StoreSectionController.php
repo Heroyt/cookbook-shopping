@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Http\Controllers;
 
+use App\Cookbook\Actions\ChangeStoreSectionIcon;
 use App\Cookbook\Actions\CreateStoreSection;
 use App\Cookbook\Actions\DeleteStoreSection;
 use App\Cookbook\Http\Requests\StoreSectionDestroyRequest;
+use App\Cookbook\Http\Requests\StoreSectionIconUpdateRequest;
 use App\Cookbook\Http\Requests\StoreSectionStoreRequest;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +19,7 @@ final class StoreSectionController extends Controller
     public function __construct(
         private readonly CreateStoreSection $createStoreSection,
         private readonly DeleteStoreSection $deleteStoreSection,
+        private readonly ChangeStoreSectionIcon $changeStoreSectionIcon,
     ) {}
 
     public function store(StoreSectionStoreRequest $request): RedirectResponse
@@ -25,9 +28,23 @@ final class StoreSectionController extends Controller
             $request->authenticatedUser(),
             $request->storeSectionName(),
             $request->storeSectionColour(),
+            $request->storeSectionIcon(),
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Store Section created.')]);
+
+        return to_route('stores.index');
+    }
+
+    public function updateIcon(StoreSectionIconUpdateRequest $request, int $storeSection): RedirectResponse
+    {
+        $this->changeStoreSectionIcon->handle(
+            $request->authenticatedUser(),
+            $storeSection,
+            $request->storeSectionIcon(),
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Store Section icon updated.')]);
 
         return to_route('stores.index');
     }

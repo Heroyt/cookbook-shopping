@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Cookbook\Models;
 
 use App\Cookbook\Values\NormalizedName;
+use App\Cookbook\Values\StoreSectionIcon;
 use App\FamilyAccess\Models\Family;
 use Database\Factories\StoreSectionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -22,11 +23,12 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $normalized_name
  * @property string $colour
+ * @property StoreSectionIcon $icon
  * @property-read int $stores_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['family_id', 'name', 'colour'])]
+#[Fillable(['family_id', 'name', 'colour', 'icon'])]
 final class StoreSection extends Model
 {
     /** @use HasFactory<StoreSectionFactory> */
@@ -54,6 +56,14 @@ final class StoreSection extends Model
     protected static function newFactory(): StoreSectionFactory
     {
         return StoreSectionFactory::new();
+    }
+
+    /** @return array<string, string> */
+    protected function casts(): array
+    {
+        return [
+            'icon' => StoreSectionIcon::class,
+        ];
     }
 
     /** @return Attribute<string, string> */

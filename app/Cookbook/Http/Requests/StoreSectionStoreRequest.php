@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Cookbook\Http\Requests;
 
 use App\Cookbook\Values\NormalizedName;
+use App\Cookbook\Values\StoreSectionIcon;
 use App\Http\Requests\AuthenticatedRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Validation\Rule;
 
 final class StoreSectionStoreRequest extends AuthenticatedRequest
 {
@@ -20,12 +22,19 @@ final class StoreSectionStoreRequest extends AuthenticatedRequest
         return $this->string('colour')->toString();
     }
 
+    public function storeSectionIcon(): StoreSectionIcon
+    {
+        return StoreSectionIcon::tryFrom($this->string('icon')->toString())
+            ?? StoreSectionIcon::Package;
+    }
+
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
             'colour' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'icon' => ['sometimes', Rule::enum(StoreSectionIcon::class)],
         ];
     }
 

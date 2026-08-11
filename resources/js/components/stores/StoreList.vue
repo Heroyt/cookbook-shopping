@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { StoreIcon } from '@lucide/vue';
 import EditStoreDialog from '@/components/stores/EditStoreDialog.vue';
+import StoreSectionIcon from '@/components/stores/StoreSectionIcon.vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Empty,
@@ -76,6 +77,10 @@ defineProps<{
                             :key="storeSection.id"
                             variant="secondary"
                         >
+                            <StoreSectionIcon
+                                :name="storeSection.icon"
+                                class="size-3.5"
+                            />
                             <span
                                 aria-hidden="true"
                                 class="size-2 rounded-full border"
