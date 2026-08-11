@@ -83,5 +83,21 @@
     "The image must not be larger than 5 MB.": "Obrázek nesmí být větší než 5 MB.",
     "The image could not be decoded safely.": "Obrázek se nepodařilo bezpečně načíst.",
     "The image could not be saved. Please try again.": "Obrázek se nepodařilo uložit. Zkuste to znovu.",
-    "Restore the entity before changing its image.": "Před změnou obrázku obnovte položku z archivu."
+    "Restore the entity before changing its image.": "Před změnou obrázku obnovte položku z archivu.",
+    "The selected Recipe is unavailable in the Current Family.": "Vybraný recept není dostupný v aktuální rodině.",
+    "Select a Recipe.": "Vyberte recept.",
+    "Enter a Serving Count.": "Zadejte počet porcí.",
+    "The Serving Count must be a positive decimal with at most six fractional places.": "Počet porcí musí být kladné desetinné číslo s nejvýše šesti desetinnými místy.",
+    "The resulting Serving Count is outside the supported range.": "Výsledný počet porcí je mimo podporovaný rozsah.",
+    "Recipe :recipe is now in the Simple Plan for :servings servings in total.": "Recept :recipe je v rychlém plánu celkem pro :servings porce.",
+    "Add at least one Recipe to the Simple Plan.": "Přidejte do rychlého plánu alespoň jeden recept.",
+    "The Simple Plan contains a Recipe that is no longer available in the Current Family.": "Rychlý plán obsahuje recept, který už není v aktuální rodině dostupný.",
+    "The Simple Plan contains a Recipe without Ingredients. Update the Recipe and try again.": "Rychlý plán obsahuje recept bez surovin. Upravte recept a zkuste to znovu.",
+    "The Simple Plan contains an unavailable Ingredient. Update the Recipe and try again.": "Rychlý plán obsahuje nedostupnou surovinu. Upravte recept a zkuste to znovu.",
+    "The requested Serving Count is invalid.": "Požadovaný počet porcí je neplatný.",
+    "The Recipe base Serving Count is invalid.": "Základní počet porcí receptu je neplatný.",
+    "A Recipe Ingredient quantity is invalid.": "Množství suroviny v receptu je neplatné.",
+    "The Ingredient package is missing the required quantity kind.": "Balení suroviny neobsahuje požadovaný druh množství.",
+    "The Ingredient package definition is invalid.": "Definice balení suroviny je neplatná.",
+    "Recipe :recipe was removed from the Simple Plan.": "Recept :recipe byl z rychlého plánu odebrán."
 }
