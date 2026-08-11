@@ -5,6 +5,7 @@ import {
     FolderGit2,
     LayoutGrid,
     StoreIcon,
+    NotebookTabsIcon,
     UsersRound,
     WheatIcon,
 } from '@lucide/vue';
@@ -26,6 +27,7 @@ import {
 import { dashboard } from '@/routes';
 import { index as familiesIndex } from '@/routes/families';
 import { index as ingredientsIndex } from '@/routes/ingredients';
+import { index as recipesIndex } from '@/routes/recipes';
 import { index as storesIndex } from '@/routes/stores';
 import type { NavItem } from '@/types';
 
@@ -44,6 +46,11 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(page.props.currentFamily === null
         ? []
         : [
+              {
+                  title: 'Recepty',
+                  href: recipesIndex(),
+                  icon: NotebookTabsIcon,
+              },
               {
                   title: 'Suroviny',
                   href: ingredientsIndex(),
