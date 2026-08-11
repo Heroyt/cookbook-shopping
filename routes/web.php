@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-Route::get('/', fn (): Response => Inertia::render('Welcome'))->name('home');
+Route::get('/', fn (Request $request): RedirectResponse => to_route($request->user() === null ? 'login' : 'dashboard'))->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('dashboard', fn (): Response => Inertia::render('Dashboard'))->name('dashboard');
