@@ -191,6 +191,6 @@ Version documentation independently using semantic versioning, beginning at `0.1
 - [x] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
 - [x] All material claims have evidence or explicit user attestation.
 - [x] Every published screenshot is manifested and approved; the configured developer guide publishes no screenshots.
-- [ ] Version 0.4.0 developer-guide and ADR-compendium Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
-- [ ] Version 0.4.0 developer-guide and ADR-compendium correctness and completeness review findings are resolved or explicitly accepted.
+- [x] Version 0.4.0 developer-guide and ADR-compendium Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
+- [x] Version 0.4.0 developer-guide and ADR-compendium correctness and completeness review findings are resolved or explicitly accepted.
 - [ ] The deferred Czech User guide has authoritative Markdown, a configured PDF target, and completed publication gates.
