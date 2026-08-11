@@ -20,10 +20,15 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { IngredientPlacementStore, IngredientSummary } from '@/types';
+import type {
+    IngredientAlternativeOption,
+    IngredientPlacementStore,
+    IngredientSummary,
+} from '@/types';
 
 defineProps<{
     ingredients: IngredientSummary[];
+    alternativeOptions: IngredientAlternativeOption[];
     stores: IngredientPlacementStore[];
 }>();
 </script>
@@ -83,7 +88,9 @@ defineProps<{
                     ingredient.nutrition ? 'Nutriční profil' : 'Bez profilu'
                 }}</TableCell>
                 <TableCell class="min-w-64"
-                    ><IngredientAlternatives :ingredient="ingredient"
+                    ><IngredientAlternatives
+                        :ingredient="ingredient"
+                        :alternative-options="alternativeOptions"
                 /></TableCell>
                 <TableCell class="text-right">
                     <div class="flex justify-end gap-2">

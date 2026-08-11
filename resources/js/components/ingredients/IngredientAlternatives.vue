@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Form, router } from '@inertiajs/vue3';
 import { Link2OffIcon, LinkIcon } from '@lucide/vue';
-import { shallowRef } from 'vue';
+import { computed, shallowRef } from 'vue';
 import IngredientAlternativeController from '@/actions/App/Cookbook/Http/Controllers/IngredientAlternativeController';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,22 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
-import type { IngredientSummary } from '@/types';
+import type { IngredientAlternativeOption, IngredientSummary } from '@/types';
 
-const { ingredient } = defineProps<{ ingredient: IngredientSummary }>();
+const { ingredient, alternativeOptions } = defineProps<{
+    ingredient: IngredientSummary;
+    alternativeOptions: IngredientAlternativeOption[];
+}>();
 const removingId = shallowRef<number | null>(null);
+const availableOptions = computed(() => {
+    const linkedIds = new Set(
+        ingredient.alternatives.map((alternative) => alternative.id),
+    );
+
+    return alternativeOptions.filter(
+        (option) => option.id !== ingredient.id && !linkedIds.has(option.id),
+    );
+});
 
 const removeAlternative = (alternativeId: number): void => {
     removingId.value = alternativeId;
@@ -63,7 +75,7 @@ const removeAlternative = (alternativeId: number): void => {
         </div>
         <span v-else class="text-sm text-muted-foreground">Bez alternativ</span>
         <Form
-            v-if="!ingredient.archived && ingredient.alternativeOptions.length"
+            v-if="!ingredient.archived && availableOptions.length"
             v-bind="IngredientAlternativeController.store.form(ingredient.id)"
             :options="{ preserveScroll: true }"
             reset-on-success
@@ -84,7 +96,7 @@ const removeAlternative = (alternativeId: number): void => {
                     <SelectContent
                         ><SelectGroup>
                             <SelectItem
-                                v-for="option in ingredient.alternativeOptions"
+                                v-for="option in availableOptions"
                                 :key="option.id"
                                 :value="String(option.id)"
                                 >{{ option.name }}</SelectItem

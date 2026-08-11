@@ -1,0 +1,171 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Cookbook\Queries;
+
+use App\Cookbook\Models\Ingredient;
+use App\Cookbook\Models\Store;
+use App\Cookbook\Models\StoreSection;
+use App\Cookbook\Values\NormalizedName;
+use App\FamilyAccess\Models\Family;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+
+final readonly class CurrentFamilyIngredientManagement
+{
+    /** @return array<string, mixed> */
+    public function handle(Family $family, string $filter): array
+    {
+        $catalog = $this->catalog($family);
+        $catalogById = $catalog->keyBy(fn (Ingredient $ingredient): int => $ingredient->id);
+        $alternativeIds = $this->alternativeIds($family);
+
+        return [
+            'ingredients' => $catalog
+                ->filter(fn (Ingredient $ingredient): bool => $this->matchesFilter($ingredient, $filter))
+                ->map(fn (Ingredient $ingredient): array => $this->ingredient(
+                    $ingredient,
+                    $catalogById,
+                    $alternativeIds[$ingredient->id] ?? [],
+                ))
+                ->values()
+                ->all(),
+            'alternativeOptions' => $catalog
+                ->filter(fn (Ingredient $ingredient): bool => $ingredient->archived_at === null)
+                ->map(fn (Ingredient $ingredient): array => ['id' => $ingredient->id, 'name' => $ingredient->name])
+                ->values()
+                ->all(),
+            'filter' => $filter,
+            'stores' => $this->stores($family),
+        ];
+    }
+
+    /** @return Collection<int, Ingredient> */
+    private function catalog(Family $family): Collection
+    {
+        return Ingredient::query()
+            ->whereBelongsTo($family)
+            ->select(['id', 'name', 'normalized_name', 'description', 'weight_grams', 'volume_millilitres', 'piece_count', 'store_id', 'store_section_id', 'archived_at'])
+            ->with(['store:id,name', 'storeSection:id,name', 'nutritionProfile'])
+            ->get()
+            ->sort(fn (Ingredient $left, Ingredient $right): int => NormalizedName::compare(
+                $left->normalized_name,
+                $left->id,
+                $right->normalized_name,
+                $right->id,
+            ))
+            ->values();
+    }
+
+    /** @return array<int, array<int, true>> */
+    private function alternativeIds(Family $family): array
+    {
+        $alternativeIds = [];
+        $edges = DB::table('ingredient_alternatives')
+            ->where('family_id', $family->id)
+            ->select(['lower_ingredient_id', 'higher_ingredient_id'])
+            ->get();
+
+        foreach ($edges as $edge) {
+            $lowerIngredientId = $edge->lower_ingredient_id;
+            $higherIngredientId = $edge->higher_ingredient_id;
+
+            if (( ! is_int($lowerIngredientId) && ! is_string($lowerIngredientId))
+                || ( ! is_int($higherIngredientId) && ! is_string($higherIngredientId))) {
+                continue;
+            }
+
+            $lowerId = (int) $lowerIngredientId;
+            $higherId = (int) $higherIngredientId;
+            $alternativeIds[$lowerId][$higherId] = true;
+            $alternativeIds[$higherId][$lowerId] = true;
+        }
+
+        return $alternativeIds;
+    }
+
+    /**
+     * @param  Collection<int, Ingredient>  $catalogById
+     * @param  array<int, true>  $alternativeIds
+     * @return array<string, mixed>
+     */
+    private function ingredient(Ingredient $ingredient, Collection $catalogById, array $alternativeIds): array
+    {
+        $alternatives = collect(array_keys($alternativeIds))
+            ->map(fn (int $alternativeId): ?Ingredient => $catalogById->get($alternativeId))
+            ->filter(fn (?Ingredient $alternative): bool => $alternative !== null)
+            ->map(fn (Ingredient $alternative): array => [
+                'id' => $alternative->id,
+                'name' => $alternative->name,
+                'archived' => $alternative->archived_at !== null,
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'id' => $ingredient->id,
+            'name' => $ingredient->name,
+            'description' => $ingredient->description,
+            'metricQuantity' => $ingredient->weight_grams ?? $ingredient->volume_millilitres,
+            'metricUnit' => $ingredient->volume_millilitres === null ? 'g' : 'ml',
+            'pieceCount' => $ingredient->piece_count,
+            'quantities' => $ingredient->packageQuantities()->display(),
+            'storeId' => $ingredient->store_id,
+            'storeSectionId' => $ingredient->store_section_id,
+            'placement' => $ingredient->store === null
+                ? null
+                : implode(' · ', array_filter([$ingredient->store->name, $ingredient->storeSection?->name])),
+            'archived' => $ingredient->archived_at !== null,
+            'alternatives' => $alternatives,
+            'nutrition' => $ingredient->nutritionProfile === null ? null : [
+                'basisKind' => $ingredient->nutritionProfile->basis_kind,
+                'basisQuantity' => $ingredient->nutritionProfile->basis_quantity,
+                'energyKcal' => $ingredient->nutritionProfile->energy_kcal,
+                'fatGrams' => $ingredient->nutritionProfile->fat_grams,
+                'proteinGrams' => $ingredient->nutritionProfile->protein_grams,
+                'carbohydrateGrams' => $ingredient->nutritionProfile->carbohydrate_grams,
+            ],
+        ];
+    }
+
+    private function matchesFilter(Ingredient $ingredient, string $filter): bool
+    {
+        return match ($filter) {
+            'active' => $ingredient->archived_at === null,
+            'archived' => $ingredient->archived_at !== null,
+            default => true,
+        };
+    }
+
+    /** @return list<array{id: int, name: string, sections: list<array{id: int, name: string, colour: string}>}> */
+    private function stores(Family $family): array
+    {
+        return array_values(
+            Store::query()
+                ->whereBelongsTo($family)
+                ->select(['id', 'name', 'normalized_name'])
+                ->with('storeSections:id,name,colour')
+                ->get()
+                ->sort(fn (Store $left, Store $right): int => NormalizedName::compare(
+                    $left->normalized_name,
+                    $left->id,
+                    $right->normalized_name,
+                    $right->id,
+                ))
+                ->values()
+                ->map(fn (Store $store): array => [
+                    'id' => $store->id,
+                    'name' => $store->name,
+                    'sections' => array_values(
+                        $store->storeSections->map(fn (StoreSection $storeSection): array => [
+                            'id' => $storeSection->id,
+                            'name' => $storeSection->name,
+                            'colour' => $storeSection->colour,
+                        ])->all(),
+                    ),
+                ])
+                ->all(),
+        );
+    }
+}

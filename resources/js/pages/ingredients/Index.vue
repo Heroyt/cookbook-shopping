@@ -11,10 +11,15 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { index } from '@/routes/ingredients';
-import type { IngredientPlacementStore, IngredientSummary } from '@/types';
+import type {
+    IngredientAlternativeOption,
+    IngredientPlacementStore,
+    IngredientSummary,
+} from '@/types';
 
 defineProps<{
     ingredients: IngredientSummary[];
+    alternativeOptions: IngredientAlternativeOption[];
     stores: IngredientPlacementStore[];
     filter: 'active' | 'archived' | 'all';
 }>();
@@ -105,6 +110,7 @@ defineOptions({
                     </div>
                     <IngredientList
                         :ingredients="ingredients"
+                        :alternative-options="alternativeOptions"
                         :stores="stores"
                     />
                 </CardContent>

@@ -40,6 +40,13 @@ describe('Ingredient UI', () => {
         );
         expect(page).toContain('<CreateIngredientForm :stores="stores" />');
         expect(page).toContain(':stores="stores"');
+        expect(page).toContain(':alternative-options="alternativeOptions"');
+        expect(readSource('./IngredientList.vue')).toContain(
+            ':alternative-options="alternativeOptions"',
+        );
+        expect(readSource('./IngredientAlternatives.vue')).toContain(
+            'const availableOptions = computed',
+        );
         expect(page).toContain("filter: 'archived'");
     });
 
@@ -120,6 +127,7 @@ describe('Ingredient UI', () => {
         });
         const listHtml = await render(IngredientList, {
             stores: [],
+            alternativeOptions: [],
             ingredients: [
                 {
                     id: 1,
@@ -134,7 +142,6 @@ describe('Ingredient UI', () => {
                     placement: 'Tržiště · Zelenina',
                     archived: true,
                     alternatives: [],
-                    alternativeOptions: [],
                     nutrition: {
                         basisKind: 'grams',
                         basisQuantity: '100.000000',

@@ -11,9 +11,10 @@ export type IngredientSummary = {
     placement: string | null;
     archived: boolean;
     alternatives: Array<{ id: number; name: string; archived: boolean }>;
-    alternativeOptions: Array<{ id: number; name: string }>;
     nutrition: IngredientNutritionProfile | null;
 };
+
+export type IngredientAlternativeOption = { id: number; name: string };
 
 export type IngredientNutritionProfile = {
     basisKind: 'package' | 'grams' | 'millilitres' | 'piece';

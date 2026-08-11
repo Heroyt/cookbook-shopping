@@ -41,7 +41,12 @@ final class IngredientAlternativeTest extends TestCase
                 ->has('ingredients.0.alternatives', 1)
                 ->has('ingredients.1.alternatives', 2)
                 ->where('ingredients.2.alternatives.0.id', $b->id)
-                ->has('ingredients.2.alternatives', 1),
+                ->has('ingredients.2.alternatives', 1)
+                ->where('alternativeOptions', [
+                    ['id' => $a->id, 'name' => 'A'],
+                    ['id' => $b->id, 'name' => 'B'],
+                    ['id' => $c->id, 'name' => 'C'],
+                ]),
         );
 
         $this->actingAs($user)->delete(route('ingredients.alternatives.destroy', [$b, $a]))
