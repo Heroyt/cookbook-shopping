@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
+import EntityImagePreview from './EntityImagePreview.vue';
 import EntityImageUpload from './EntityImageUpload.vue';
 
 const readSource = (relativePath: string): string =>
@@ -28,23 +29,13 @@ describe('Entity image upload UI', () => {
         expect(source).toContain('Nahradit obrázek');
     });
 
-    it('renders a protected current image, accessible labels, and no mutation form when archived', async () => {
+    it('renders the current image and accessible upload controls', async () => {
         const editableHtml = await renderToString(
             createSSRApp(EntityImageUpload, {
                 mediaType: 'ingredient-photo',
                 entityId: 7,
                 imageUrl: '/entity-media/ingredient-photo/7/catalogue',
                 imageAlt: 'Fotografie suroviny Mouka',
-                editable: true,
-            }),
-        );
-        const archivedHtml = await renderToString(
-            createSSRApp(EntityImageUpload, {
-                mediaType: 'ingredient-photo',
-                entityId: 7,
-                imageUrl: '/entity-media/ingredient-photo/7/catalogue',
-                imageAlt: 'Fotografie suroviny Mouka',
-                editable: false,
             }),
         );
 
@@ -54,21 +45,49 @@ describe('Entity image upload UI', () => {
         expect(editableHtml).toContain('alt="Fotografie suroviny Mouka"');
         expect(editableHtml).toContain('Vybrat obrázek');
         expect(editableHtml).toContain('type="file"');
-        expect(archivedHtml).not.toContain('type="file"');
     });
 
-    it('is composed into all approved Store, Store Section, Ingredient, and Recipe surfaces', () => {
-        expect(readSource('../stores/StoreList.vue')).toContain(
+    it('renders a mutation-free preview for list views', async () => {
+        const html = await renderToString(
+            createSSRApp(EntityImagePreview, {
+                imageUrl: '/entity-media/ingredient-photo/7/catalogue',
+                imageAlt: 'Fotografie suroviny Mouka',
+            }),
+        );
+
+        expect(html).toContain(
+            'src="/entity-media/ingredient-photo/7/catalogue"',
+        );
+        expect(html).toContain('alt="Fotografie suroviny Mouka"');
+        expect(html).not.toContain('type="file"');
+        expect(html).not.toContain('Nahrát obrázek');
+    });
+
+    it('keeps uploads in edit dialogs and only previews in list views', () => {
+        expect(readSource('../stores/EditStoreDialog.vue')).toContain(
             'media-type="store-logo"',
         );
-        expect(readSource('../stores/StoreSectionList.vue')).toContain(
-            'media-type="store-section-icon"',
-        );
-        expect(readSource('../ingredients/IngredientList.vue')).toContain(
+        expect(readSource('../ingredients/EditIngredientDialog.vue')).toContain(
             'media-type="ingredient-photo"',
         );
-        expect(readSource('../recipes/RecipeList.vue')).toContain(
+        expect(readSource('../recipes/EditRecipeDialog.vue')).toContain(
             'media-type="recipe-cover"',
+        );
+
+        for (const list of [
+            '../stores/StoreList.vue',
+            '../stores/StoreSectionList.vue',
+            '../ingredients/IngredientList.vue',
+            '../recipes/RecipeList.vue',
+        ]) {
+            expect(readSource(list)).not.toContain('<EntityImageUpload');
+        }
+
+        expect(readSource('../ingredients/IngredientList.vue')).toContain(
+            '<EntityImagePreview',
+        );
+        expect(readSource('../recipes/RecipeList.vue')).toContain(
+            '<EntityImagePreview',
         );
     });
 });

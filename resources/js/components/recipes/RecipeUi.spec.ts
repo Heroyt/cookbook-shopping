@@ -36,6 +36,12 @@ describe('Recipe UI', () => {
         expect(readSource('./RecipeList.vue')).toContain(
             ':open-initially="editRecipeId === recipe.id"',
         );
+        expect(readSource('./RecipeList.vue')).not.toContain(
+            '<EntityImageUpload',
+        );
+        expect(readSource('./EditRecipeDialog.vue')).toContain(
+            'media-type="recipe-cover"',
+        );
         expect(readSource('./RecipeLifecycleButton.vue')).toContain(
             'RecipeController.archive',
         );

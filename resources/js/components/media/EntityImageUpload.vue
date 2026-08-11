@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
-import { ImageIcon, UploadIcon } from '@lucide/vue';
+import { UploadIcon } from '@lucide/vue';
 import { ref, useId } from 'vue';
 import { store as storeEntityMedia } from '@/actions/App/Cookbook/Http/Controllers/EntityMediaController';
+import EntityImagePreview from '@/components/media/EntityImagePreview.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -17,16 +18,12 @@ import { Spinner } from '@/components/ui/spinner';
 type EntityMediaType =
     'store-logo' | 'store-section-icon' | 'ingredient-photo' | 'recipe-cover';
 
-const props = withDefaults(
-    defineProps<{
-        mediaType: EntityMediaType;
-        entityId: number;
-        imageUrl: string | null;
-        imageAlt: string;
-        editable?: boolean;
-    }>(),
-    { editable: true },
-);
+const props = defineProps<{
+    mediaType: EntityMediaType;
+    entityId: number;
+    imageUrl: string | null;
+    imageAlt: string;
+}>();
 
 const inputId = useId();
 const inputVersion = ref(0);
@@ -65,25 +62,9 @@ const submit = (): void => {
 
 <template>
     <div class="flex flex-col gap-2" data-media-image>
-        <img
-            v-if="imageUrl"
-            :src="imageUrl"
-            :alt="imageAlt"
-            class="h-24 w-full rounded-md border object-cover"
-        />
-        <div
-            v-else
-            class="flex h-24 items-center justify-center gap-2 rounded-md border border-dashed text-xs text-muted-foreground"
-        >
-            <ImageIcon aria-hidden="true" class="size-4" />
-            <span>Obrázek zatím není nahraný</span>
-        </div>
+        <EntityImagePreview :image-url="imageUrl" :image-alt="imageAlt" />
 
-        <form
-            v-if="editable"
-            class="flex flex-col gap-2"
-            @submit.prevent="submit"
-        >
+        <form class="flex flex-col gap-2" @submit.prevent="submit">
             <FieldGroup>
                 <Field
                     :data-invalid="Boolean(form.errors.image)"

@@ -4,6 +4,7 @@ import { PencilIcon } from '@lucide/vue';
 import { shallowRef } from 'vue';
 import IngredientController from '@/actions/App/Cookbook/Http/Controllers/IngredientController';
 import IngredientFormFields from '@/components/ingredients/IngredientFormFields.vue';
+import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,6 +16,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
@@ -39,6 +41,35 @@ const open = shallowRef(props.openInitially);
             </Button>
         </DialogTrigger>
         <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>
+                    Upravit surovinu {{ ingredient.name }}
+                </DialogTitle>
+                <DialogDescription>
+                    Změňte údaje konkrétního balení v aktuální rodině.
+                </DialogDescription>
+            </DialogHeader>
+
+            <section
+                class="flex flex-col gap-3"
+                :aria-labelledby="`ingredient-${ingredient.id}-photo`"
+            >
+                <h3
+                    :id="`ingredient-${ingredient.id}-photo`"
+                    class="font-medium"
+                >
+                    Fotografie suroviny
+                </h3>
+                <EntityImageUpload
+                    media-type="ingredient-photo"
+                    :entity-id="ingredient.id"
+                    :image-url="ingredient.photoUrl"
+                    :image-alt="`Fotografie suroviny ${ingredient.name}`"
+                />
+            </section>
+
+            <Separator />
+
             <Form
                 v-bind="IngredientController.update.form(ingredient.id)"
                 :options="{ preserveScroll: true }"
@@ -46,15 +77,6 @@ const open = shallowRef(props.openInitially);
                 v-slot="{ errors, processing }"
                 @success="open = false"
             >
-                <DialogHeader>
-                    <DialogTitle
-                        >Upravit surovinu {{ ingredient.name }}</DialogTitle
-                    >
-                    <DialogDescription>
-                        Změňte údaje konkrétního balení v aktuální rodině.
-                    </DialogDescription>
-                </DialogHeader>
-
                 <IngredientFormFields
                     :ingredient="ingredient"
                     :stores="stores"

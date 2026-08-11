@@ -28,6 +28,10 @@ describe('Ingredient UI', () => {
         expect(edit).toContain('@success="open = false"');
         expect(edit).toContain('shallowRef(props.openInitially)');
         expect(readSource('./IngredientList.vue')).toContain(':open-initially');
+        expect(readSource('./IngredientList.vue')).not.toContain(
+            '<EntityImageUpload',
+        );
+        expect(edit).toContain('media-type="ingredient-photo"');
         expect(readSource('./IngredientList.vue')).toContain(
             'editIngredientId === ingredient.id',
         );

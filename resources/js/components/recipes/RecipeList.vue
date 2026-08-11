@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
+import EntityImagePreview from '@/components/media/EntityImagePreview.vue';
 import EditRecipeDialog from '@/components/recipes/EditRecipeDialog.vue';
 import RecipeLifecycleButton from '@/components/recipes/RecipeLifecycleButton.vue';
 import { Badge } from '@/components/ui/badge';
@@ -82,17 +82,16 @@ const kindLabel = (kind: 'grams' | 'millilitres' | 'piece'): string =>
                     >
                 </div>
             </CardHeader>
-            <CardContent class="space-y-4">
-                <EntityImageUpload
-                    media-type="recipe-cover"
-                    :entity-id="recipe.id"
+            <CardContent class="flex flex-col gap-4">
+                <EntityImagePreview
                     :image-url="recipe.coverUrl"
                     :image-alt="`Titulní fotografie receptu ${recipe.name}`"
-                    :editable="!recipe.archived"
                 />
                 <div>
                     <h3 class="text-sm font-medium">Suroviny</h3>
-                    <ol class="mt-1 list-decimal space-y-1 pl-5 text-sm">
+                    <ol
+                        class="mt-1 flex list-decimal flex-col gap-1 pl-5 text-sm"
+                    >
                         <li v-for="line in recipe.ingredients" :key="line.id">
                             {{ line.ingredientName }} —
                             {{ format(line.quantity) }}
@@ -102,7 +101,9 @@ const kindLabel = (kind: 'grams' | 'millilitres' | 'piece'): string =>
                 </div>
                 <div v-if="recipe.steps.length">
                     <h3 class="text-sm font-medium">Postup</h3>
-                    <ol class="mt-1 list-decimal space-y-1 pl-5 text-sm">
+                    <ol
+                        class="mt-1 flex list-decimal flex-col gap-1 pl-5 text-sm"
+                    >
                         <li v-for="step in recipe.steps" :key="step.id">
                             {{ step.instruction }}
                         </li>

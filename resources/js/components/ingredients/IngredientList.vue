@@ -4,7 +4,7 @@ import ArchiveIngredientAlertDialog from '@/components/ingredients/ArchiveIngred
 import EditIngredientDialog from '@/components/ingredients/EditIngredientDialog.vue';
 import IngredientAlternatives from '@/components/ingredients/IngredientAlternatives.vue';
 import RestoreIngredientButton from '@/components/ingredients/RestoreIngredientButton.vue';
-import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
+import EntityImagePreview from '@/components/media/EntityImagePreview.vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Empty,
@@ -72,12 +72,9 @@ defineProps<{
                     </div>
                 </TableCell>
                 <TableCell class="w-56">
-                    <EntityImageUpload
-                        media-type="ingredient-photo"
-                        :entity-id="ingredient.id"
+                    <EntityImagePreview
                         :image-url="ingredient.photoUrl"
                         :image-alt="`Fotografie suroviny ${ingredient.name}`"
-                        :editable="!ingredient.archived"
                     />
                 </TableCell>
                 <TableCell>
