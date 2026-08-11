@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
+    ClipboardListIcon,
     FolderGit2,
     LayoutGrid,
     StoreIcon,
@@ -28,6 +29,7 @@ import { dashboard } from '@/routes';
 import { index as familiesIndex } from '@/routes/families';
 import { index as ingredientsIndex } from '@/routes/ingredients';
 import { index as recipesIndex } from '@/routes/recipes';
+import { index as simplePlanIndex } from '@/routes/simple-plan';
 import { index as storesIndex } from '@/routes/stores';
 import type { NavItem } from '@/types';
 
@@ -46,6 +48,11 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(page.props.currentFamily === null
         ? []
         : [
+              {
+                  title: 'Rychlý plán',
+                  href: simplePlanIndex(),
+                  icon: ClipboardListIcon,
+              },
               {
                   title: 'Recepty',
                   href: recipesIndex(),

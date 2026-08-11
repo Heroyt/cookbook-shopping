@@ -1,0 +1,68 @@
+export type SimplePlanRecipeOption = {
+    id: number;
+    name: string;
+};
+
+export type SimplePlanSelection = {
+    recipeId: number;
+    recipeName: string;
+    servingCount: string;
+    available: boolean;
+};
+
+export type QuantityDisplay = {
+    label: string;
+    value: string;
+    unit: string;
+    approximate: boolean;
+};
+
+export type ShoppingListLinePresentation = {
+    ingredientId: number;
+    ingredientName: string;
+    purchasePackages: string;
+    quantities: Array<{
+        kind: 'grams' | 'millilitres' | 'piece';
+        required: QuantityDisplay;
+        purchased: QuantityDisplay;
+        surplus: QuantityDisplay;
+    }>;
+    contributions: Array<{
+        recipeId: number;
+        recipeName: string;
+        originalIngredientName: string;
+        required: QuantityDisplay;
+    }>;
+    eligibleAlternatives: Array<{
+        ingredientId: number;
+        ingredientName: string;
+    }>;
+    alternativeChoices: Array<{
+        originalIngredientName: string;
+        alternativeIngredientName: string;
+    }>;
+};
+
+export type ShoppingListPresentation = {
+    storeGroups: Array<{
+        storeId: number;
+        storeName: string;
+        sections: Array<{
+            sectionId: number;
+            sectionName: string;
+            lines: ShoppingListLinePresentation[];
+        }>;
+        unsectionedLines: ShoppingListLinePresentation[];
+    }>;
+    unplacedLines: ShoppingListLinePresentation[];
+};
+
+export type ShoppingListProblem = {
+    recipeId: number;
+    recipeName: string;
+    ingredientId: number;
+    ingredientName: string;
+    quantity: string;
+    unit: string;
+    message: string;
+};
