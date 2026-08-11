@@ -1,43 +1,33 @@
 # Nutrition
 
-Ingredient Nutrition Profile persistence and editing are implemented. Recipe calculation, overrides, incomplete profiles, and Calendar totals remain planned. The canonical concepts are defined in the final Domain Glossary chapter.
+Ingredient Nutrition Profile persistence, exact Recipe calculation, complete Recipe overrides, explicit incomplete profiles, and Calendar-day totals are implemented. Nutrition remains separate from package generation: missing nutrition never blocks Shopping Generation or becomes zero.
 
 ## Ingredient nutrition basis
 
 An active Ingredient may define one complete Nutrition Profile containing energy in kilocalories and fat, protein, and carbohydrates for an explicit positive basis in canonical grams, millilitres, piece count, or exactly one whole package. All six values are supplied together or the profile is absent. Database checks restrict the basis kind, require positive basis quantity, require package basis quantity one, and reject negative energy or macros.
 
-The chosen grams, millilitres, or piece basis must exist on the Ingredient package. Editing cannot remove the depended-on package kind while retaining that profile. Clearing the profile removes the dependency. Recipe scaling and package/count conversion are not implemented yet.
+The chosen grams, millilitres, or piece basis must exist on the Ingredient package. Editing cannot remove the depended-on package kind while retaining that profile. Clearing the profile removes that dependency, subject to any Recipe Ingredient that still uses the package kind.
 
 ## Recipe calculation
 
-> **Planned**
->
-> Calculate the Recipe's base-batch nutrition by scaling each usable Ingredient Nutrition Profile to its Recipe Ingredient quantity and summing kcal and all macros. Divide the batch result by the positive base Serving Count to produce the Recipe Nutrition Profile per serving. Recipe views may derive the full batch total from the same values, but per serving is the canonical Recipe result used by planning.
->
-> Scaling a Recipe Selection multiplies that per-serving profile by its requested decimal Serving Count. Nutrition calculation is separate from Shopping List package generation; missing nutrition never blocks ingredient aggregation or purchase counts.
+`RecipeNutritionCalculator` scales every usable Ingredient Nutrition Profile to its Recipe Ingredient quantity using exact rational arithmetic, sums kcal and all macros for the base batch, and divides by the positive base Serving Count. The Recipe projection exposes the canonical per-serving result.
+
+Profiles based on package, grams, millilitres, or pieces use only the package equivalences explicitly stored on that Ingredient. No density or cross-Ingredient conversion is inferred. Repeated Recipe Ingredient lines contribute independently and are summed.
 
 ## Recipe Nutrition Override
 
-> **Planned**
->
-> A Recipe may provide a complete manual per-serving override containing kcal, fat, protein, and carbohydrates together. While present, this profile replaces the entire calculated per-serving result. Partial overrides are invalid because mixing manual and calculated fields could present an internally inconsistent profile.
+A Recipe may provide a complete manual per-serving override containing kcal, fat, protein, and carbohydrates together. While present, this profile replaces the calculated per-serving result. Partial overrides are rejected at validation and persistence boundaries because mixing manual and calculated fields would present an inconsistent profile.
 
 ## Incomplete profiles
 
-> **Planned**
->
-> If any Recipe Ingredient lacks a Nutrition Profile or a usable conversion to that profile's basis, preserve the sum of known values but mark the Recipe result as an Incomplete Nutrition Profile. Identify the missing Ingredients and never present the partial sum as exact or silently substitute zero.
->
-> A complete Recipe Nutrition Override makes the Recipe result complete without requiring Ingredient-level data. Removing the override exposes the current calculated status again.
+If any Recipe Ingredient lacks a Nutrition Profile or a usable conversion to its profile basis, the calculator preserves the sum of known values, marks the result incomplete, and identifies every missing Ingredient. It never presents the partial sum as exact or silently substitutes zero. A complete Recipe Nutrition Override makes the Recipe result complete without requiring Ingredient-level data; removing the override exposes the current calculated state again.
 
 ## Calendar totals
 
-> **Planned**
->
-> Calendar Day nutrition is derived from its Calendar Entries rather than persisted as a daily record. For each entry, multiply the Recipe's current per-serving profile or override by its planned Serving Count, then sum the entries. If any contribution is incomplete, retain known totals, mark the day incomplete, and surface the missing Ingredient details.
->
-> Meal Labels affect display grouping only; labeled and unlabeled Calendar Entries all contribute to the same daily nutrition total. See [Calendar planning](calendar-planning.md) for day construction and live Recipe references.
+Calendar Day nutrition is derived from live Calendar Entries. Each entry multiplies the Recipe's current per-serving calculated profile or override by its planned Serving Count, then the day projection sums all entries. When any contribution is incomplete, the projection retains known totals, marks the day incomplete, and surfaces the missing Ingredient names.
+
+Meal Labels affect display grouping only; labeled and unlabeled Calendar Entries all contribute to the same daily total. Simple Plan and Shopping List output do not use nutrition in their package arithmetic.
 
 ## Verification focus
 
-Current PHPUnit coverage proves create/list/remove, all-or-none validation, basis/package compatibility, quantity-kind removal protection, and database checks independently from Shopping Generation. Future Recipe and Calendar tests must cover scaling, overrides, missing conversions, repeated lines, and propagation of incompleteness without coupling them to package-rounding tests.
+Focused PHPUnit coverage proves Ingredient create/list/remove, all-or-none validation, basis/package compatibility, quantity-kind dependency protection, exact scaling across supported bases, repeated lines, complete override precedence, preservation of known totals in incomplete results, and Calendar propagation. Generator tests separately prove that missing nutrition has no effect on package calculation.

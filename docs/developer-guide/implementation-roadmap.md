@@ -1,9 +1,8 @@
 # Implementation Roadmap
 
-This roadmap orders the approved MVP by dependency and risk. It is an implementation plan, not a statement of available behavior.
+This roadmap records the dependency order and current completion state. Slices 1 through 7 are implemented; Slice 8 remains planned, and Slice 0 still lacks its external live-recreation evidence.
 
-> **Planned**
-> Each slice should deliver migrations, domain and application code, authorization, Inertia UI, factories, and focused PHPUnit/Vitest coverage together. Do not build all tables first and postpone the behavior that proves them.
+Each delivered slice includes migrations where needed, domain and application code, authorization, Inertia UI, factories, and focused pure PHPUnit/Vitest coverage rather than table-only scaffolding.
 
 ## Slice 0: delivery baseline
 
@@ -28,15 +27,16 @@ The verified implementation increments and resolved delivery decisions are:
 
 > **Planned**
 >
-> Verify the externally managed production profile before adding Family data:
+> Verify the externally managed production profile before declaring Slice 0 or
+> the live production profile accepted:
 >
 > - Confirm the Komodo container boots and startup migrations succeed against
 >   the same-host MariaDB service.
 > - Configure Komodo or the proxy to poll `/up` and confirm it returns HTTP 200.
 > - Confirm a MariaDB record and a private file beneath the persistent
 >   `/var/www/storage/app` mount survive application-container recreation.
-> - Exercise database-sensitive migrations and constraints against the selected
->   MariaDB server version before product migrations ship.
+> - Exercise the complete database-sensitive migration and constraint suite
+>   against the selected live MariaDB version before accepting Slice 0.
 >
 > Follow the non-secret
 > [external acceptance checklist](infrastructure-deployment.md#external-acceptance-checklist)
@@ -87,73 +87,41 @@ The verified Slice 2 tracer now provides:
 - database-backed placement, Alternative-pair, and Nutrition Profile invariants plus lifecycle cleanup for Store, association, and reusable Section removal; and
 - Czech shadcn-vue/Inertia controls for placement, nutrition, alternatives, filtering, archive confirmation, restoration, and restore-before-edit behavior.
 
-> **Planned**
->
-> - Add optional Store logos and optional Store Section icons after their concrete media/catalogue prerequisites are approved.
-> - Add optional Ingredient media after its concrete upload-validation policy is approved.
-> - Extend the implemented quantity-kind removal guard to Recipe Ingredient dependencies when Slice 3 adds those records.
->
-> Exclude photos and logos from the first Slice 2 tracer. Their implementation is blocked on the concrete upload-validation policy named in [Security and observability](security-observability.md#planned-photos-and-files).
->
-> **Completion gate:** the non-media Slice 2 invariants are implemented and verified. The media portion remains deliberately blocked rather than guessed: Store logos, optional Store Section icons, and Ingredient media require the approved MIME, byte, dimension, decode/corruption, temporary-file cleanup, and icon-catalogue policies. Recipe Ingredient quantity-kind dependencies cannot exist before Slice 3; the implemented Nutrition Profile dependency proves the current removal guard and must be extended when Recipe Ingredients are introduced. The live Slice 0 Komodo/MariaDB recreation gate remains incomplete and is not replaced by local test evidence.
+- private Store logo, Store Section image, Ingredient photo, and Recipe cover uploads accept approved JPEG/PNG input up to 5 MB, decode and normalize to configured deterministic WebP variants, authorize every read, serialize replacement writers, restore prior variants on failure, retain Recipe/Ingredient archive media, and remove affected files with rollback-aware hard Store, Store Section, or Family deletion;
+- Store Sections may select one allowlisted SVG icon key independently of their colour or uploaded image; and
+- the Ingredient quantity-kind removal guard now checks indexed Recipe Ingredient dependencies in addition to Nutrition Profiles.
+
+**Completion gate met:** every approved Slice 2 invariant, including media and icon policy, is implemented and verified on SQLite and relevant disposable MariaDB suites. The live Slice 0 Komodo/MariaDB recreation gate remains incomplete and is not replaced by local evidence.
 
 ## Slice 3: Recipes and nutrition
 
-> **Planned**
->
-> - Add uniquely named Recipes with base Serving Count, one ordered ingredient list, optional ordered Recipe Steps and approved metadata, saved as complete versioned aggregates that reject stale edits.
-> - Permit repeated Ingredient lines and fractional count amounts.
-> - Scale quantities by `requested servings / base servings` using exact rational value objects created from validated `DECIMAL(20,6)` inputs.
-> - Calculate complete or explicitly incomplete per-serving nutrition, with complete Recipe Nutrition Overrides taking precedence.
-> - Add Recipe Tags with assignment-clearing hard deletion, search result layers, and reversible Recipe archival/restoration without individual hard deletion.
->
-> **Completion gate:** every Planned Slice 3 invariant is proven. Automated tests cover mixed units, repeated lines, fractional servings, missing nutrition, overrides, Family isolation, active/archived filtering and restore-before-edit behavior, stale complete-aggregate rejection without partial writes, Tag deletion with assignment cleanup and name reuse, and layered Recipe search that deduplicates results while retaining every match reason. Media remains gated by the approved upload policy.
+The implemented Slice 3 provides uniquely named complete Recipe aggregates with positive base Serving Counts, repeated ordered Ingredients, optional ordered Steps, source URL, durations, Notes, Tags, and complete nutrition overrides. Optimistic versions reject stale full saves without partial writes. Exact Recipe nutrition calculates across package, metric, and piece bases, preserves known totals in explicit incomplete results, and lets a complete override take precedence. Tags hard-delete with assignment cleanup and name reuse. Layered Current-Family search deduplicates Recipes while preserving all name, Tag, and Ingredient reasons. Recipe archive/filter/restore and restore-before-edit are complete.
+
+**Completion gate met:** focused tests cover exact and fractional quantities, repeated lines, missing nutrition, overrides, two-Family isolation, rollback, stale versions, Tag cleanup, archive/restore, and layered search.
 
 ## Slice 4: pure Shopping Generation
 
-> **Planned**
->
-> - Implement the persistence-independent generator from Recipe Selections to Shopping List Lines.
-> - Aggregate by final Ingredient before ceiling package counts.
-> - Express required, purchased, and Surplus quantities in every configured unit.
-> - Retain contribution breakdowns by source Recipe.
-> - Offer one single-hop active direct Alternative Ingredient choice only when every canonical Recipe quantity kind exists on its package, with no cross-kind conversion or manual-quantity fallback, then globally re-aggregate while preserving per-choice provenance.
-> - Compose a pure grouping collaborator behind the public generator facade to deterministically order Stores by normalized name, then output Store Section traversal order and Ingredient name, with unassigned groups last.
-> - Return either a complete grouped Shopping List or typed Calculation Problems; never return partial purchase output.
->
-> **Completion gate:** domain tests exercise every Planned Slice 4 bullet plus the examples and invariants in [Shopping-list generation](shopping-generation.md) without HTTP, database, calendar, or Inertia dependencies. They prove all-or-nothing problem collection, exact arithmetic and global pre-round aggregation, single-hop canonical-kind Alternative behavior, deterministic normalized-name/stable-identity grouping across input orders, and complete provenance.
+The implemented pure generator scales exact Recipe Selections, aggregates by final Ingredient before ceiling package counts, calculates required/purchased/Surplus in every configured kind, retains deterministic Recipe contributions, applies one eligible direct active Alternative per original Ingredient, globally re-aggregates with reversible provenance, and groups by normalized Store, Section traversal, and normalized Ingredient. It returns either a complete Shopping List or every typed Calculation Problem and has no HTTP, database, Calendar, or session dependency.
+
+**Completion gate met:** pure PHPUnit proves exact arithmetic, all-or-nothing problem collection, deterministic grouping across input orders, complete provenance, single-hop Alternative rules, and internal contract violations.
 
 ## Slice 5: Simple Plan
 
-> **Planned**
->
-> - Build an unordered, temporary set with one Recipe Selection per Recipe and accumulate repeated additions into that row with an explicit resulting-total notice.
-> - Generate the list through the same service used by Calendar planning.
-> - Present responsive desktop and mobile output suitable for copying into another checklist tool.
->
-> **Completion gate:** a browser-level test proves that Recipe selection and fractional servings produce the expected package counts without persisting the Simple Plan, and that adding the same Recipe again accumulates its submitted Serving Count into one row with an explicit resulting-total notice.
+The implemented Simple Plan is a Current-Family-namespaced transient session set with one Recipe Selection per active Recipe. Duplicate additions accumulate exact Serving Count with Czech resulting-total feedback. Generation is refresh-safe, preserves the plan through correction, presents every problem and exact correction link, applies/reverts valid direct Alternatives, and uses the pure generator without a Simple Plan table.
+
+**Completion gate met:** PHPUnit, Vitest, and recorded browser evidence prove fractional/additive selection, two-Family isolation, transience, responsive output, correction/retry, alternatives, focus, and Czech feedback.
 
 ## Slice 6: weekly Calendar
 
-> **Planned**
->
-> - Persist Calendar Entries only; derive Calendar Days at read time.
-> - Support the five fixed Czech Meal Labels plus unlabeled entries.
-> - Prevent duplicate `(Family, date, Meal Label, Recipe)` rows by persisting a non-null internal key for the unlabeled case, while atomically accumulating duplicate creates and collision-producing edits with an explicit UI notice for every accepted request.
-> - Provide a responsive weekly planner and arbitrary multi-date Calendar Selection with range-selection convenience.
-> - Show calculated Recipe and daily nutrition, including incomplete-state warnings.
->
-> **Completion gate:** every Planned Slice 6 invariant is proven. Selecting non-contiguous dates produces the same generator input and output as an equivalent Simple Plan; tests also cover duplicate create, collision-producing edit using the submitted edited Serving Count, concurrent collision, repeated transport request, explicit resulting-total notice, the internal unlabeled key, and restore-required restrictions on archived-Recipe entries.
+The implemented Calendar persists only entries and derives ordered weekly days plus exact daily nutrition. It supports five fixed Czech labels and internal `unlabeled`, atomically accumulates duplicate creates and collision edits, restricts archived-Recipe entry edits, provides arbitrary non-contiguous date selection, preserves selection while invalidating stale generated presentations, and produces the same generator request/output as equivalent Simple Plan input.
+
+**Completion gate met:** SQLite and disposable MariaDB tests cover unique-key collision, exact accumulation, rollback, repeated accepted requests, two-Family scope, archived restrictions, arbitrary dates, alternatives, source-specific correction flow, and nutrition. Vitest/browser evidence covers responsive planner and composed dialog/focus behavior.
 
 ## Slice 7: generation history
 
-> **Planned**
->
-> - Let a member explicitly save a new read-only Shopping List snapshot for every accepted request, identified to the User by generation timestamp.
-> - Store relational ownership/provenance headers and a versioned immutable JSON payload containing display data, lossless calculated output, applied alternatives, and source provenance.
-> - Permit any Family member to delete history entries.
->
-> **Completion gate:** every Planned Slice 7 invariant is proven. Later edits or archival of Recipes and Ingredients, and edits or deletion of Stores and Sections, cannot change the rendered snapshot. Tests also prove that every accepted save—including identical content and a repeated request—creates a distinct row; the schema version is readable; exact values and provenance round-trip losslessly; and frozen localized display values render without consulting live records.
+The implemented history explicitly saves a separate immutable snapshot for every accepted request. Relational headers support Current-Family bounded cursor history while explicit `SavedShoppingListV1` serialization freezes lossless output, localized display, alternatives, and Simple Plan or Calendar provenance. Detail does not consult live records; unsupported/corrupt schemas render an intentional Czech unavailable state. Any member may delete history with visible focus recovery.
+
+**Completion gate met:** tests prove repeated/identical saves remain distinct, microsecond timestamp plus identifier ordering, schema-aware round-trip, immutability, live-record independence, two-Family isolation, summary-only index queries, pagination, cascade, and equal-member deletion. Vitest/browser evidence covers save, history navigation/detail, cancellation and confirmation focus, and console-clean behavior.
 
 ## Slice 8: Agent Integration
 

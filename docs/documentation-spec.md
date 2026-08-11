@@ -2,16 +2,16 @@
 
 ## Status
 
-- Mode: Create
-- Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1, 0.1.2, 0.2.0, and 0.3.0 approved on 2026-08-10
+- Mode: Refresh
+- Approval: Approved on 2026-08-09 after Family-scope revision; versions 0.1.1, 0.1.2, 0.2.0, and 0.3.0 approved on 2026-08-10; version 0.4.0 approved on 2026-08-11
 - Primary languages: Czech for the deferred user guide; English for the configured developer/operator guide and ADR compendium
-- Documentation version: 0.3.0
+- Documentation version: 0.4.0
 
 ## Application and evidence
 
 ### Product boundary
 
-The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Sections, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, a placeholder authenticated dashboard, operator-only User provisioning, complete Family Access collaboration workflows, reusable Current Family record scoping, complete Store and reusable Store Section management with ordered associations, and concrete packaged Ingredient creation, editing, placement, archival/restoration, direct Alternative management, and optional Nutrition Profiles. Ingredient metric inputs normalize `mg`, `g`, `kg`, `ml`, `cl`, and `l` to canonical persistence. Store logos, Store Section icons, Ingredient media, Recipes, meal-calendar, Shopping List, and shopping-generation workflows remain intended functionality that is not yet implemented.
+The product boundary is this family-scoped cookbook and shopping-planning web application. A User may participate in multiple Families and works within one Current Family at a time. Each Family exclusively owns its Cookbook, Ingredients, Stores, Store Sections, Store Placements, Calendar Entries, and Saved Shopping Lists. The currently implemented boundary contains authentication, password recovery, passkey management, profile and security settings, appearance settings, operator-only User provisioning, complete Family Access collaboration workflows, and reusable Current Family record scoping. Cookbook implements Store and reusable Store Section management with ordered associations and an icon catalogue; concrete packaged Ingredients with normalized quantities, placement, archival/restoration, direct Alternatives, Nutrition Profiles, and private normalized images; and complete versioned Recipe aggregates with repeated ordered Ingredients, Steps, approved metadata, Tags, search, archive/restore, nutrition calculation/overrides, and private cover images. Meal Planning implements transient Simple Plans, persistent weekly Calendar Entries, Calendar nutrition, arbitrary date selection, and both generation adapters. Shopping Generation implements persistence-independent exact calculation, grouping, alternatives, typed all-or-nothing problems, refresh-safe generated results, and immutable saved history.
 
 All user-facing application copy is Czech, including visible interface text, page titles, placeholders, validation and authentication errors, flash messages and toasts, loading and empty states, and accessible-only labels. Source-code identifiers and the developer/operator guide remain English. Backend and package messages use the Czech resources under `lang/cs`; Czech is both the application and fallback locale so an English fallback is not an acceptable user-facing state.
 
@@ -31,10 +31,12 @@ Do not use the currently connected Laravel Boost database as evidence because it
 - Laravel Boost is connected to an unrelated livestock-management database. Repository migrations and code remain authoritative until that connection is corrected.
 - On 2026-08-10 the User selected operator-only Artisan provisioning with public registration disabled, and persisted nullable Current Family selection validated against membership.
 - On 2026-08-10 the User selected application-generated normalized name keys with database-backed Family-scoped uniqueness and approved documentation version 0.3.0.
+- On 2026-08-11 the User approved JPEG and PNG uploads up to 5 MB with decode checks, no pixel-dimension limit, configurable normalized WebP variants, deterministic entity filenames, replacement, and entity-deletion cleanup.
+- On 2026-08-11 the User approved documentation version 0.4.0 and requested validation and publication.
 
 ### Intended-versus-implemented mismatches
 
-Family persistence, operator User provisioning, Family collaboration, reusable Current Family scoping, Store and reusable Store Section lifecycles and ordering, and packaged Ingredient management through placement, archival, direct Alternatives, and Nutrition Profiles are implemented. Store logos, optional Store Section icons, Ingredient media, Recipe Ingredient dependencies, Recipes, meal-calendar, Shopping List, and Shopping Generation remain unimplemented. Alternative replacement eligibility is implemented as a pure canonical-kind predicate, but applying a replacement remains part of planned Shopping Generation.
+Slices 1 through 7 are implemented: Family Access; Stores, Store Sections, the icon catalogue, packaged Ingredients and private media; Recipes and nutrition; pure Shopping Generation; Simple Plan; weekly Calendar; and immutable Saved Shopping List history. Media storage normalizes accepted JPEG/PNG uploads into configured private WebP variants and retains Recipe and Ingredient media on archive, while hard Store, Store Section, or Family deletion removes the affected files transactionally. Slice 8 Agent Integration remains planned and has no Agent Credential, Agent API, Change Set, Sanctum, Scramble, or OpenAPI implementation. Slice 0's live Komodo/MariaDB recreation evidence remains incomplete even though the repository and disposable MariaDB compatibility gates have been exercised.
 
 - Omit unimplemented behavior from the user guide.
 - The developer/operator guide may describe intended design only in visually distinct **Planned** callouts, separated from current setup and operational instructions.
@@ -189,6 +191,6 @@ Version documentation independently using semantic versioning, beginning at `0.1
 - [x] Domain language is reflected in the appropriate `CONTEXT.md` files or in every context referenced by `CONTEXT-MAP.md`.
 - [x] All material claims have evidence or explicit user attestation.
 - [x] Every published screenshot is manifested and approved; the configured developer guide publishes no screenshots.
-- [x] Configured developer-guide and ADR-compendium Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks after this publication-structure refresh.
-- [x] Configured developer-guide and ADR-compendium correctness and completeness review findings are resolved or explicitly accepted after this publication-structure refresh.
+- [ ] Version 0.4.0 developer-guide and ADR-compendium Markdown and PDFs pass mechanical, visual, privacy, and accessibility checks.
+- [ ] Version 0.4.0 developer-guide and ADR-compendium correctness and completeness review findings are resolved or explicitly accepted.
 - [ ] The deferred Czech User guide has authoritative Markdown, a configured PDF target, and completed publication gates.

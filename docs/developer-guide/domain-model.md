@@ -1,6 +1,6 @@
 # Domain model
 
-The repository implements the authenticated `User` and account-security shell, Family Access, and Cookbook Store, Store Section, placement, and packaged Ingredient management. `app/Cookbook` owns Store/Section lifecycles and ordering plus Ingredient editing, archival, direct Alternatives, and Nutrition Profiles. Recipes, Meal Planning, and Shopping Generation remain unimplemented, and the generator boundary remains persistence-independent.
+The repository implements the authenticated `User` and account-security shell, Family Access, Cookbook, Meal Planning, pure Shopping Generation, and immutable generation history through Slice 7. `app/Cookbook` owns Store/Section lifecycles and ordering, media and icons, packaged Ingredients, Recipe aggregates, Tags, search, archival, Alternatives, and nutrition. `app/MealPlanning` owns Calendar Entries and the two planning adapters. `app/ShoppingGeneration` owns exact persistence-independent generation and separately owns the application/persistence seam for explicit snapshots. Agent Integration remains unimplemented.
 
 The final Domain Glossary chapter is the canonical implementation-free vocabulary. These developer chapters explain relationships, invariants, and implementation consequences without replacing it.
 
@@ -38,24 +38,22 @@ The approved design is governed by:
 - [ADR 0032: Save Recipes as versioned aggregates](../adr/0032-save-recipes-as-versioned-aggregates.md)
 - [ADR 0033: Delete Recipe Tags with assignment cleanup](../adr/0033-delete-recipe-tags-with-assignment-cleanup.md)
 
-## Planned boundaries
+## Implemented boundaries
 
-> **Planned**
->
-> The application remains one Laravel deployment and logical database with four explicit in-process modules. **Family Access** owns Family Membership and Current Family context. **Cookbook** owns Recipes, Ingredients, Stores, Store Sections, Recipe Tags, preparation content, package definitions, and nutrition. **Meal Planning** owns persistent Calendar Entries and adapts Calendar Selections or temporary Simple Plans into Recipe Selections. **Shopping Generation** consumes those selections through a persistence-independent service and returns calculated Shopping List Lines.
->
-> Family is the ownership and authorization boundary at every module edge. Cookbook, planning, and saved-history records belong to exactly one Family. No operation combines or copies data across Families in the MVP.
+The application remains one Laravel deployment and logical database with four explicit in-process modules. **Family Access** owns Family Membership and Current Family context. **Cookbook** owns Recipes, Ingredients, Stores, Store Sections, Recipe Tags, preparation content, package definitions, media, and nutrition. **Meal Planning** owns persistent Calendar Entries and adapts Calendar Selections or temporary Simple Plans into Recipe Selections. **Shopping Generation** consumes those selections through a persistence-independent service and returns calculated Shopping List Lines; its application layer stores only explicitly saved snapshots.
+
+Family is the ownership and authorization boundary at every module edge. Cookbook, planning, and saved-history records belong to exactly one Family. Session generation state is namespaced by Current Family, and no operation combines or copies data across Families.
 
 See [Architecture and system boundaries](architecture.md) for framework placement and module dependencies, and [Data structure](data-structure.md) for implemented persistence and the remaining conceptual relational shape.
 
 ## Capability chapters
 
 - [Family access](family-access.md) — implemented provisioning, Family and membership lifecycle, Current Family selection, account-deletion protection, and the reusable scope proven by Stores, Store Sections, and Ingredients; later aggregates must reuse it.
-- [Recipes and Ingredients](recipes-ingredients.md) — implemented package management, metric normalization, placement, archival, direct Alternatives, and Nutrition Profiles plus planned Recipe composition and search.
-- [Nutrition](nutrition.md) — Ingredient bases, calculated per-serving values, overrides, incomplete profiles, and daily totals.
-- [Stores and shopping order](stores-shopping-order.md) — implemented Store lifecycle, reusable Store Section creation/listing/deletion, and per-Store association/order plus planned placement effects and final grouping.
-- [Calendar planning](calendar-planning.md) — Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.
-- [Shopping List generation](shopping-generation.md) — generator input and output, calculation order, alternatives, grouping, and immutable history.
+- [Recipes and Ingredients](recipes-ingredients.md) — implemented package management, media, Recipe aggregates, Tags, metric normalization, placement, archival, direct Alternatives, and layered search.
+- [Nutrition](nutrition.md) — implemented Ingredient bases, calculated per-serving values, complete overrides, explicit incomplete profiles, and daily totals.
+- [Stores and shopping order](stores-shopping-order.md) — implemented Store lifecycle, reusable Store Section icons/association/order, placement cleanup, and final generated grouping.
+- [Calendar planning](calendar-planning.md) — implemented Calendar Entries, fixed Meal Labels, Calendar Selection, weekly planning, and Simple Plans.
+- [Shopping List generation](shopping-generation.md) — implemented generator input/output, exact calculation, alternatives, grouping, typed problems, and immutable history.
 - [Agent integrations](agent-integrations.md) — the planned Agent Credential, Family Catalog, atomic Agent Change Set, and OpenAPI boundary.
 
 The dependency-ordered delivery sequence is in the [Implementation roadmap](implementation-roadmap.md).

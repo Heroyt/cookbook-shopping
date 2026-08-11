@@ -89,9 +89,11 @@ Laravel reads runtime choices from environment variables through the files under
   `failed_jobs`; production uses the synchronous connection and has no queue
   persistence. Add a supervised worker before enabling asynchronous production
   jobs.
-- **Private uploads:** the local filesystem stores these under
-  `storage/app/private` beneath the `/var/www/storage/app` persistent mount.
-  Keep Family media private and preserve the mount across container recreation.
+- **Private uploads:** `MEDIA_DISK=local` stores normalized entity WebP variants
+  beneath `storage/app/private/family-media` inside the
+  `/var/www/storage/app` persistent mount. Keep Family media private and
+  preserve the mount across container recreation. The current pipeline requires
+  GD with JPEG, PNG, and WebP support.
 - **Public uploads:** the local filesystem stores these under
   `storage/app/public` beneath the same mount and exposes them through
   `public/storage`. Use this path only for deliberately public assets; Family
@@ -128,7 +130,7 @@ At startup, the [production entrypoint](../../docker/production/start) creates s
 
 - MariaDB runs on the same host according to the user attestation, but its supported server version, credentials, network exposure, and connection limits are not repository evidence. Keep it off the public network unless a reviewed TLS configuration protects the connection.
 - The image deliberately contains no `.env` or build-time Laravel configuration cache. The external deployment must inject every required runtime value; `.env.production.example` is a non-secret contract, not deployable credentials.
-- Komodo must persist `/var/www/storage/app`; without that mount, uploaded media is lost when the container is replaced. The repository cannot verify the live mount.
+- Komodo must persist `/var/www/storage/app`; without that mount, normalized Store, Section, Ingredient, and Recipe images are lost when the container is replaced. The repository cannot verify the live mount.
 - The final image contains no production queue worker. The production environment therefore uses the synchronous queue connection while the application has no queued jobs.
 - The single application container runs migrations during startup before PHP-FPM. Adding replicas requires a release job or another migration-serialization mechanism before concurrent startup.
 - The container starts cron, but no application-specific scheduled commands are registered. Adding replicas or scheduled work requires exactly one scheduler trigger.

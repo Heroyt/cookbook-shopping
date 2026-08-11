@@ -1,15 +1,12 @@
 # Local Development
 
-This chapter covers the current authenticated Laravel/Inertia shell and Family
-Access workflow plus the non-media Slice 2 Cookbook implementation. Local setup
-and migrations create the Family, Store, Store Section, ordered-association,
-Ingredient, Alternative-edge, and Nutrition Profile tables plus the Current
-Family preference. Focused tests exercise provisioning, Family lifecycle,
-Store and Store Section management and ordering, Ingredient creation and editing,
-Store Placement, archival/restoration, direct Alternatives, Nutrition Profiles,
-equal rights, cross-Family isolation, database constraints, and account-deletion
-protection. The rest of Cookbook,
-meal planning, and Shopping List generation do not exist yet. See
+This chapter covers the Laravel/Inertia application through Slice 7. Local setup
+and migrations create Family Access, Cookbook, Calendar Entry, and Saved Shopping
+List persistence; private media remains filesystem-backed and Simple Plans plus
+generated results remain transient. Focused tests exercise equal rights,
+two-Family isolation, exact quantities, aggregate rollback, media lifecycle,
+pure generation, planning adapters, Calendar concurrency, and immutable history.
+Agent Integration does not exist yet. See
 [Current Application](current-application.md) for the implemented boundary.
 
 ## Choose a runtime
@@ -176,6 +173,9 @@ See [docker-compose.yml](../../docker-compose.yml),
   the application log rather than sent.
 - **`FILESYSTEM_DISK`** defaults to `local`; files are private under
   `storage/app/private` by default.
+- **`MEDIA_DISK`** selects the Laravel disk for private entity images and
+  defaults to `local`; `config/media.php` defines the 5 MB limit, WebP quality,
+  deterministic root, and per-entity variant bounds.
 - **`VITE_APP_NAME`** inherits `APP_NAME` and controls the browser-title suffix.
 
 Do not derive documentation or migrations from the Laravel Boost database in
@@ -211,6 +211,8 @@ php artisan test --compact tests/Feature/Cookbook/StoreManagementTest.php
 php artisan test --compact tests/Feature/Cookbook/StoreSectionManagementTest.php
 php artisan test --compact tests/Feature/Cookbook/IngredientManagementTest.php
 php artisan test --compact tests/Feature/Cookbook tests/Unit/Cookbook
+php artisan test --compact tests/Feature/MealPlanning tests/Unit/MealPlanning
+php artisan test --compact tests/Feature/ShoppingGeneration tests/Unit/ShoppingGeneration
 ```
 
 Before finalizing PHP changes, run the project-required checks:
@@ -234,6 +236,10 @@ pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/composables/useIn
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreUi.spec.ts
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/stores/StoreSectionUi.spec.ts
 pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/ingredients/IngredientUi.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/recipes/RecipeUi.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/calendar/CalendarUi.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/simple-plan/SimplePlanUi.spec.ts
+pnpm test:node --maxWorkers=1 --testTimeout=10000 resources/js/components/shopping-list-history/SavedShoppingListUi.spec.ts
 ```
 
 Replace the example path with an existing affected test. Before finalizing

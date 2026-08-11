@@ -24,8 +24,8 @@ scope from that validated server-side selection, every member has equal rights,
 final-membership removal is blocked, and Family deletion requires the exact
 Family name. Focused tests reject selecting or removing membership through a
 different Family. `CurrentFamilyScope` applies the same membership-validated
-context to Store reads, creation, rename, and deletion; Store Section reads,
-creation, and deletion; both-record resolution for association, removal, and reorder; and Ingredient reads and creation.
+context to Store, Store Section, Ingredient, Recipe, Recipe Tag, Calendar,
+protected media, generation-adapter, and Saved Shopping List operations.
 Every member has equal Cookbook-management rights. Store
 rename and deletion resolve the route Store identifier
 inside that scope, ignore a client-supplied Family identifier, and return not
@@ -42,7 +42,7 @@ increments, and normalized-name reuse.
 
 > **Planned**
 >
-> Authentication establishes User identity; it does not by itself authorize Family data. Every later Family-owned query and mutation must reuse the authenticated User's Family Membership and selected Current Family scope, following the implemented Store, Store Section, and Ingredient tracers. No request-supplied Family or record identifier may bypass that membership check.
+> Authentication establishes User identity; it does not by itself authorize Family data. Future Family-owned queries and mutations, including Slice 8, must reuse a membership-validated Family context. No request-supplied Family or record identifier may bypass that check.
 >
 > The roleless model gives every Family member equal authority. Controls still required for Family-owned records include:
 >
@@ -62,14 +62,13 @@ increments, and normalized-name reuse.
 >
 > Agent mutations use an immutable preview followed by digest-bound atomic apply. Only the credential that created a preview may apply it. Apply rechecks live issuer membership, abilities, expiry, record timestamps, warnings, and Family ownership inside the transaction. Tests must use multiple Users, Families, credentials, and abilities to prove that changing a route identifier or request body cannot widen scope. See [Agent integrations](agent-integrations.md) and [ADR 0009](../adr/0009-scope-agent-credentials-to-one-user-and-family.md).
 
-## Planned photos and files
+## Photos and files
 
-> **Planned**
-> Recipe cover photos, Ingredient photos, and Store logos are entity-owned Family data. The selected backend is Laravel's private local disk persisted through the Komodo mount at `/var/www/storage/app`; S3 remains a future migration option. The first implementation retains one original file without generated variants. Replacement supersedes and removes the previous file after the database change commits; archiving retains the attachment; hard deletion and Family deletion remove it. No upload workflow exists yet. Validate MIME type and size, generate server-controlled filenames, and authorize every non-public retrieval when uploads are implemented.
->
-> Media is excluded from the first Store/Ingredient and Recipe tracers. Before any upload implementation begins, approve and document the exact MIME allowlist, maximum byte size and image dimensions, corrupt/decode rejection behavior, and temporary-file cleanup. The lifecycle above does not supply those missing validation limits and must not be treated as an implementable upload policy.
->
-> Do not place sensitive Family media on an unauthenticated public disk by default. File deletion must be coordinated with record replacement, archiving, and Family deletion. Feature tests should use Laravel filesystem fakes.
+Recipe covers, Ingredient photos, Store logos, and optional Store Section images are entity-owned Family data. Upload accepts only JPEG and PNG up to 5 MB, checks extension and detected MIME, rejects incomplete or undecodable files, and imposes no input pixel-dimension limit. The service decodes the image, preserves aspect ratio without upscaling, and stores only configured normalized WebP variants using deterministic server-controlled paths and filenames.
+
+Every read is authenticated and Current-Family scoped, returns `image/webp` with private/no-store and `nosniff` headers, and never reveals a storage path. A valid replacement serializes writers through the entity lock, supersedes the existing variants, and removes variants no longer configured; prior files are restored if any write fails. Any decode or write failure becomes Czech field feedback. Archive retains Recipe and Ingredient media; hard Store, Store Section, and Family deletion removes affected media with database rollback if cleanup fails.
+
+The selected backend is Laravel's private local disk persisted through the external Komodo mount at `/var/www/storage/app`; S3 remains a future migration option. The repository verifies the lifecycle with filesystem fakes but has not verified that the live mount survives container recreation. Do not move Family media to an unauthenticated public disk.
 
 ## Secrets and configuration
 
@@ -96,7 +95,8 @@ The default log stack writes to Laravel's configured channels. Development conta
 
 ## Audit and privacy limits
 
+Saved Shopping Lists are implemented user-managed snapshots, not audit records. Any Family member may delete one, and deletion never changes source domain data. The MVP has no approved audit log, pricing data, pantry inventory, allergens, or cross-Family data sharing.
+>
 > **Planned**
-> Saved Shopping Lists are user-managed snapshots, not audit records. The MVP has no approved audit log, pricing data, pantry inventory, allergens, or cross-Family data sharing. Avoid designing operational controls that imply those capabilities exist.
 >
 > Applied Agent Change Set History is retained operational provenance, not a general-purpose audit log. Any Agent Credential with `content:read` may inspect its Family's history, no agent may delete it, and any Family member may delete it through the web interface. History deletion never reverses domain changes.

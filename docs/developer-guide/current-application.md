@@ -7,12 +7,13 @@ the unrelated database currently connected through Laravel Boost.
 
 ## Product boundary
 
-The repository currently implements an authenticated Laravel application shell
-and the Family Access collaboration workflow. Its working surfaces are:
+The repository implements the authenticated application, Family Access, and
+the complete Slice 2 through Slice 7 household planning workflow. Its working
+surfaces are:
 
-- a public welcome page;
+- a guest root redirect to login and an authenticated root redirect to the
+  placeholder Dashboard;
 - login, logout, password reset, and passkey authentication;
-- an authenticated dashboard whose content is still placeholder panels;
 - operator-only interactive User provisioning;
 - Family creation, Current Family switching, member addition and removal,
   leaving, and exact-name-confirmed Family deletion;
@@ -23,6 +24,26 @@ and the Family Access collaboration workflow. Its working surfaces are:
   restoration of concrete packaged Ingredients, including explicit metric-unit
   normalization, optional descriptions and Nutrition Profiles, and direct
   symmetric Alternative links;
+- private Current-Family media for Store logos, Store Section images,
+  Ingredient photos, and Recipe covers, normalized from JPEG or PNG into
+  configured WebP variants, plus an allowlisted Store Section SVG icon
+  catalogue;
+- complete Current-Family Recipe aggregate creation and optimistic editing,
+  including ordered repeatable Ingredient lines, optional ordered Steps,
+  source and duration metadata, Notes, complete nutrition overrides, Tags,
+  layered search, and archive/filter/restore;
+- exact Recipe nutrition calculation with explicit incomplete states;
+- a transient Simple Plan with additive fractional Serving Counts and
+  refresh-safe Shopping List generation;
+- persistent weekly Calendar Entries with fixed Czech Meal Labels, additive
+  collision handling, derived daily nutrition, arbitrary selected dates, and
+  the same generator boundary;
+- persistence-independent Shopping Generation with exact aggregation,
+  deterministic Store/Section grouping, contribution provenance, typed
+  Calculation Problems, and single-hop direct Alternative application; and
+- immutable, versioned, timestamped Saved Shopping List history with frozen
+  Simple Plan or Calendar provenance, bounded cursor pagination, intentional
+  unsupported/corrupt-payload states, and equal-member deletion;
 - profile editing and account deletion;
 - password and passkey management;
 - light, dark, and system appearance preferences; and
@@ -48,14 +69,11 @@ text.
 
 > **Planned**
 >
-> Store logos, optional Store Section icons, Ingredient media, Recipes, meal
-> planning, and Shopping List generation remain approved domain
-> design rather than available behavior. Do not infer their models,
-> authorization, or persistence from the implemented Cookbook tracers. Alternative
-> replacement remains part of pure planned Shopping Generation even though its direct
-> relationships and canonical-kind eligibility predicate exist. The canonical vocabulary is in
-> the final Domain Glossary chapter, and the architectural direction is recorded in
-> [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
+> Agent Integration remains approved design rather than available behavior.
+> The repository has no Agent Credential, Catalog, Change Set, Sanctum Agent
+> boundary, Scramble dependency, or Agent API/OpenAPI route. The canonical
+> vocabulary is in the final Domain Glossary chapter, and the architectural
+> direction is recorded in [ADR 0004](../adr/0004-build-a-laravel-modular-monolith.md).
 
 ## Technology baseline
 
@@ -88,15 +106,15 @@ response. Inertia renders Vue page components without a separate JSON API.
 [`resources/js/app.ts`](../../resources/js/app.ts) boots the client and chooses
 layouts by page name:
 
-- `Welcome` has no application layout;
 - `auth/*` uses the authentication layout;
 - `settings/*` nests the settings layout inside the application layout; and
 - every other page uses the application layout.
 
 The application layout provides a responsive sidebar, breadcrumb header, and
-toast host. The sidebar links to the placeholder dashboard, Families,
-Ingredients, and Stores management pages, and exposes a Current Family switcher populated
-only from the authenticated User's memberships. Settings are reached through the user menu. See
+toast host. The sidebar links to Families, Recipes, Ingredients, Stores,
+Calendar, Simple Plan, and Shopping List history, and exposes a Current Family
+switcher populated only from the authenticated User's memberships. Settings are
+reached through the user menu. See
 [the sidebar](../../resources/js/components/AppSidebar.vue) and
 [settings layout](../../resources/js/layouts/settings/Layout.vue).
 
@@ -171,11 +189,21 @@ The current schema contains:
   package quantities, and association-backed Store Placement;
 - ordered direct Ingredient Alternative edges and one optional checked
   Nutrition Profile per Ingredient;
+- complete Recipe aggregates with optimistic versions, ordered repeatable
+  Ingredient lines, ordered Steps, Tag assignments, metadata, optional complete
+  nutrition overrides, and reversible archive state;
+- Calendar Entries with same-Family Recipe references, positive Serving Counts,
+  fixed Meal Label keys including the internal `unlabeled` key, and one row per
+  Family/date/label/Recipe combination; and
+- immutable Saved Shopping Lists with relational Family/provenance headers and
+  explicit versioned JSON payloads;
 - database cache entries and locks; and
 - queued jobs, job batches, and failed jobs.
 
-There are no Recipe, Calendar Entry, media, or Shopping List tables. See the
-[migration directory](../../database/migrations/).
+Media is stored on the configured private filesystem rather than in a database
+table. Simple Plans and generated lists remain transient session state until a
+member explicitly saves a snapshot. There are no Agent Integration tables. See
+the [migration directory](../../database/migrations/).
 
 The default environment uses SQLite and database-backed sessions, cache, and
 queues. The local filesystem disk points to `storage/app/private`; the public
@@ -229,12 +257,12 @@ operationally verified. See [Jenkinsfile](../../Jenkinsfile).
 - Runtime configuration is injected rather than baked into the production
   image, but the deployment platform's secret definitions and validated
   production values are not committed here.
-- Reusable Current Family authorization now scopes the Store, Store Section,
-  and Ingredient tracers, but later
-  Family-owned records and media-upload workflows are not implemented. The selected personal profile
-  uses the private local filesystem and intentionally requires no automated
-  backup, recovery, or centralized observability; the persistent mount remains
-  external and unverified.
+- Reusable Current Family authorization scopes Store, Store Section,
+  Ingredient, Recipe, Calendar, generation-adapter, media, and saved-history
+  workflows. Agent Integration remains unimplemented. The selected personal
+  profile uses the private local filesystem and intentionally requires no
+  automated backup, recovery, or centralized observability; the persistent
+  mount remains external and unverified.
 
 See [ADR 0006](../adr/0006-use-a-single-host-personal-production-profile.md)
 for the selected profile and its reassessment triggers.
