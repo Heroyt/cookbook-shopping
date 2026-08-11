@@ -73,16 +73,28 @@ final class ShoppingListPresenter
         return [
             'ingredientId' => $line->ingredient->id,
             'ingredientName' => $line->ingredient->name,
+            'package' => [
+                'grams' => $line->ingredient->package->weightGrams,
+                'millilitres' => $line->ingredient->package->volumeMillilitres,
+                'piece' => $line->ingredient->package->pieceCount,
+            ],
             'purchasePackages' => $line->purchasePackages,
             'quantities' => $quantities,
-            'contributions' => array_map(fn (RecipeContribution $contribution): array => [
+            'contributions' => array_map(fn (RecipeContribution $contribution, int $index): array => [
+                'contributionKey' => implode(':', [
+                    $contribution->recipeId,
+                    $contribution->originalIngredientId,
+                    $contribution->quantityKind->value,
+                    $index,
+                ]),
                 'recipeId' => $contribution->recipeId,
                 'recipeName' => $contribution->recipeName,
                 'originalIngredientId' => $contribution->originalIngredientId,
                 'originalIngredientName' => $contribution->originalIngredientName,
                 'quantityKind' => $contribution->quantityKind->value,
                 'required' => $this->quantity($contribution->required, $contribution->quantityKind),
-            ], $line->contributions),
+                'packageFraction' => $contribution->packageFraction->fraction(),
+            ], $line->contributions, array_keys($line->contributions)),
             'eligibleAlternatives' => array_map(static fn (AlternativeIngredientDefinition $alternative): array => [
                 'ingredientId' => $alternative->id,
                 'ingredientName' => $alternative->name,
@@ -96,7 +108,7 @@ final class ShoppingListPresenter
         ];
     }
 
-    /** @return array{label: string, value: string, unit: string, approximate: bool} */
+    /** @return array{exact: string, label: string, value: string, unit: string, approximate: bool} */
     private function quantity(ExactQuantity $quantity, QuantityKind $kind): array
     {
         $value = BigRational::of($quantity->fraction());
@@ -118,6 +130,7 @@ final class ShoppingListPresenter
         $normalized = $this->normalizeDecimal((string) $rounded);
 
         return [
+            'exact' => $quantity->fraction(),
             'label' => str_replace('.', ',', $normalized) . ' ' . $unit,
             'value' => $normalized,
             'unit' => $unit,

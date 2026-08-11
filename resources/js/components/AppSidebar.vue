@@ -5,6 +5,7 @@ import {
     CalendarDaysIcon,
     ClipboardListIcon,
     FolderGit2,
+    HistoryIcon,
     LayoutGrid,
     StoreIcon,
     NotebookTabsIcon,
@@ -31,6 +32,7 @@ import { index as calendarIndex } from '@/routes/calendar';
 import { index as familiesIndex } from '@/routes/families';
 import { index as ingredientsIndex } from '@/routes/ingredients';
 import { index as recipesIndex } from '@/routes/recipes';
+import { index as shoppingListHistoryIndex } from '@/routes/shopping-list-history';
 import { index as simplePlanIndex } from '@/routes/simple-plan';
 import { index as storesIndex } from '@/routes/stores';
 import type { NavItem } from '@/types';
@@ -59,6 +61,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: 'Rychlý plán',
                   href: simplePlanIndex(),
                   icon: ClipboardListIcon,
+              },
+              {
+                  title: 'Historie nákupů',
+                  href: shoppingListHistoryIndex(),
+                  icon: HistoryIcon,
               },
               {
                   title: 'Recepty',

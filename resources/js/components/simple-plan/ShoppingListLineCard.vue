@@ -26,8 +26,9 @@ const props = withDefaults(
     defineProps<{
         line: ShoppingListLinePresentation;
         generationSource?: 'simple-plan' | 'calendar';
+        readOnly?: boolean;
     }>(),
-    { generationSource: 'simple-plan' },
+    { generationSource: 'simple-plan', readOnly: false },
 );
 
 const storeAlternative = computed(() =>
@@ -103,6 +104,7 @@ const destroyAlternative = computed(() =>
                         {{ choice.originalIngredientName }}.
                     </p>
                     <Form
+                        v-if="!readOnly"
                         v-bind="
                             destroyAlternative.form(choice.originalIngredientId)
                         "
@@ -130,7 +132,7 @@ const destroyAlternative = computed(() =>
             </template>
 
             <div
-                v-if="line.eligibleAlternatives.length > 0"
+                v-if="!readOnly && line.eligibleAlternatives.length > 0"
                 class="flex flex-col items-start gap-2"
             >
                 <p class="text-muted-foreground">Dostupné alternativy</p>
@@ -179,7 +181,7 @@ const destroyAlternative = computed(() =>
                     <ul class="mt-2 flex flex-col gap-2 border-l pl-4">
                         <li
                             v-for="contribution in line.contributions"
-                            :key="`${contribution.recipeId}:${contribution.originalIngredientId}:${contribution.quantityKind}`"
+                            :key="contribution.contributionKey"
                         >
                             <span class="font-medium">{{
                                 contribution.recipeName

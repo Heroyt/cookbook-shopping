@@ -125,5 +125,14 @@
     "The Calendar selection contains a Recipe without Ingredients. Update the Recipe and try again.": "Výběr z kalendáře obsahuje recept bez surovin. Upravte recept a zkuste to znovu.",
     "The Calendar selection contains an unavailable Ingredient. Update the Recipe and try again.": "Výběr z kalendáře obsahuje nedostupnou surovinu. Upravte recept a zkuste to znovu.",
     "Unavailable Alternatives were reverted and the Calendar Shopping List was generated again.": "Nedostupné alternativy byly vráceny a nákupní seznam z kalendáře byl vytvořen znovu.",
-    "Unavailable Alternatives were reverted. The Calendar Shopping List still requires corrections.": "Nedostupné alternativy byly vráceny. Nákupní seznam z kalendáře stále vyžaduje opravy."
+    "Unavailable Alternatives were reverted. The Calendar Shopping List still requires corrections.": "Nedostupné alternativy byly vráceny. Nákupní seznam z kalendáře stále vyžaduje opravy.",
+    "Simple Plan": "Rychlý plán",
+    "Calendar": "Kalendář",
+    "First generate a complete Shopping List.": "Nejprve vytvořte úplný nákupní seznam.",
+    "A Shopping List with problems cannot be saved.": "Nákupní seznam s problémy nelze uložit.",
+    "Shopping List saved to history.": "Nákupní seznam byl uložen do historie.",
+    "Saved Shopping List deleted.": "Uložený nákupní seznam byl smazán.",
+    "Shopping List serving count": "[0.000001,4.999999] :count porce|[5,*] :count porcí",
+    "This Saved Shopping List version is not supported.": "Tato verze uloženého nákupního seznamu není podporována.",
+    "The Saved Shopping List is corrupt and cannot be displayed.": "Uložený nákupní seznam je poškozený a nelze jej zobrazit."
 }

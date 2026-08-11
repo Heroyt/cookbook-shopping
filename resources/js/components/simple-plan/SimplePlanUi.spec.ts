@@ -197,7 +197,7 @@ describe('Simple Plan UI', () => {
         expect(view).not.toContain('problem.unit');
         expect(view).toContain(':key="problem.problemKey"');
         expect(readSource('./ShoppingListLineCard.vue')).toContain(
-            'contribution.quantityKind',
+            'contribution.contributionKey',
         );
         expect(readSource('./ShoppingListLineCard.vue')).toContain(
             '<FieldError :errors="[errors.alternative_ingredient_id]" />',

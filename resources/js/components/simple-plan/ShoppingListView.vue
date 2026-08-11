@@ -20,11 +20,13 @@ withDefaults(
         problems: ShoppingListProblem[];
         generationSource?: 'simple-plan' | 'calendar';
         preservedSourceText?: string;
+        readOnly?: boolean;
     }>(),
     {
         generationSource: 'simple-plan',
         preservedSourceText:
             'Rychlý plán zůstal zachovaný. Opravte všechny uvedené problémy a zkuste vytvoření znovu.',
+        readOnly: false,
     },
 );
 </script>
@@ -115,6 +117,7 @@ withDefaults(
                         :key="line.ingredientId"
                         :line="line"
                         :generation-source="generationSource"
+                        :read-only="readOnly"
                     />
                 </div>
             </section>
@@ -131,6 +134,7 @@ withDefaults(
                         :key="line.ingredientId"
                         :line="line"
                         :generation-source="generationSource"
+                        :read-only="readOnly"
                     />
                 </div>
             </section>
@@ -147,6 +151,7 @@ withDefaults(
                     :key="line.ingredientId"
                     :line="line"
                     :generation-source="generationSource"
+                    :read-only="readOnly"
                 />
             </div>
         </section>

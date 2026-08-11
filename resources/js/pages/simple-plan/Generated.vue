@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeftIcon } from '@lucide/vue';
+import SaveShoppingListButton from '@/components/shopping-list-history/SaveShoppingListButton.vue';
 import ShoppingListView from '@/components/simple-plan/ShoppingListView.vue';
 import { Button } from '@/components/ui/button';
 import { index } from '@/routes/simple-plan';
@@ -31,12 +32,18 @@ defineOptions({
                     přebytek zůstávají viditelné pro kontrolu.
                 </p>
             </div>
-            <Button as-child variant="outline">
-                <Link :href="index()">
-                    <ArrowLeftIcon data-icon="inline-start" />
-                    Zpět na rychlý plán
-                </Link>
-            </Button>
+            <div class="flex flex-col items-start gap-3 sm:items-end">
+                <SaveShoppingListButton
+                    v-if="shoppingList && problems.length === 0"
+                    source="simple-plan"
+                />
+                <Button as-child variant="outline">
+                    <Link :href="index()">
+                        <ArrowLeftIcon data-icon="inline-start" />
+                        Zpět na rychlý plán
+                    </Link>
+                </Button>
+            </div>
         </div>
 
         <ShoppingListView :shopping-list="shoppingList" :problems="problems" />

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeftIcon } from '@lucide/vue';
+import SaveShoppingListButton from '@/components/shopping-list-history/SaveShoppingListButton.vue';
 import ShoppingListView from '@/components/simple-plan/ShoppingListView.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,12 +44,18 @@ defineOptions({
                     >
                 </div>
             </div>
-            <Button as-child variant="outline">
-                <Link :href="index({ query: { week: selectedDates[0] } })">
-                    <ArrowLeftIcon data-icon="inline-start" />
-                    Zpět do kalendáře
-                </Link>
-            </Button>
+            <div class="flex flex-col items-start gap-3 sm:items-end">
+                <SaveShoppingListButton
+                    v-if="shoppingList && problems.length === 0"
+                    source="calendar"
+                />
+                <Button as-child variant="outline">
+                    <Link :href="index({ query: { week: selectedDates[0] } })">
+                        <ArrowLeftIcon data-icon="inline-start" />
+                        Zpět do kalendáře
+                    </Link>
+                </Button>
+            </div>
         </div>
         <ShoppingListView
             :shopping-list="shoppingList"

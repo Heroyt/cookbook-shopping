@@ -3,10 +3,28 @@
 declare(strict_types=1);
 
 use App\MealPlanning\Http\Controllers\CalendarController;
+use App\MealPlanning\Http\Controllers\SavedShoppingListSourceController;
 use App\MealPlanning\Http\Controllers\SimplePlanController;
+use App\ShoppingGeneration\Http\Controllers\SavedShoppingListController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('shopping-list-history', [SavedShoppingListController::class, 'index'])
+        ->name('shopping-list-history.index');
+    Route::get('shopping-list-history/{snapshot}', [SavedShoppingListController::class, 'show'])
+        ->whereNumber('snapshot')
+        ->name('shopping-list-history.show');
+    Route::post('shopping-list-history/simple-plan', [SavedShoppingListSourceController::class, 'storeSimplePlan'])
+        ->block(10, 10)
+        ->name('shopping-list-history.simple-plan.store');
+    Route::post('shopping-list-history/calendar', [SavedShoppingListSourceController::class, 'storeCalendar'])
+        ->block(10, 10)
+        ->name('shopping-list-history.calendar.store');
+    Route::delete('shopping-list-history/{snapshot}', [SavedShoppingListController::class, 'destroy'])
+        ->whereNumber('snapshot')
+        ->block(10, 10)
+        ->name('shopping-list-history.destroy');
+
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::post('calendar/entries', [CalendarController::class, 'store'])
         ->block(10, 10)
