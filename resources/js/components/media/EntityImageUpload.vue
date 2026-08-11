@@ -85,7 +85,10 @@ const submit = (): void => {
             @submit.prevent="submit"
         >
             <FieldGroup>
-                <Field :data-invalid="Boolean(form.errors.image)">
+                <Field
+                    :data-invalid="Boolean(form.errors.image)"
+                    :data-disabled="form.processing"
+                >
                     <FieldLabel :for="inputId">Vybrat obrázek</FieldLabel>
                     <Input
                         :id="inputId"

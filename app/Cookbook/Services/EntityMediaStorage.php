@@ -287,11 +287,11 @@ final class EntityMediaStorage
     {
         $disk = $this->disk();
         if ( ! $disk->exists($directory)) {
-            return new EntityMediaDeletion($directory, []);
+            return new EntityMediaDeletion([]);
         }
 
         $files = $this->readFiles($disk, $directory);
-        $deletion = new EntityMediaDeletion($directory, $files);
+        $deletion = new EntityMediaDeletion($files);
 
         if ( ! $disk->deleteDirectory($directory)) {
             $this->restore($deletion);

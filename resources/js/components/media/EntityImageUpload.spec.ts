@@ -18,6 +18,7 @@ describe('Entity image upload UI', () => {
         );
         expect(source).toContain('storeEntityMedia({');
         expect(source).toContain('FieldGroup');
+        expect(source).toContain(':data-disabled="form.processing"');
         expect(source).not.toContain('space-y-');
         expect(source).toContain('accept="image/jpeg,image/png"');
         expect(source).toContain('form.progress.percentage');
