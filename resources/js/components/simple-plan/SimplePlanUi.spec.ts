@@ -188,10 +188,11 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('Vejce');
         expect(html).toContain('Zadáno: 50 ml.');
         expect(html).toContain('Upravit recept');
-        expect(html).toContain('Upravit surovinu');
+        expect(html).toContain('Zobrazit surovinu');
         const view = readSource('./ShoppingListView.vue');
         expect(view).toContain('edit: problem.recipeId');
         expect(view).toContain('edit: problem.ingredientId');
+        expect(view).toContain("filter: 'all'");
         expect(view).not.toContain('search: problem.ingredientName');
         expect(view).not.toContain('problem.unit');
         expect(view).toContain(':key="problem.problemKey"');

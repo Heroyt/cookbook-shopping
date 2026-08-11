@@ -19,6 +19,8 @@ use App\MealPlanning\Session\SimplePlanSession;
 use App\MealPlanning\Values\ServingCount;
 use App\MealPlanning\Values\SimplePlan;
 use App\ShoppingGeneration\ShoppingListGenerator;
+use App\ShoppingGeneration\Values\AlternativeChoice;
+use App\ShoppingGeneration\Values\GenerationRequest;
 use App\ShoppingGeneration\Values\GenerationResult;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
@@ -90,20 +92,22 @@ final class SimplePlanController extends Controller
             try {
                 $result = $this->regenerate($request, $family, $simplePlan, $alternatives);
             } catch (InvalidArgumentException) {
-                $result = $this->regenerate($request, $family, $simplePlan, []);
-                $this->simplePlanSession->saveAlternatives($request->session(), $family->id, []);
+                $alternatives = $this->validAlternatives($family, $simplePlan, $alternatives);
+                $result = $this->regenerate($request, $family, $simplePlan, $alternatives);
+                $this->simplePlanSession->saveAlternatives($request->session(), $family->id, $alternatives);
                 $alternativesReset = true;
             }
 
             return ['successful' => $result->isSuccessful(), 'alternativesReset' => $alternativesReset];
         });
 
-        Inertia::flash('toast', [
-            'type' => $outcome['alternativesReset'] ? 'warning' : ($outcome['successful'] ? 'success' : 'error'),
-            'message' => $outcome['alternativesReset']
-                ? __('Unavailable Alternatives were reverted and the Shopping List was generated again.')
-                : ($outcome['successful'] ? __('Shopping List generated.') : __('The Shopping List requires corrections.')),
-        ]);
+        $toast = match ([$outcome['alternativesReset'], $outcome['successful']]) {
+            [true, true] => ['type' => 'warning', 'message' => __('Unavailable Alternatives were reverted and the Shopping List was generated again.')],
+            [true, false] => ['type' => 'error', 'message' => __('Unavailable Alternatives were reverted. The Shopping List still requires corrections.')],
+            [false, true] => ['type' => 'success', 'message' => __('Shopping List generated.')],
+            [false, false] => ['type' => 'error', 'message' => __('The Shopping List requires corrections.')],
+        };
+        Inertia::flash('toast', $toast);
 
         return to_route('simple-plan.generated');
     }
@@ -205,5 +209,28 @@ final class SimplePlanController extends Controller
         );
 
         return $result;
+    }
+
+    /**
+     * @param  array<int, int>  $alternatives
+     * @return array<int, int>
+     */
+    private function validAlternatives(Family $family, SimplePlan $simplePlan, array $alternatives): array
+    {
+        $baseRequest = $this->generationRequest->handle($family, $simplePlan);
+        $valid = [];
+        foreach ($alternatives as $originalIngredientId => $alternativeIngredientId) {
+            try {
+                $this->shoppingListGenerator->generate(new GenerationRequest(
+                    $baseRequest->selections,
+                    [new AlternativeChoice($originalIngredientId, $alternativeIngredientId)],
+                ));
+                $valid[$originalIngredientId] = $alternativeIngredientId;
+            } catch (InvalidArgumentException) {
+                continue;
+            }
+        }
+
+        return $valid;
     }
 }

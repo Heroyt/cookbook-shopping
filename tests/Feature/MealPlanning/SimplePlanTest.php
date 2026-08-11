@@ -12,6 +12,7 @@ use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\Models\Family;
 use App\FamilyAccess\Models\FamilyMembership;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
@@ -307,6 +308,7 @@ final class SimplePlanTest extends TestCase
             'name' => 'Mouka',
             'weight_grams' => '500',
             'piece_count' => null,
+            'archived_at' => now(),
         ]);
         $pieceOnly = Ingredient::factory()->for($family)->create([
             'name' => 'Vejce',
@@ -331,14 +333,18 @@ final class SimplePlanTest extends TestCase
             (string) $firstRecipe->id => '2',
             (string) $secondRecipe->id => '2',
         ];
+        $foreignAlternative = Ingredient::factory()->for(Family::factory()->create())->create([
+            'volume_millilitres' => '500',
+        ]);
 
         $this->actingAs($user)->withSession([
             "meal_planning.simple_plan.{$family->id}" => $plan,
+            "meal_planning.alternatives.{$family->id}" => [$weightOnly->id => $foreignAlternative->id],
         ])->post(route('simple-plan.generate'))
             ->assertRedirect(route('simple-plan.generated'))
             ->assertInertiaFlash('toast', [
                 'type' => 'error',
-                'message' => 'Nákupní seznam vyžaduje opravy.',
+                'message' => 'Nedostupné alternativy byly vráceny. Nákupní seznam stále vyžaduje opravy.',
             ]);
         $this->get(route('simple-plan.generated'))
             ->assertOk()
@@ -353,8 +359,11 @@ final class SimplePlanTest extends TestCase
         $this->assertSame($plan, session("meal_planning.simple_plan.{$family->id}"));
         $this->get(route('recipes.index', ['edit' => $firstRecipe->id]))
             ->assertInertia(fn (Assert $page): Assert => $page->where('editRecipeId', $firstRecipe->id));
-        $this->get(route('ingredients.index', ['edit' => $weightOnly->id]))
-            ->assertInertia(fn (Assert $page): Assert => $page->where('editIngredientId', $weightOnly->id));
+        $this->get(route('ingredients.index', ['edit' => $weightOnly->id, 'filter' => 'all']))
+            ->assertInertia(fn (Assert $page): Assert => $page
+                ->where('editIngredientId', $weightOnly->id)
+                ->where('ingredients.0.id', $weightOnly->id)
+                ->where('ingredients.0.archived', true));
     }
 
     public function test_direct_alternatives_recalculate_globally_and_can_be_reverted(): void
@@ -430,9 +439,22 @@ final class SimplePlanTest extends TestCase
         $this->selectCurrentFamily($user, $family);
         $ingredient = Ingredient::factory()->for($family)->create(['weight_grams' => '100']);
         $foreignAlternative = Ingredient::factory()->for($otherFamily)->create(['weight_grams' => '100']);
+        $validOriginal = Ingredient::factory()->for($family)->create(['weight_grams' => '100']);
+        $validAlternative = Ingredient::factory()->for($family)->create(['weight_grams' => '100']);
+        DB::table('ingredient_alternatives')->insert([
+            'family_id' => $family->id,
+            'lower_ingredient_id' => min($validOriginal->id, $validAlternative->id),
+            'higher_ingredient_id' => max($validOriginal->id, $validAlternative->id),
+        ]);
         $recipe = Recipe::factory()->for($family)->create(['base_servings' => '1']);
         RecipeIngredient::factory()->for($recipe)->for($ingredient)->create([
             'family_id' => $family->id,
+            'quantity' => '50',
+            'quantity_kind' => 'grams',
+        ]);
+        RecipeIngredient::factory()->for($recipe)->for($validOriginal)->create([
+            'family_id' => $family->id,
+            'position' => 2,
             'quantity' => '50',
             'quantity_kind' => 'grams',
         ]);
@@ -440,6 +462,10 @@ final class SimplePlanTest extends TestCase
         $this->actingAs($user)->withSession([
             "meal_planning.simple_plan.{$family->id}" => [(string) $recipe->id => '1'],
         ])->post(route('simple-plan.generate'))->assertSessionHasNoErrors();
+        $this->post(route('simple-plan.alternatives.store'), [
+            'original_ingredient_id' => $validOriginal->id,
+            'alternative_ingredient_id' => $validAlternative->id,
+        ])->assertSessionHasNoErrors();
         $generated = session("meal_planning.generated.{$family->id}");
 
         $this->post(route('simple-plan.alternatives.store'), [
@@ -450,10 +476,13 @@ final class SimplePlanTest extends TestCase
         ]);
 
         $this->assertSame($generated, session("meal_planning.generated.{$family->id}"));
-        $this->assertFalse(session()->has("meal_planning.alternatives.{$family->id}"));
+        $this->assertSame([$validOriginal->id => $validAlternative->id], session("meal_planning.alternatives.{$family->id}"));
 
         $this->withSession([
-            "meal_planning.alternatives.{$family->id}" => [$ingredient->id => $foreignAlternative->id],
+            "meal_planning.alternatives.{$family->id}" => [
+                $ingredient->id => $foreignAlternative->id,
+                $validOriginal->id => $validAlternative->id,
+            ],
         ])->post(route('simple-plan.generate'))
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('simple-plan.generated'))
@@ -461,7 +490,11 @@ final class SimplePlanTest extends TestCase
                 'type' => 'warning',
                 'message' => 'Nedostupné alternativy byly vráceny a nákupní seznam byl vytvořen znovu.',
             ]);
-        $this->assertSame([], session("meal_planning.alternatives.{$family->id}"));
+        $this->assertSame([$validOriginal->id => $validAlternative->id], session("meal_planning.alternatives.{$family->id}"));
+        $this->get(route('simple-plan.generated'))->assertInertia(fn (Assert $page): Assert => $page
+            ->where('shoppingList.unplacedLines', fn (Collection $lines): bool => $lines->contains(
+                fn (array $line): bool => ($line['alternativeChoices'][0]['originalIngredientId'] ?? null) === $validOriginal->id,
+            )));
     }
 
     /** @param list<User> $members */

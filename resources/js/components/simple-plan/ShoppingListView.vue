@@ -63,10 +63,13 @@ defineProps<{
                         <Link
                             :href="
                                 ingredientsIndex({
-                                    query: { edit: problem.ingredientId },
+                                    query: {
+                                        edit: problem.ingredientId,
+                                        filter: 'all',
+                                    },
                                 })
                             "
-                            >Upravit surovinu</Link
+                            >Zobrazit surovinu</Link
                         >
                     </Button>
                 </div>
