@@ -76,6 +76,26 @@ const kindsFor = (ingredientId: string): Line['quantityKind'][] =>
         (ingredient) => ingredient.id === Number(ingredientId),
     )?.kinds ?? ['grams', 'millilitres', 'piece'];
 
+const chooseIngredient = (index: number, value: unknown): void => {
+    if (typeof value !== 'string') {
+        return;
+    }
+
+    const line = lines.value[index];
+
+    if (!line) {
+        return;
+    }
+
+    line.ingredientId = value;
+
+    const supportedKinds = kindsFor(value);
+
+    if (!supportedKinds.includes(line.quantityKind) && supportedKinds[0]) {
+        line.quantityKind = supportedKinds[0];
+    }
+};
+
 const quantityKindLabel = (kind: Line['quantityKind']): string =>
     ({ grams: 'gramy', millilitres: 'mililitry', piece: 'kusy' })[kind];
 </script>
@@ -139,6 +159,7 @@ const quantityKindLabel = (kind: Line['quantityKind']): string =>
                         v-model="line.ingredientId"
                         :name="`ingredients[${index}][ingredient_id]`"
                         required
+                        @update:model-value="chooseIngredient(index, $event)"
                     >
                         <SelectTrigger
                             :id="`recipe-ingredient-${index}`"

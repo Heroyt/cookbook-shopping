@@ -57,6 +57,9 @@ describe('Recipe UI', () => {
         expect(html).toContain('name="base_servings"');
         expect(html).toContain('step="0.000001"');
         expect(html).toContain('Odebrat surovinu 1');
+        expect(readSource('./RecipeFormFields.vue')).toContain(
+            '@update:model-value="chooseIngredient(index, $event)"',
+        );
     });
 
     it('shows explicit incomplete nutrition and every search reason', async () => {
