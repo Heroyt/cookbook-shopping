@@ -3,6 +3,7 @@
     "Agent Credential created.": "Přístup agenta byl vytvořen.",
     "Agent Credential rotated.": "Tajemství přístupu agenta bylo nahrazeno.",
     "Agent Credential revoked.": "Přístup agenta byl odvolán.",
+    "Agent Change history deleted. Applied changes remain unchanged.": "Historie změny agenta byla smazána. Provedené změny zůstávají beze změny.",
     "An Ingredient with this name already exists in the Current Family.": "Surovina s tímto názvem už v aktuální rodině existuje.",
     "A Store Section with this name already exists in the Current Family.": "Část obchodu s tímto názvem už v aktuální rodině existuje.",
     "A Store with this name already exists in the Current Family.": "Obchod s tímto názvem už v aktuální rodině existuje.",

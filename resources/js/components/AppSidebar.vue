@@ -12,6 +12,7 @@ import {
     WheatIcon,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import AgentChangeSetHistoryController from '@/actions/App/AgentIntegration/Http/Controllers/AgentChangeSetHistoryController';
 import AgentCredentialController from '@/actions/App/AgentIntegration/Http/Controllers/AgentCredentialController';
 import AppLogo from '@/components/AppLogo.vue';
 import FamilySwitcher from '@/components/families/FamilySwitcher.vue';
@@ -85,6 +86,11 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: 'Přístupy agentů',
                   href: AgentCredentialController.index(),
                   icon: BotIcon,
+              },
+              {
+                  title: 'Historie změn agentů',
+                  href: AgentChangeSetHistoryController.index(),
+                  icon: HistoryIcon,
               },
           ]),
 ]);

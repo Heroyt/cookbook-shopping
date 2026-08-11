@@ -8,6 +8,12 @@ use App\AgentIntegration\Http\Controllers\CatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:content:read'])->group(function (): void {
+    Route::get('change-sets', [AgentChangeSetController::class, 'index'])
+        ->middleware('throttle:agent-catalog')
+        ->name('api.v1.change-sets.index');
+    Route::get('change-sets/{changeSet}', [AgentChangeSetController::class, 'show'])
+        ->middleware('throttle:agent-catalog')
+        ->name('api.v1.change-sets.show');
     Route::get('catalog', [CatalogController::class, 'index'])
         ->middleware('throttle:agent-catalog')
         ->name('api.v1.catalog.index');

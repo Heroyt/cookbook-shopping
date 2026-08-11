@@ -1,4 +1,5 @@
 export * from './agent-credential';
+export * from './agent-change-set';
 export * from './auth';
 export * from './calendar';
 export * from './family';
