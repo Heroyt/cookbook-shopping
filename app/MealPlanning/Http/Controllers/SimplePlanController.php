@@ -86,7 +86,13 @@ final class SimplePlanController extends Controller
         $successful = $this->scope->within($request->authenticatedUser(), function (Family $family) use ($request): bool {
             $simplePlan = $this->simplePlanSession->load($request->session(), $family->id);
             $alternatives = $this->simplePlanSession->alternatives($request->session(), $family->id);
-            $result = $this->regenerate($request, $family, $simplePlan, $alternatives);
+            try {
+                $result = $this->regenerate($request, $family, $simplePlan, $alternatives);
+            } catch (InvalidArgumentException) {
+                throw ValidationException::withMessages([
+                    'plan' => __('One or more selected Alternatives are no longer available. Revert them to their original Ingredients and try again.'),
+                ]);
+            }
 
             return $result->isSuccessful();
         });

@@ -446,6 +446,12 @@ final class SimplePlanTest extends TestCase
 
         $this->assertSame($generated, session("meal_planning.generated.{$family->id}"));
         $this->assertFalse(session()->has("meal_planning.alternatives.{$family->id}"));
+
+        $this->withSession([
+            "meal_planning.alternatives.{$family->id}" => [$ingredient->id => $foreignAlternative->id],
+        ])->post(route('simple-plan.generate'))->assertSessionHasErrors([
+            'plan' => 'Jedna nebo více vybraných alternativ už není dostupná. Vraťte ji na původní surovinu a zkuste to znovu.',
+        ]);
     }
 
     /** @param list<User> $members */
