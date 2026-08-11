@@ -504,6 +504,15 @@ final class AgentChangeSetPreviewTest extends TestCase
             'operations' => [$invalidIngredient],
         ])->assertUnprocessable()->assertJsonPath('error.code', 'validation_failed');
 
+        $invalidIngredient['data']['package_quantities'] = ['weight_grams' => '500', 'volume_millilitres' => '500', 'piece_count' => null];
+        $this->withToken($secret)->postJson('/api/v1/change-sets', [
+            'version' => 1,
+            'client_request_id' => 'conflicting-package-metrics',
+            'operations' => [$invalidIngredient],
+        ])->assertUnprocessable()
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonPath('error.path', '/operations/0/data/package_quantities');
+
         $recipe = $this->minimalRecipeCreateOperation(1);
         $recipe['data']['ingredients'] = [];
         $this->withToken($secret)->postJson('/api/v1/change-sets', [

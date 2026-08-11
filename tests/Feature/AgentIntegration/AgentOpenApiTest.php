@@ -101,6 +101,19 @@ final class AgentOpenApiTest extends TestCase
         $this->assertSame(1, $updateIngredient['properties']['set']['minProperties']);
         $this->assertSame(1, $updateIngredient['properties']['unset']['minItems']);
 
+        $packageQuantities = $schemas['CreateIngredientOperation']['properties']['data']['properties']['package_quantities'];
+        $this->assertCount(3, $packageQuantities['oneOf']);
+        $this->assertSame(['weight_grams'], $packageQuantities['oneOf'][0]['required']);
+        $this->assertSame('string', $packageQuantities['oneOf'][0]['properties']['weight_grams']['type']);
+        $this->assertSame('null', $packageQuantities['oneOf'][0]['properties']['volume_millilitres']['type']);
+        $this->assertSame(['volume_millilitres'], $packageQuantities['oneOf'][1]['required']);
+        $this->assertSame('null', $packageQuantities['oneOf'][1]['properties']['weight_grams']['type']);
+        $this->assertSame('string', $packageQuantities['oneOf'][1]['properties']['volume_millilitres']['type']);
+        $this->assertSame(['piece_count'], $packageQuantities['oneOf'][2]['required']);
+        $this->assertSame('null', $packageQuantities['oneOf'][2]['properties']['weight_grams']['type']);
+        $this->assertSame('null', $packageQuantities['oneOf'][2]['properties']['volume_millilitres']['type']);
+        $this->assertSame('string', $packageQuantities['oneOf'][2]['properties']['piece_count']['type']);
+
         $examples = $schemas['AgentChangeSetDocument']['examples'];
         $this->assertCount(20, $examples);
         $pairs = array_map(

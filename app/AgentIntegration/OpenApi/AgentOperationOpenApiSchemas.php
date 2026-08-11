@@ -287,15 +287,27 @@ final readonly class AgentOperationOpenApiSchemas
         return $schema;
     }
 
-    private function packageQuantities(): ContractObjectType
+    private function packageQuantities(): OneOfType
     {
-        $schema = new ContractObjectType();
-        $schema->addProperty('weight_grams', $this->nullable($this->positiveDecimal()));
-        $schema->addProperty('volume_millilitres', $this->nullable($this->positiveDecimal()));
-        $schema->addProperty('piece_count', $this->nullable($this->positiveDecimal()));
-        $schema->setDescription('The complete package quantities. At least one value must be non-null; weight and volume are mutually exclusive.');
+        $weight = new ContractObjectType();
+        $weight->addProperty('weight_grams', $this->positiveDecimal());
+        $weight->addProperty('volume_millilitres', new NullType());
+        $weight->addProperty('piece_count', $this->nullable($this->positiveDecimal()));
+        $weight->setRequired(['weight_grams']);
 
-        return $schema;
+        $volume = new ContractObjectType();
+        $volume->addProperty('weight_grams', new NullType());
+        $volume->addProperty('volume_millilitres', $this->positiveDecimal());
+        $volume->addProperty('piece_count', $this->nullable($this->positiveDecimal()));
+        $volume->setRequired(['volume_millilitres']);
+
+        $pieces = new ContractObjectType();
+        $pieces->addProperty('weight_grams', new NullType());
+        $pieces->addProperty('volume_millilitres', new NullType());
+        $pieces->addProperty('piece_count', $this->positiveDecimal());
+        $pieces->setRequired(['piece_count']);
+
+        return new OneOfType([$weight, $volume, $pieces]);
     }
 
     private function storePlacement(): ContractObjectType

@@ -515,6 +515,9 @@ final readonly class AgentOperationPreviewer
                 $this->validateDecimal($quantity, "{$path}/{$field}", $operationId, positive: true);
             }
         }
+        if (($value['weight_grams'] ?? null) !== null && ($value['volume_millilitres'] ?? null) !== null) {
+            throw new AgentApiException('validation_failed', 'Package weight and volume are mutually exclusive.', 422, $path, $operationId);
+        }
         if ( ! $present) {
             throw new AgentApiException('validation_failed', 'At least one package quantity is required.', 422, $path, $operationId);
         }
