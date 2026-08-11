@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
-import InputError from '@/components/InputError.vue';
 import PasskeyVerify from '@/components/PasskeyVerify.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -43,9 +47,9 @@ defineProps<{
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
-        <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="email">E-mailová adresa</Label>
+        <FieldGroup>
+            <Field :data-invalid="Boolean(errors.email)">
+                <FieldLabel for="email">E-mailová adresa</FieldLabel>
                 <Input
                     id="email"
                     type="email"
@@ -55,13 +59,14 @@ defineProps<{
                     :tabindex="1"
                     autocomplete="email"
                     placeholder="email@example.com"
+                    :aria-invalid="Boolean(errors.email)"
                 />
-                <InputError :message="errors.email" />
-            </div>
+                <FieldError :errors="[errors.email]" />
+            </Field>
 
-            <div class="grid gap-2">
+            <Field :data-invalid="Boolean(errors.password)">
                 <div class="flex items-center justify-between">
-                    <Label for="password">Heslo</Label>
+                    <FieldLabel for="password">Heslo</FieldLabel>
                     <TextLink
                         v-if="canResetPassword"
                         :href="request()"
@@ -78,16 +83,15 @@ defineProps<{
                     :tabindex="2"
                     autocomplete="current-password"
                     placeholder="Heslo"
+                    :aria-invalid="Boolean(errors.password)"
                 />
-                <InputError :message="errors.password" />
-            </div>
+                <FieldError :errors="[errors.password]" />
+            </Field>
 
-            <div class="flex items-center justify-between">
-                <Label for="remember" class="flex items-center space-x-3">
-                    <Checkbox id="remember" name="remember" :tabindex="3" />
-                    <span>Zapamatovat si mě</span>
-                </Label>
-            </div>
+            <Field orientation="horizontal">
+                <Checkbox id="remember" name="remember" :tabindex="3" />
+                <FieldLabel for="remember">Zapamatovat si mě</FieldLabel>
+            </Field>
 
             <Button
                 type="submit"
@@ -99,6 +103,6 @@ defineProps<{
                 <Spinner v-if="processing" />
                 Přihlásit se
             </Button>
-        </div>
+        </FieldGroup>
     </Form>
 </template>
