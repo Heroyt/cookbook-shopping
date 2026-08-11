@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    BookOpen,
     CalendarDaysIcon,
     ClipboardListIcon,
-    FolderGit2,
     HistoryIcon,
     LayoutGrid,
     StoreIcon,
@@ -15,7 +13,6 @@ import {
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import FamilySwitcher from '@/components/families/FamilySwitcher.vue';
-import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
@@ -84,19 +81,6 @@ const mainNavItems = computed<NavItem[]>(() => [
               },
           ]),
 ]);
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repozitář',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Dokumentace',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
 </script>
 
 <template>
@@ -119,7 +103,6 @@ const footerNavItems: NavItem[] = [
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>
