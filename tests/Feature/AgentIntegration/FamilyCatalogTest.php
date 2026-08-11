@@ -27,7 +27,7 @@ final class FamilyCatalogTest extends TestCase
 {
     public function test_catalog_requires_a_live_content_read_agent_credential(): void
     {
-        $this->getJson('/api/v1/catalog')->assertUnauthorized()->assertExactJson([
+        $response = $this->getJson('/api/v1/catalog')->assertUnauthorized()->assertExactJson([
             'error' => [
                 'code' => 'authentication_required',
                 'message' => 'A valid Agent Credential is required.',
@@ -37,6 +37,8 @@ final class FamilyCatalogTest extends TestCase
                 'retryable' => false,
             ],
         ]);
+        $decoded = json_decode($response->content());
+        $this->assertIsObject($decoded?->error->details);
 
         [$issuer, $family, , $secret] = $this->credentialContext();
         $credential = AgentCredential::query()->sole();

@@ -67,6 +67,7 @@ final class AgentChangeSetApplyTest extends TestCase
         $section = StoreSection::factory()->for($family)->create(['name' => 'Původní', 'colour' => '#111111', 'icon' => 'package']);
         $store = Store::factory()->for($family)->create(['name' => 'Starý obchod']);
         app(AttachStoreSection::class)->handle($context, $store->id, $section->id);
+        $store->refresh();
         $alternative = Ingredient::factory()->for($family)->create(['name' => 'Alternativa']);
         $ingredient = Ingredient::factory()->for($family)->create([
             'name' => 'Původní surovina',

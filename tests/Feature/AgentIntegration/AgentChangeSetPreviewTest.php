@@ -153,6 +153,28 @@ final class AgentChangeSetPreviewTest extends TestCase
         $this->assertDatabaseCount('agent_change_sets', 0);
     }
 
+    public function test_empty_create_data_is_treated_as_an_object_and_reports_the_first_missing_resource_field(): void
+    {
+        [, , $secret] = $this->credential();
+
+        $this->withToken($secret)->postJson('/api/v1/change-sets', [
+            'version' => 1,
+            'client_request_id' => 'empty-create-data',
+            'operations' => [[
+                'operation_id' => 'create-store',
+                'resource_type' => 'stores',
+                'action' => 'create',
+                'local_ref' => 'store',
+                'data' => (object) [],
+            ]],
+        ])->assertUnprocessable()
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonPath('error.path', '/operations/0/data/name')
+            ->assertJsonPath('error.operation_id', 'create-store');
+
+        $this->assertDatabaseCount('agent_change_sets', 0);
+    }
+
     public function test_operation_payload_and_per_credential_rate_limits_are_enforced(): void
     {
         [, , $secret] = $this->credential();
