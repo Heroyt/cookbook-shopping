@@ -96,6 +96,40 @@ final class AgentChangeSetPreviewTest extends TestCase
         $this->assertDatabaseCount('agent_change_sets', 2);
     }
 
+    public function test_new_preview_retains_family_scoped_supersession_lineage_without_mutating_the_original(): void
+    {
+        [, $family, $secret] = $this->credential();
+        $original = $this->withToken($secret)->postJson(
+            '/api/v1/change-sets',
+            $this->storeCreateDocument('lineage-original', 'Původní trh'),
+        )->assertCreated();
+        $replacementDocument = $this->storeCreateDocument('lineage-replacement', 'Náhradní trh');
+        $replacementDocument['supersedes_id'] = $original->json('data.id');
+
+        $replacement = $this->withToken($secret)->postJson('/api/v1/change-sets', $replacementDocument)
+            ->assertCreated()
+            ->assertJsonPath('data.supersedes_id', $original->json('data.id'));
+
+        $this->assertDatabaseHas('agent_change_sets', [
+            'id' => $original->json('data.id'),
+            'status' => 'previewed',
+            'supersedes_id' => null,
+        ]);
+        $this->assertDatabaseHas('agent_change_sets', [
+            'id' => $replacement->json('data.id'),
+            'supersedes_id' => $original->json('data.id'),
+        ]);
+
+        $foreign = AgentChangeSet::factory()->for(Family::factory()->create())->create();
+        $foreignDocument = $this->storeCreateDocument('lineage-foreign', 'Cizí trh');
+        $foreignDocument['supersedes_id'] = $foreign->id;
+        $this->withToken($secret)->postJson('/api/v1/change-sets', $foreignDocument)
+            ->assertNotFound()
+            ->assertJsonPath('error.code', 'family_scope_violation');
+
+        $this->assertSame(2, AgentChangeSet::query()->where('family_id', $family->id)->count());
+    }
+
     public function test_invalid_preview_and_name_conflict_return_structured_errors_without_persistence(): void
     {
         [, $family, $secret] = $this->credential();

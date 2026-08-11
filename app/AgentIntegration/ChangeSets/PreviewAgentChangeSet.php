@@ -9,6 +9,7 @@ use App\AgentIntegration\Models\AgentChangeSet;
 use App\AgentIntegration\Models\AgentCredential;
 use App\AgentIntegration\Values\PreviewedAgentChangeSet;
 use App\FamilyAccess\AuthorizedFamilyContext;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -47,89 +48,112 @@ final readonly class PreviewAgentChangeSet
             throw new AgentApiException('validation_failed', 'The client_request_id is invalid.', 422, '/client_request_id');
         }
 
-        return DB::transaction(function () use (
-            $context,
-            $credential,
-            $canonicalRequest,
-            $digest,
-            $clientRequestId,
-            $payloadBytes,
-        ): PreviewedAgentChangeSet {
-            $existing = AgentChangeSet::query()
-                ->whereBelongsTo($credential, 'credential')
-                ->where('client_request_id', $clientRequestId)
-                ->lockForUpdate()
-                ->first();
-
-            if ($existing instanceof AgentChangeSet) {
-                if ( ! hash_equals($existing->digest, $digest)) {
-                    throw new AgentApiException(
-                        'idempotency_conflict',
-                        'The client_request_id was already used with a different canonical request.',
-                        409,
-                        '/client_request_id',
-                        details: ['change_set_id' => $existing->id],
-                    );
+        try {
+            return DB::transaction(function () use (
+                $context,
+                $credential,
+                $canonicalRequest,
+                $digest,
+                $clientRequestId,
+                $payloadBytes,
+            ): PreviewedAgentChangeSet {
+                $existing = $this->existingPreview($credential, $clientRequestId, $digest, lock: true);
+                if ($existing instanceof PreviewedAgentChangeSet) {
+                    return $existing;
                 }
 
-                return new PreviewedAgentChangeSet($existing, false);
-            }
+                $preview = $this->operationPreviewer->preview($context, $credential, $canonicalRequest);
+                $operations = $canonicalRequest['operations'];
 
-            $preview = $this->operationPreviewer->preview($context, $credential, $canonicalRequest);
-            $operations = $canonicalRequest['operations'];
-
-            if ( ! is_array($operations)) {
-                throw new AgentApiException('validation_failed', 'The operations field is invalid.', 422, '/operations');
-            }
-
-            $supersedesId = $canonicalRequest['supersedes_id'] ?? null;
-            if ($supersedesId !== null) {
-                if ( ! is_string($supersedesId) || ! AgentChangeSet::query()
-                    ->whereBelongsTo($context->family)
-                    ->whereKey($supersedesId)
-                    ->exists()) {
-                    throw new AgentApiException(
-                        'family_scope_violation',
-                        'The superseded Change Set is unavailable in this Family.',
-                        404,
-                        '/supersedes_id',
-                    );
+                if ( ! is_array($operations)) {
+                    throw new AgentApiException('validation_failed', 'The operations field is invalid.', 422, '/operations');
                 }
+
+                $supersedesId = $canonicalRequest['supersedes_id'] ?? null;
+                if ($supersedesId !== null) {
+                    if ( ! is_string($supersedesId) || ! AgentChangeSet::query()
+                        ->whereBelongsTo($context->family)
+                        ->whereKey($supersedesId)
+                        ->exists()) {
+                        throw new AgentApiException(
+                            'family_scope_violation',
+                            'The superseded Change Set is unavailable in this Family.',
+                            404,
+                            '/supersedes_id',
+                        );
+                    }
+                }
+
+                $resourceTypes = collect($operations)
+                    ->map(static fn (mixed $operation): mixed => is_array($operation) ? ($operation['resource_type'] ?? null) : null)
+                    ->filter(static fn (mixed $resourceType): bool => is_string($resourceType))
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->all();
+
+                $changeSet = AgentChangeSet::query()->create([
+                    'id' => (string) Str::ulid(),
+                    'family_id' => $context->family->id,
+                    'agent_credential_id' => $credential->id,
+                    'issuer_user_id' => $credential->tokenable_id,
+                    'issuer_name' => $credential->issuer_name,
+                    'credential_name' => $credential->name,
+                    'client_request_id' => $clientRequestId,
+                    'status' => 'previewed',
+                    'digest' => $digest,
+                    'document_version' => 1,
+                    'canonical_request' => $canonicalRequest,
+                    'preview_document' => $preview,
+                    'resource_types' => $resourceTypes,
+                    'title' => $canonicalRequest['title'] ?? null,
+                    'source_urls' => $canonicalRequest['source_urls'] ?? [],
+                    'note' => $canonicalRequest['note'] ?? null,
+                    'supersedes_id' => $supersedesId,
+                    'payload_bytes' => $payloadBytes,
+                    'operation_count' => count($operations),
+                    'expires_at' => now()->addHours(Config::integer('agent-integration.change_sets.preview_expiry_hours')),
+                ]);
+
+                return new PreviewedAgentChangeSet($changeSet, true);
+            }, 3);
+        } catch (UniqueConstraintViolationException $exception) {
+            $existing = $this->existingPreview($credential, $clientRequestId, $digest);
+            if ($existing instanceof PreviewedAgentChangeSet) {
+                return $existing;
             }
 
-            $resourceTypes = collect($operations)
-                ->map(static fn (mixed $operation): mixed => is_array($operation) ? ($operation['resource_type'] ?? null) : null)
-                ->filter(static fn (mixed $resourceType): bool => is_string($resourceType))
-                ->unique()
-                ->sort()
-                ->values()
-                ->all();
+            throw $exception;
+        }
+    }
 
-            $changeSet = AgentChangeSet::query()->create([
-                'id' => (string) Str::ulid(),
-                'family_id' => $context->family->id,
-                'agent_credential_id' => $credential->id,
-                'issuer_user_id' => $credential->tokenable_id,
-                'issuer_name' => $credential->issuer_name,
-                'credential_name' => $credential->name,
-                'client_request_id' => $clientRequestId,
-                'status' => 'previewed',
-                'digest' => $digest,
-                'document_version' => 1,
-                'canonical_request' => $canonicalRequest,
-                'preview_document' => $preview,
-                'resource_types' => $resourceTypes,
-                'title' => $canonicalRequest['title'] ?? null,
-                'source_urls' => $canonicalRequest['source_urls'] ?? [],
-                'note' => $canonicalRequest['note'] ?? null,
-                'supersedes_id' => $supersedesId,
-                'payload_bytes' => $payloadBytes,
-                'operation_count' => count($operations),
-                'expires_at' => now()->addHours(Config::integer('agent-integration.change_sets.preview_expiry_hours')),
-            ]);
+    private function existingPreview(
+        AgentCredential $credential,
+        string $clientRequestId,
+        string $digest,
+        bool $lock = false,
+    ): ?PreviewedAgentChangeSet {
+        $query = AgentChangeSet::query()
+            ->whereBelongsTo($credential, 'credential')
+            ->where('client_request_id', $clientRequestId);
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+        $existing = $query->first();
+        if ( ! $existing instanceof AgentChangeSet) {
+            return null;
+        }
+        if ( ! hash_equals($existing->digest, $digest)) {
+            throw new AgentApiException(
+                'idempotency_conflict',
+                'The client_request_id was already used with a different canonical request.',
+                409,
+                '/client_request_id',
+                details: ['change_set_id' => $existing->id],
+            );
+        }
 
-            return new PreviewedAgentChangeSet($changeSet, true);
-        });
+        return new PreviewedAgentChangeSet($existing, false);
     }
 
     /** @param array<string, mixed> $document */

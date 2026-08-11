@@ -8,6 +8,8 @@ use App\AgentIntegration\Exceptions\AgentApiException;
 use App\AgentIntegration\Models\AgentChangeSet;
 use App\AgentIntegration\Models\AgentCredential;
 use App\FamilyAccess\AuthorizedFamilyContext;
+use App\FamilyAccess\Models\FamilyMembership;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
@@ -29,9 +31,10 @@ final readonly class ApplyAgentChangeSet
     ): AgentChangeSet {
         try {
             return DB::transaction(function () use ($context, $credential, $changeSetId, $digest, $warningAcknowledgements): AgentChangeSet {
+                $liveCredential = $this->liveCredential($context, $credential);
                 $changeSet = AgentChangeSet::query()
                     ->whereBelongsTo($context->family)
-                    ->whereBelongsTo($credential, 'credential')
+                    ->whereBelongsTo($liveCredential, 'credential')
                     ->whereKey($changeSetId)
                     ->lockForUpdate()
                     ->first();
@@ -55,7 +58,7 @@ final readonly class ApplyAgentChangeSet
                 if ( ! hash_equals($changeSet->digest, $this->canonicalDocument->digest($canonicalRequest))) {
                     throw new AgentApiException('digest_mismatch', 'The stored canonical request no longer matches its digest.', 409);
                 }
-                $livePreview = $this->operationPreviewer->preview($context, $credential, $canonicalRequest);
+                $livePreview = $this->operationPreviewer->preview($context, $liveCredential, $canonicalRequest);
                 if ($livePreview !== $changeSet->preview_document) {
                     throw new AgentApiException('stale_preview', 'The live preview no longer matches the stored preview.', 409);
                 }
@@ -91,6 +94,36 @@ final readonly class ApplyAgentChangeSet
 
             throw $exception;
         }
+    }
+
+    private function liveCredential(AuthorizedFamilyContext $context, AgentCredential $credential): AgentCredential
+    {
+        $liveCredential = AgentCredential::query()
+            ->whereKey($credential->id)
+            ->whereBelongsTo($context->family)
+            ->lockForUpdate()
+            ->first();
+        $membershipExists = FamilyMembership::query()
+            ->whereBelongsTo($context->family)
+            ->whereBelongsTo($context->user)
+            ->lockForUpdate()
+            ->exists();
+
+        if ( ! $liveCredential instanceof AgentCredential
+            || $liveCredential->revoked_at !== null
+            || $liveCredential->expires_at === null
+            || $liveCredential->expires_at->isPast()
+            || $liveCredential->tokenable_type !== User::class
+            || $liveCredential->tokenable_id !== $context->user->id
+            || ! $membershipExists) {
+            throw new AgentApiException(
+                'credential_invalidated',
+                'The Agent Credential no longer has live authority for this Family.',
+                401,
+            );
+        }
+
+        return $liveCredential;
     }
 
     private function assertDigest(AgentChangeSet $changeSet, string $digest): void

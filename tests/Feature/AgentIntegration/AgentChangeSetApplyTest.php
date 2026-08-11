@@ -6,7 +6,10 @@ namespace Tests\Feature\AgentIntegration;
 
 use App\AgentIntegration\Actions\IssueAgentCredential;
 use App\AgentIntegration\AgentCredentialAbility;
+use App\AgentIntegration\ChangeSets\ApplyAgentChangeSet;
+use App\AgentIntegration\Exceptions\AgentApiException;
 use App\AgentIntegration\Models\AgentChangeSet;
+use App\AgentIntegration\Models\AgentCredential;
 use App\Cookbook\Actions\AttachIngredientAlternative;
 use App\Cookbook\Actions\AttachStoreSection;
 use App\Cookbook\Actions\CreateRecipe;
@@ -316,6 +319,90 @@ final class AgentChangeSetApplyTest extends TestCase
         ])->assertOk()->assertJsonPath('data.status', 'applied');
         $this->assertDatabaseHas('recipe_tags', ['name' => 'Dočasný štítek']);
         $this->assertDatabaseHas('ingredients', ['name' => 'Dočasná surovina']);
+    }
+
+    public function test_apply_rechecks_live_credential_and_issuer_membership_inside_the_transaction(): void
+    {
+        [$context, , $secret] = $this->credential();
+        $preview = $this->withToken($secret)->postJson('/api/v1/change-sets', [
+            'version' => 1,
+            'client_request_id' => 'live-authority',
+            'operations' => [[
+                'operation_id' => 'create-store',
+                'resource_type' => 'stores',
+                'action' => 'create',
+                'local_ref' => 'store',
+                'data' => ['name' => 'Kontrolovaný obchod'],
+            ]],
+        ])->assertCreated();
+        $credential = AgentCredential::query()->sole();
+
+        AgentCredential::query()->whereKey($credential->id)->update(['revoked_at' => now()]);
+        try {
+            app(ApplyAgentChangeSet::class)->handle(
+                $context,
+                $credential,
+                $preview->json('data.id'),
+                $preview->json('data.digest'),
+                [],
+            );
+            $this->fail('A revoked credential must not apply a previously authenticated request.');
+        } catch (AgentApiException $exception) {
+            $this->assertSame('credential_invalidated', $exception->errorCode);
+        }
+
+        AgentCredential::query()->whereKey($credential->id)->update(['revoked_at' => null]);
+        FamilyMembership::query()->where('family_id', $context->family->id)->where('user_id', $context->user->id)->delete();
+        try {
+            app(ApplyAgentChangeSet::class)->handle(
+                $context,
+                $credential,
+                $preview->json('data.id'),
+                $preview->json('data.digest'),
+                [],
+            );
+            $this->fail('An issuer without live Family membership must not apply.');
+        } catch (AgentApiException $exception) {
+            $this->assertSame('credential_invalidated', $exception->errorCode);
+        }
+
+        $this->assertDatabaseMissing('stores', ['name' => 'Kontrolovaný obchod']);
+        $this->assertDatabaseHas('agent_change_sets', ['id' => $preview->json('data.id'), 'status' => 'previewed']);
+    }
+
+    public function test_apply_rate_limit_is_scoped_to_the_credential(): void
+    {
+        [, , $secret] = $this->credential();
+        $previews = [];
+        foreach ([1, 2, 3] as $number) {
+            $previews[] = $this->withToken($secret)->postJson('/api/v1/change-sets', [
+                'version' => 1,
+                'client_request_id' => "apply-rate-{$number}",
+                'operations' => [[
+                    'operation_id' => 'create-store',
+                    'resource_type' => 'stores',
+                    'action' => 'create',
+                    'local_ref' => 'store',
+                    'data' => ['name' => "Obchod {$number}"],
+                ]],
+            ])->assertCreated()->json('data');
+        }
+
+        config(['agent-integration.rates.apply_per_minute' => 2]);
+        foreach (array_slice($previews, 0, 2) as $preview) {
+            $this->withToken($secret)->postJson('/api/v1/change-sets/' . $preview['id'] . '/apply', [
+                'digest' => $preview['digest'],
+                'warning_acknowledgements' => [],
+            ])->assertOk();
+        }
+
+        $this->withToken($secret)->postJson('/api/v1/change-sets/' . $previews[2]['id'] . '/apply', [
+            'digest' => $previews[2]['digest'],
+            'warning_acknowledgements' => [],
+        ])->assertTooManyRequests()
+            ->assertHeader('Retry-After')
+            ->assertJsonPath('error.code', 'rate_limit_exceeded')
+            ->assertJsonPath('error.retryable', true);
     }
 
     /** @return array{AuthorizedFamilyContext, Family, string} */
