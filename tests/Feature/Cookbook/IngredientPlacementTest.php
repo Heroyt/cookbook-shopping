@@ -114,17 +114,23 @@ final class IngredientPlacementTest extends TestCase
         ]);
     }
 
-    public function test_the_database_rejects_a_store_section_without_a_store(): void
+    public function test_the_application_rejects_a_store_section_without_a_store(): void
     {
-        $family = $this->createFamilyWithMembers();
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
         $section = StoreSection::factory()->for($family)->create();
 
-        $this->expectException(QueryException::class);
-
-        Ingredient::factory()->for($family)->create([
-            'store_id' => null,
+        $this->actingAs($user)->post(route('ingredients.store'), [
+            'name' => 'Rýže',
+            'metric_quantity' => '500',
+            'metric_unit' => 'g',
             'store_section_id' => $section->id,
+        ])->assertSessionHasErrors([
+            'store_id' => 'Před výběrem části obchodu vyberte obchod.',
         ]);
+
+        $this->assertDatabaseCount('ingredients', 0);
     }
 
     public function test_store_and_section_lifecycles_clear_only_the_required_placement_fields(): void

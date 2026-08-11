@@ -8,8 +8,6 @@ use App\Cookbook\Models\Ingredient;
 use App\FamilyAccess\Models\Family;
 use App\FamilyAccess\Models\FamilyMembership;
 use App\Models\User;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -388,45 +386,26 @@ final class IngredientManagementTest extends TestCase
                 ->where('ingredients.1.quantities', ['999,13 g']));
     }
 
-    public function test_database_rejects_invalid_package_quantity_combinations(): void
+    public function test_application_rejects_invalid_package_quantity_combinations(): void
     {
-        $family = Family::factory()->create();
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
 
-        try {
-            DB::table('ingredients')->insert([
-                'family_id' => $family->id,
-                'name' => 'Bez množství',
-                'normalized_name' => 'bez množství',
-            ]);
-            $this->fail('The database accepted an Ingredient without a package quantity.');
-        } catch (QueryException) {
-            $this->addToAssertionCount(1);
-        }
+        $this->actingAs($user)->post(route('ingredients.store'), [
+            'name' => 'Bez množství',
+        ])->assertSessionHasErrors('quantities');
+        $this->actingAs($user)->post(route('ingredients.store'), [
+            'name' => 'Nulová míra',
+            'metric_quantity' => '0',
+            'metric_unit' => 'g',
+        ])->assertSessionHasErrors('metric_quantity');
+        $this->actingAs($user)->post(route('ingredients.store'), [
+            'name' => 'Nulový počet kusů',
+            'piece_count' => '0',
+        ])->assertSessionHasErrors('piece_count');
 
-        try {
-            DB::table('ingredients')->insert([
-                'family_id' => $family->id,
-                'name' => 'Dvě míry',
-                'normalized_name' => 'dvě míry',
-                'weight_grams' => '500',
-                'volume_millilitres' => '500',
-            ]);
-            $this->fail('The database accepted weight and volume together.');
-        } catch (QueryException) {
-            $this->addToAssertionCount(1);
-        }
-
-        try {
-            DB::table('ingredients')->insert([
-                'family_id' => $family->id,
-                'name' => 'Nulová míra',
-                'normalized_name' => 'nulová míra',
-                'weight_grams' => '0',
-            ]);
-            $this->fail('The database accepted a non-positive package quantity.');
-        } catch (QueryException) {
-            $this->addToAssertionCount(1);
-        }
+        $this->assertDatabaseCount('ingredients', 0);
     }
 
     public function test_ingredient_management_requires_a_current_family(): void

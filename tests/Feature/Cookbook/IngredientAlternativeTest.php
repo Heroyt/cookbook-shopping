@@ -77,7 +77,7 @@ final class IngredientAlternativeTest extends TestCase
         $this->assertDatabaseCount('ingredient_alternatives', 1);
     }
 
-    public function test_database_rejects_non_canonical_or_cross_family_edges(): void
+    public function test_database_rejects_cross_family_edges(): void
     {
         $family = $this->family();
         $otherFamily = $this->family();

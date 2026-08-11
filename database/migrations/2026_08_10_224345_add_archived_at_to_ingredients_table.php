@@ -24,6 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ingredients', function (Blueprint $table): void {
+            $table->dropIndex(['archived_at']);
             $table->dropColumn('archived_at');
         });
     }

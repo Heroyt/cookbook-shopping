@@ -8,7 +8,6 @@ use App\Cookbook\Models\Ingredient;
 use App\FamilyAccess\Models\Family;
 use App\FamilyAccess\Models\FamilyMembership;
 use App\Models\User;
-use Illuminate\Database\QueryException;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -103,16 +102,23 @@ final class IngredientNutritionTest extends TestCase
         ]);
     }
 
-    public function test_database_rejects_an_invalid_nutrition_profile(): void
+    public function test_application_rejects_an_invalid_nutrition_profile(): void
     {
-        $ingredient = Ingredient::factory()->create();
+        $user = User::factory()->create();
+        $family = $this->family($user);
+        $this->select($user, $family);
+        $ingredient = Ingredient::factory()->for($family)->create();
 
-        $this->expectException(QueryException::class);
+        $this->actingAs($user)->patch(route('ingredients.update', $ingredient), $this->payload($ingredient, [
+            'nutrition_basis_kind' => 'package',
+            'nutrition_basis_quantity' => '2',
+            'nutrition_energy_kcal' => '-1',
+            'nutrition_fat_grams' => '0',
+            'nutrition_protein_grams' => '0',
+            'nutrition_carbohydrate_grams' => '0',
+        ]))->assertSessionHasErrors(['nutrition_basis_quantity', 'nutrition_energy_kcal']);
 
-        $ingredient->nutritionProfile()->create([
-            'basis_kind' => 'package', 'basis_quantity' => 2, 'energy_kcal' => -1,
-            'fat_grams' => 0, 'protein_grams' => 0, 'carbohydrate_grams' => 0,
-        ]);
+        $this->assertDatabaseMissing('ingredient_nutrition_profiles', ['ingredient_id' => $ingredient->id]);
     }
 
     /** @param array<string, string> $extra */
