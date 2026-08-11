@@ -9,6 +9,7 @@ export type RecipeTagOption = { id: number; name: string };
 export type RecipeSummary = {
     id: number;
     name: string;
+    coverUrl: string | null;
     baseServings: string;
     version: number;
     sourceUrl: string | null;

@@ -1,6 +1,7 @@
 export type IngredientSummary = {
     id: number;
     name: string;
+    photoUrl: string | null;
     description: string | null;
     metricQuantity: string | null;
     metricUnit: 'g' | 'ml';

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PaletteIcon } from '@lucide/vue';
+import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
 import DeleteStoreSectionAlertDialog from '@/components/stores/DeleteStoreSectionAlertDialog.vue';
 import {
     Empty,
@@ -38,6 +39,7 @@ defineProps<{ storeSections: StoreSectionSummary[] }>();
         <TableHeader>
             <TableRow>
                 <TableHead>Název</TableHead>
+                <TableHead>Ikona</TableHead>
                 <TableHead>Barva</TableHead>
                 <TableHead class="text-right">Akce</TableHead>
             </TableRow>
@@ -48,6 +50,14 @@ defineProps<{ storeSections: StoreSectionSummary[] }>();
                 :key="storeSection.id"
             >
                 <TableCell>{{ storeSection.name }}</TableCell>
+                <TableCell class="w-56">
+                    <EntityImageUpload
+                        media-type="store-section-icon"
+                        :entity-id="storeSection.id"
+                        :image-url="storeSection.iconUrl"
+                        :image-alt="`Ikona části obchodu ${storeSection.name}`"
+                    />
+                </TableCell>
                 <TableCell>
                     <div class="flex items-center gap-2">
                         <span

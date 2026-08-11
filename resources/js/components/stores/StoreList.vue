@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { StoreIcon } from '@lucide/vue';
+import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
 import DeleteStoreAlertDialog from '@/components/stores/DeleteStoreAlertDialog.vue';
 import RenameStoreDialog from '@/components/stores/RenameStoreDialog.vue';
 import StoreSectionOrderManager from '@/components/stores/StoreSectionOrderManager.vue';
@@ -43,6 +44,7 @@ defineProps<{
         <TableHeader>
             <TableRow>
                 <TableHead>Název</TableHead>
+                <TableHead>Logo</TableHead>
                 <TableHead>Části a pořadí</TableHead>
                 <TableHead class="text-right">Akce</TableHead>
             </TableRow>
@@ -50,6 +52,14 @@ defineProps<{
         <TableBody>
             <TableRow v-for="store in stores" :key="store.id">
                 <TableCell>{{ store.name }}</TableCell>
+                <TableCell class="w-56">
+                    <EntityImageUpload
+                        media-type="store-logo"
+                        :entity-id="store.id"
+                        :image-url="store.logoUrl"
+                        :image-alt="`Logo obchodu ${store.name}`"
+                    />
+                </TableCell>
                 <TableCell>
                     <StoreSectionOrderManager
                         :store="store"
