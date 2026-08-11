@@ -470,9 +470,11 @@ Resume the uncompleted Gate 4 evidence from the retained preview:
 
 Complete Gate 5 from a live, unexpired preview:
 
-5. If the retained preview is still `previewed` and unexpired, use it. Otherwise
-   create one fresh `stores/create` preview as described in step 4 with a new
-   request identity. Never attempt to apply an expired or terminal preview.
+5. Use the retained preview when it is still `previewed` and unexpired;
+   otherwise use the live replacement created in step 4. Only when neither is
+   available, create one fresh `stores/create` preview as described in step 4
+   with a new request identity. Never attempt to apply an expired or terminal
+   preview.
 6. Submit `POST /api/v1/change-sets/{id}/apply` with the exact digest and exactly
    the preview warning codes, using an empty array when there are no warnings.
    Require HTTP 200, status `applied`, a mapping from the run-scoped `local_ref`
