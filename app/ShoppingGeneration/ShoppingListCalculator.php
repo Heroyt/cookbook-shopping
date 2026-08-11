@@ -27,7 +27,7 @@ final class ShoppingListCalculator
     {
         $requiredKinds = $this->requiredKinds($request);
         $chosenAlternatives = $this->chosenAlternatives($request, $requiredKinds);
-        /** @var array<int, array{ingredient: IngredientDefinition, packageFraction: BigRational, contributions: list<RecipeContribution>, originalIngredients: array<int, IngredientDefinition>, alternativeChoices: array<int, AlternativeChoiceProvenance>}> $aggregates */
+        /** @var array<int, array{ingredient: IngredientDefinition, packageFraction: BigRational, contributions: array<string, array{recipeId: int, recipeName: string, originalIngredientId: int, originalIngredientName: string, quantityKind: QuantityKind, required: BigRational, packageFraction: BigRational}>, originalIngredients: array<int, IngredientDefinition>, alternativeChoices: array<int, AlternativeChoiceProvenance>}> $aggregates */
         $aggregates = [];
         $problems = [];
 
@@ -151,20 +151,49 @@ final class ShoppingListCalculator
                     );
                 }
 
-                $aggregate['contributions'][] = new RecipeContribution(
-                    recipeId: $selection->recipeId,
-                    recipeName: $selection->recipeName,
-                    originalIngredientId: $originalIngredient->id,
-                    originalIngredientName: $originalIngredient->name,
-                    quantityKind: $recipeIngredient->quantityKind,
-                    required: ExactQuantity::from($required),
-                    packageFraction: ExactQuantity::from($packageFraction),
-                );
+                $contributionKey = implode(':', [
+                    $selection->recipeId,
+                    $originalIngredient->id,
+                    $recipeIngredient->quantityKind->value,
+                ]);
+                $contribution = $aggregate['contributions'][$contributionKey] ?? [
+                    'recipeId' => $selection->recipeId,
+                    'recipeName' => $selection->recipeName,
+                    'originalIngredientId' => $originalIngredient->id,
+                    'originalIngredientName' => $originalIngredient->name,
+                    'quantityKind' => $recipeIngredient->quantityKind,
+                    'required' => BigRational::zero(),
+                    'packageFraction' => BigRational::zero(),
+                ];
+                $contribution['required'] = $contribution['required']->plus($required);
+                $contribution['packageFraction'] = $contribution['packageFraction']->plus($packageFraction);
+                $aggregate['contributions'][$contributionKey] = $contribution;
                 $aggregates[$finalIngredientId] = $aggregate;
             }
         }
 
         if ($problems !== []) {
+            usort(
+                $problems,
+                static fn (CalculationProblem $left, CalculationProblem $right): int => [
+                    $left->recipeId,
+                    $left->ingredientId,
+                    $left->unit,
+                    $left->reason->value,
+                    $left->quantity,
+                    $left->recipeName,
+                    $left->ingredientName,
+                ] <=> [
+                    $right->recipeId,
+                    $right->ingredientId,
+                    $right->unit,
+                    $right->reason->value,
+                    $right->quantity,
+                    $right->recipeName,
+                    $right->ingredientName,
+                ],
+            );
+
             return ShoppingListCalculation::failed($problems);
         }
 
@@ -185,8 +214,20 @@ final class ShoppingListCalculator
                 );
             }
 
+            $contributions = array_map(
+                static fn (array $contribution): RecipeContribution => new RecipeContribution(
+                    recipeId: $contribution['recipeId'],
+                    recipeName: $contribution['recipeName'],
+                    originalIngredientId: $contribution['originalIngredientId'],
+                    originalIngredientName: $contribution['originalIngredientName'],
+                    quantityKind: $contribution['quantityKind'],
+                    required: ExactQuantity::from($contribution['required']),
+                    packageFraction: ExactQuantity::from($contribution['packageFraction']),
+                ),
+                array_values($aggregate['contributions']),
+            );
             usort(
-                $aggregate['contributions'],
+                $contributions,
                 static fn (RecipeContribution $left, RecipeContribution $right): int => [
                     $left->recipeId,
                     $left->originalIngredientId,
@@ -217,7 +258,7 @@ final class ShoppingListCalculator
                 ingredient: $aggregate['ingredient'],
                 purchasePackages: (string) $purchasePackages,
                 quantities: $quantities,
-                contributions: $aggregate['contributions'],
+                contributions: $contributions,
                 eligibleAlternatives: $eligibleAlternatives,
                 alternativeChoices: $alternativeChoices,
             );

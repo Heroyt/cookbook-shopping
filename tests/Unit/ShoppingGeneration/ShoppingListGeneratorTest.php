@@ -8,17 +8,23 @@ use App\ShoppingGeneration\ShoppingListCalculator;
 use App\ShoppingGeneration\ShoppingListGenerator;
 use App\ShoppingGeneration\ShoppingListGrouper;
 use App\ShoppingGeneration\Values\AlternativeChoice;
+use App\ShoppingGeneration\Values\AlternativeChoiceProvenance;
 use App\ShoppingGeneration\Values\AlternativeIngredientDefinition;
+use App\ShoppingGeneration\Values\CalculationProblem;
 use App\ShoppingGeneration\Values\CalculationProblemReason;
 use App\ShoppingGeneration\Values\GenerationRequest;
 use App\ShoppingGeneration\Values\IngredientDefinition;
 use App\ShoppingGeneration\Values\IngredientPackage;
 use App\ShoppingGeneration\Values\IngredientPlacement;
 use App\ShoppingGeneration\Values\QuantityKind;
+use App\ShoppingGeneration\Values\RecipeContribution;
 use App\ShoppingGeneration\Values\RecipeIngredientInput;
 use App\ShoppingGeneration\Values\RecipeSelection;
 use App\ShoppingGeneration\Values\ShoppingList;
+use App\ShoppingGeneration\Values\ShoppingListLine;
+use App\ShoppingGeneration\Values\StoreGroup;
 use App\ShoppingGeneration\Values\StoreReference;
+use App\ShoppingGeneration\Values\StoreSectionGroup;
 use App\ShoppingGeneration\Values\StoreSectionReference;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -33,6 +39,16 @@ final class ShoppingListGeneratorTest extends TestCase
             'inactive' => ['inactive'],
             'missing a required canonical kind' => ['missing-kind'],
             'not a direct edge' => ['indirect'],
+        ];
+    }
+
+    /** @return array<string, array{QuantityKind, IngredientPackage}> */
+    public static function exactWholePackageCases(): array
+    {
+        return [
+            'grams' => [QuantityKind::Grams, new IngredientPackage(weightGrams: '100')],
+            'millilitres' => [QuantityKind::Millilitres, new IngredientPackage(volumeMillilitres: '100')],
+            'piece count' => [QuantityKind::Piece, new IngredientPackage(pieceCount: '100')],
         ];
     }
 
@@ -79,7 +95,7 @@ final class ShoppingListGeneratorTest extends TestCase
                 ['recipeId' => 22, 'recipeName' => 'Koláč', 'required' => '70'],
             ],
             array_map(
-                static fn ($contribution): array => [
+                static fn (RecipeContribution $contribution): array => [
                     'recipeId' => $contribution->recipeId,
                     'recipeName' => $contribution->recipeName,
                     'required' => $contribution->required->fraction(),
@@ -138,7 +154,7 @@ final class ShoppingListGeneratorTest extends TestCase
             normalizedName: 'neplatné balení',
             package: new IngredientPackage(weightGrams: '100.000000', volumeMillilitres: '100.000000'),
         );
-        $request = new GenerationRequest([
+        $selections = [
             new RecipeSelection(
                 recipeId: 41,
                 recipeName: 'Nulová porce',
@@ -160,29 +176,31 @@ final class ShoppingListGeneratorTest extends TestCase
                 requestedServings: '2.000000',
                 ingredients: [new RecipeIngredientInput($invalidPackage, '50.000000', QuantityKind::Grams)],
             ),
-        ]);
+        ];
 
-        $result = (new ShoppingListGenerator(new ShoppingListCalculator(), new ShoppingListGrouper()))->generate($request);
+        $generator = new ShoppingListGenerator(new ShoppingListCalculator(), new ShoppingListGrouper());
+        $result = $generator->generate(new GenerationRequest($selections));
+        $reverse = $generator->generate(new GenerationRequest(array_reverse($selections)));
 
         self::assertFalse($result->isSuccessful());
         self::assertNull($result->shoppingList);
-        self::assertSame(
-            [
-                [41, 31, '0.000000', 'servings', CalculationProblemReason::NonPositiveRequestedServings],
-                [42, 31, '50.000000', 'millilitres', CalculationProblemReason::MissingPackageQuantity],
-                [43, 32, '50.000000', 'grams', CalculationProblemReason::InvalidPackageDefinition],
+        $expected = [
+            [41, 31, '0.000000', 'servings', CalculationProblemReason::NonPositiveRequestedServings],
+            [42, 31, '50.000000', 'millilitres', CalculationProblemReason::MissingPackageQuantity],
+            [43, 32, '50.000000', 'grams', CalculationProblemReason::InvalidPackageDefinition],
+        ];
+        $snapshot = static fn (array $problems): array => array_map(
+            static fn (CalculationProblem $problem): array => [
+                $problem->recipeId,
+                $problem->ingredientId,
+                $problem->quantity,
+                $problem->unit,
+                $problem->reason,
             ],
-            array_map(
-                static fn ($problem): array => [
-                    $problem->recipeId,
-                    $problem->ingredientId,
-                    $problem->quantity,
-                    $problem->unit,
-                    $problem->reason,
-                ],
-                $result->problems,
-            ),
+            $problems,
         );
+        self::assertSame($expected, $snapshot($result->problems));
+        self::assertSame($expected, $snapshot($reverse->problems));
     }
 
     public function test_it_offers_only_active_direct_kind_compatible_alternatives_and_applies_one_choice(): void
@@ -234,7 +252,7 @@ final class ShoppingListGeneratorTest extends TestCase
         self::assertNotNull($initial->shoppingList);
         self::assertSame(
             [52],
-            array_map(static fn ($alternative): int => $alternative->id, $initial->shoppingList->unplacedLines[0]->eligibleAlternatives),
+            array_map(static fn (AlternativeIngredientDefinition $alternative): int => $alternative->id, $initial->shoppingList->unplacedLines[0]->eligibleAlternatives),
         );
 
         $replaced = $generator->generate(new GenerationRequest(
@@ -255,7 +273,7 @@ final class ShoppingListGeneratorTest extends TestCase
         self::assertSame(
             [[51, 'Velké rajče', 52, 'Malé rajče']],
             array_map(
-                static fn ($choice): array => [
+                static fn (AlternativeChoiceProvenance $choice): array => [
                     $choice->originalIngredientId,
                     $choice->originalIngredientName,
                     $choice->alternativeIngredientId,
@@ -367,14 +385,14 @@ final class ShoppingListGeneratorTest extends TestCase
         self::assertSame(
             [[81, 90], [82, 90]],
             array_map(
-                static fn ($choice): array => [$choice->originalIngredientId, $choice->alternativeIngredientId],
+                static fn (AlternativeChoiceProvenance $choice): array => [$choice->originalIngredientId, $choice->alternativeIngredientId],
                 $line->alternativeChoices,
             ),
         );
         self::assertSame(
             [[81, 'První surovina'], [82, 'Druhá surovina']],
             array_map(
-                static fn ($contribution): array => [$contribution->originalIngredientId, $contribution->originalIngredientName],
+                static fn (RecipeContribution $contribution): array => [$contribution->originalIngredientId, $contribution->originalIngredientName],
                 $line->contributions,
             ),
         );
@@ -482,8 +500,93 @@ final class ShoppingListGeneratorTest extends TestCase
                 CalculationProblemReason::InvalidRequestedServings,
                 CalculationProblemReason::NonPositiveBaseServings,
             ],
-            array_map(static fn ($problem): CalculationProblemReason => $problem->reason, $result->problems),
+            array_map(static fn (CalculationProblem $problem): CalculationProblemReason => $problem->reason, $result->problems),
         );
+    }
+
+    public function test_it_rejects_an_empty_generation_request_as_an_internal_contract_violation(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new GenerationRequest([]);
+    }
+
+    public function test_it_rejects_a_recipe_selection_without_ingredients_as_an_internal_contract_violation(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new RecipeSelection(130, 'Prázdný recept', '1', '1', []);
+    }
+
+    public function test_repeated_same_kind_lines_have_one_deterministic_source_recipe_contribution(): void
+    {
+        $ingredient = new IngredientDefinition(
+            id: 131,
+            name: 'Mouka',
+            normalizedName: 'mouka',
+            package: new IngredientPackage(weightGrams: '100'),
+        );
+        $selection = static fn (array $quantities): RecipeSelection => new RecipeSelection(
+            recipeId: 132,
+            recipeName: 'Dvojitá mouka',
+            baseServings: '1',
+            requestedServings: '1',
+            ingredients: array_map(
+                static fn (string $quantity): RecipeIngredientInput => new RecipeIngredientInput(
+                    $ingredient,
+                    $quantity,
+                    QuantityKind::Grams,
+                ),
+                $quantities,
+            ),
+        );
+        $generator = new ShoppingListGenerator(new ShoppingListCalculator(), new ShoppingListGrouper());
+
+        $forward = $generator->generate(new GenerationRequest([$selection(['10', '20'])]));
+        $reverse = $generator->generate(new GenerationRequest([$selection(['20', '10'])]));
+        $repeatedSelections = $generator->generate(new GenerationRequest([
+            $selection(['20']),
+            $selection(['10']),
+        ]));
+
+        self::assertNotNull($forward->shoppingList);
+        self::assertNotNull($reverse->shoppingList);
+        $forwardContributions = $forward->shoppingList->unplacedLines[0]->contributions;
+        $reverseContributions = $reverse->shoppingList->unplacedLines[0]->contributions;
+        self::assertCount(1, $forwardContributions);
+        self::assertCount(1, $reverseContributions);
+        self::assertSame('30', $forwardContributions[0]->required->fraction());
+        self::assertSame('3/10', $forwardContributions[0]->packageFraction->fraction());
+        self::assertEquals($forwardContributions, $reverseContributions);
+        self::assertNotNull($repeatedSelections->shoppingList);
+        self::assertEquals(
+            $forwardContributions,
+            $repeatedSelections->shoppingList->unplacedLines[0]->contributions,
+        );
+    }
+
+    #[DataProvider('exactWholePackageCases')]
+    public function test_an_exact_whole_package_has_no_ceiling_surplus(
+        QuantityKind $kind,
+        IngredientPackage $package,
+    ): void {
+        $ingredient = new IngredientDefinition(140, 'Přesné balení', 'přesné balení', $package);
+        $request = new GenerationRequest([new RecipeSelection(
+            recipeId: 141,
+            recipeName: 'Přesná hranice',
+            baseServings: '1',
+            requestedServings: '1',
+            ingredients: [new RecipeIngredientInput($ingredient, '100', $kind)],
+        )]);
+
+        $result = (new ShoppingListGenerator(new ShoppingListCalculator(), new ShoppingListGrouper()))->generate($request);
+
+        self::assertNotNull($result->shoppingList);
+        $line = $result->shoppingList->unplacedLines[0];
+        self::assertSame('1', $line->purchasePackages);
+        self::assertSame('100', $line->quantity($kind)->required->fraction());
+        self::assertSame('100', $line->quantity($kind)->purchased->fraction());
+        self::assertSame('0', $line->quantity($kind)->surplus->fraction());
     }
 
     /** @param list<IngredientDefinition> $ingredients */
@@ -510,20 +613,20 @@ final class ShoppingListGeneratorTest extends TestCase
     {
         return [
             'stores' => array_map(
-                static fn ($storeGroup): array => [
+                static fn (StoreGroup $storeGroup): array => [
                     'id' => $storeGroup->store->id,
                     'sections' => array_map(
-                        static fn ($sectionGroup): array => [
+                        static fn (StoreSectionGroup $sectionGroup): array => [
                             'id' => $sectionGroup->section->id,
-                            'ingredients' => array_map(static fn ($line): int => $line->ingredient->id, $sectionGroup->lines),
+                            'ingredients' => array_map(static fn (ShoppingListLine $line): int => $line->ingredient->id, $sectionGroup->lines),
                         ],
                         $storeGroup->sections,
                     ),
-                    'unsectioned' => array_map(static fn ($line): int => $line->ingredient->id, $storeGroup->unsectionedLines),
+                    'unsectioned' => array_map(static fn (ShoppingListLine $line): int => $line->ingredient->id, $storeGroup->unsectionedLines),
                 ],
                 $shoppingList->storeGroups,
             ),
-            'unplaced' => array_map(static fn ($line): int => $line->ingredient->id, $shoppingList->unplacedLines),
+            'unplaced' => array_map(static fn (ShoppingListLine $line): int => $line->ingredient->id, $shoppingList->unplacedLines),
         ];
     }
 }
