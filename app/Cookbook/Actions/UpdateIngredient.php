@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Cookbook\Actions;
 
 use App\Cookbook\Models\Ingredient;
+use App\Cookbook\Models\RecipeIngredient;
 use App\Cookbook\Values\IngredientNutritionInput;
 use App\Cookbook\Values\IngredientPackageQuantities;
 use App\FamilyAccess\CurrentFamilyScope;
@@ -45,6 +46,27 @@ final readonly class UpdateIngredient
                     throw ValidationException::withMessages([
                         'ingredient' => __('Restore the Ingredient before editing it.'),
                     ]);
+                }
+
+                $removedKinds = array_values(array_filter([
+                    $ingredient->weight_grams !== null && $quantities->weightGrams === null ? 'grams' : null,
+                    $ingredient->volume_millilitres !== null && $quantities->volumeMillilitres === null ? 'millilitres' : null,
+                    $ingredient->piece_count !== null && $quantities->pieceCount === null ? 'piece' : null,
+                ]));
+                if ($removedKinds !== []) {
+                    $usedKind = RecipeIngredient::query()
+                        ->where('family_id', $family->id)
+                        ->where('ingredient_id', $ingredient->id)
+                        ->whereIn('quantity_kind', $removedKinds)
+                        ->lockForUpdate()
+                        ->value('quantity_kind');
+                    if (is_string($usedKind)) {
+                        $field = $usedKind === 'piece' ? 'piece_count' : 'metric_quantity';
+                        $message = $usedKind === 'piece'
+                            ? __('The piece count cannot be removed because a Recipe Ingredient uses it.')
+                            : __('The metric quantity cannot be removed because a Recipe Ingredient uses it.');
+                        throw ValidationException::withMessages([$field => $message]);
+                    }
                 }
 
                 if ($nutrition !== null && ! $nutrition->supports($quantities)) {
