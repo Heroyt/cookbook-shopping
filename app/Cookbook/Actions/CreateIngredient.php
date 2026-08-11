@@ -11,6 +11,7 @@ use App\Cookbook\Values\NormalizedName;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
 final readonly class CreateIngredient
@@ -33,21 +34,29 @@ final readonly class CreateIngredient
             $this->validateNutritionCompatibility($nutrition, $quantities);
             $placement = $this->resolveIngredientStorePlacement->handle($family, $storeId, $storeSectionId);
             $normalizedName = NormalizedName::from($name);
-            $ingredient = Ingredient::query()->createOrFirst(
-                [
-                    'family_id' => $family->id,
-                    'normalized_name' => $normalizedName->key,
-                ],
-                [
-                    'name' => $normalizedName->display,
-                    'description' => $description,
-                    'weight_grams' => $quantities->weightGrams,
-                    'volume_millilitres' => $quantities->volumeMillilitres,
-                    'piece_count' => $quantities->pieceCount,
-                    'store_id' => $placement->storeId,
-                    'store_section_id' => $placement->storeSectionId,
-                ],
-            );
+            try {
+                $ingredient = Ingredient::query()->createOrFirst(
+                    [
+                        'family_id' => $family->id,
+                        'normalized_name' => $normalizedName->key,
+                    ],
+                    [
+                        'name' => $normalizedName->display,
+                        'description' => $description,
+                        'weight_grams' => $quantities->weightGrams,
+                        'volume_millilitres' => $quantities->volumeMillilitres,
+                        'piece_count' => $quantities->pieceCount,
+                        'store_id' => $placement->storeId,
+                        'store_section_id' => $placement->storeSectionId,
+                    ],
+                );
+            } catch (QueryException $exception) {
+                $this->resolveIngredientStorePlacement->rethrowAsValidationExceptionIfUnavailable(
+                    $family,
+                    $placement,
+                    $exception,
+                );
+            }
 
             if ( ! $ingredient->wasRecentlyCreated) {
                 throw ValidationException::withMessages([

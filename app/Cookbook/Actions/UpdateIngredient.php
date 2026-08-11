@@ -10,6 +10,7 @@ use App\Cookbook\Values\IngredientPackageQuantities;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -77,6 +78,12 @@ final readonly class UpdateIngredient
                     throw ValidationException::withMessages([
                         'name' => __('An Ingredient with this name already exists in the Current Family.'),
                     ]);
+                } catch (QueryException $exception) {
+                    $this->resolveIngredientStorePlacement->rethrowAsValidationExceptionIfUnavailable(
+                        $family,
+                        $placement,
+                        $exception,
+                    );
                 }
 
                 if ($nutrition === null) {

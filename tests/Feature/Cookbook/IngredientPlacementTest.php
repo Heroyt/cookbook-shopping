@@ -11,6 +11,8 @@ use App\FamilyAccess\Models\Family;
 use App\FamilyAccess\Models\FamilyMembership;
 use App\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
@@ -131,6 +133,52 @@ final class IngredientPlacementTest extends TestCase
         ]);
 
         $this->assertDatabaseCount('ingredients', 0);
+    }
+
+    public function test_a_detach_race_becomes_a_store_section_field_error_without_a_partial_update(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $store = Store::factory()->for($family)->create();
+        $section = StoreSection::factory()->for($family)->create();
+        $store->storeSections()->attach($section, ['position' => 0]);
+        $ingredient = Ingredient::factory()->for($family)->create(['name' => 'Původní název']);
+        $eventName = 'eloquent.saving: ' . Ingredient::class;
+
+        Event::listen($eventName, function (Ingredient $savingIngredient) use ($ingredient, $store, $section): void {
+            if ($savingIngredient->is($ingredient)) {
+                DB::table('store_store_section')
+                    ->where('store_id', $store->id)
+                    ->where('store_section_id', $section->id)
+                    ->delete();
+            }
+        });
+
+        try {
+            $this->actingAs($user)->patch(route('ingredients.update', $ingredient), [
+                'name' => 'Nový název',
+                'metric_quantity' => '500',
+                'metric_unit' => 'g',
+                'store_id' => (string) $store->id,
+                'store_section_id' => (string) $section->id,
+            ])->assertSessionHasErrors([
+                'store_section_id' => 'Vybraná část obchodu už není k tomuto obchodu přiřazená.',
+            ]);
+        } finally {
+            Event::forget($eventName);
+        }
+
+        $this->assertDatabaseHas('ingredients', [
+            'id' => $ingredient->id,
+            'name' => 'Původní název',
+            'store_id' => null,
+            'store_section_id' => null,
+        ]);
+        $this->assertDatabaseHas('store_store_section', [
+            'store_id' => $store->id,
+            'store_section_id' => $section->id,
+        ]);
     }
 
     public function test_store_and_section_lifecycles_clear_only_the_required_placement_fields(): void

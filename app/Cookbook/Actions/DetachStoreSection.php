@@ -10,6 +10,7 @@ use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\CurrentFamilyScope;
 use App\FamilyAccess\Models\Family;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 final readonly class DetachStoreSection
 {
@@ -29,7 +30,14 @@ final readonly class DetachStoreSection
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $store->storeSections()->whereKey($storeSection->id)->firstOrFail();
+            abort_unless(
+                DB::table('store_store_section')
+                    ->where('store_id', $store->id)
+                    ->where('store_section_id', $storeSection->id)
+                    ->lockForUpdate()
+                    ->exists(),
+                404,
+            );
             Ingredient::query()
                 ->whereBelongsTo($family)
                 ->where('store_id', $store->id)
