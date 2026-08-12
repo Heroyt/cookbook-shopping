@@ -3,9 +3,9 @@ import { router } from '@inertiajs/vue3';
 import { FilterIcon, RotateCcwIcon } from '@lucide/vue';
 import { ref } from 'vue';
 import AgentChangeSetHistoryController from '@/actions/App/AgentIntegration/Http/Controllers/AgentChangeSetHistoryController';
+import AppDatePicker from '@/components/date/AppDatePicker.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -112,15 +112,19 @@ const applyFilters = (): void => {
         </Field>
         <Field>
             <FieldLabel for="agent-history-date-from">Od data</FieldLabel>
-            <Input
+            <AppDatePicker
                 id="agent-history-date-from"
                 v-model="dateFrom"
-                type="date"
+                clearable
             />
         </Field>
         <Field>
             <FieldLabel for="agent-history-date-to">Do data</FieldLabel>
-            <Input id="agent-history-date-to" v-model="dateTo" type="date" />
+            <AppDatePicker
+                id="agent-history-date-to"
+                v-model="dateTo"
+                clearable
+            />
         </Field>
         <Field>
             <FieldLabel for="agent-history-outcome">Výsledek</FieldLabel>

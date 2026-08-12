@@ -47,7 +47,9 @@ const emit = defineEmits<{
 
 const open = ref(false);
 
-const parseOptionalDate = (value: string | undefined): DateValue | undefined => {
+const parseOptionalDate = (
+    value: string | undefined,
+): DateValue | undefined => {
     if (value === undefined || value === '') {
         return undefined;
     }
@@ -99,12 +101,7 @@ const todayIsDisabled = computed(() => {
 </script>
 
 <template>
-    <input
-        v-if="name"
-        type="hidden"
-        :name="name"
-        :value="modelValue"
-    />
+    <input v-if="name" type="hidden" :name="name" :value="modelValue" />
 
     <Popover v-model:open="open">
         <PopoverTrigger as-child>

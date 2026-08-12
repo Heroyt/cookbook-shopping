@@ -81,6 +81,41 @@ final class CalendarTest extends TestCase
         $this->assertSame(10, $route->waitsFor());
     }
 
+    public function test_create_can_repeat_atomically_across_consecutive_days(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $recipe = Recipe::factory()->for($family)->create(['name' => 'Polévka']);
+        CalendarEntry::factory()->for($family)->for($recipe)->create([
+            'date' => '2026-08-13',
+            'meal_label_key' => 'dinner',
+            'serving_count' => '1',
+        ]);
+
+        $this->actingAs($user)->post(route('calendar.entries.store'), [
+            'recipe_id' => $recipe->id,
+            'date' => '2026-08-12',
+            'meal_label' => 'večeře',
+            'serving_count' => '2',
+            'repeat_days' => 3,
+        ])->assertSessionHasNoErrors()->assertInertiaFlash('toast', [
+            'type' => 'success',
+            'message' => 'Přidáno dnů: 2, sloučeno s existujícími: 1.',
+        ]);
+
+        $this->assertDatabaseCount('calendar_entries', 3);
+        $this->assertDatabaseHas('calendar_entries', ['date' => '2026-08-13', 'serving_count' => '3.000000']);
+
+        $this->post(route('calendar.entries.store'), [
+            'recipe_id' => $recipe->id,
+            'date' => '2026-08-12',
+            'serving_count' => '1',
+            'repeat_days' => 32,
+        ])->assertSessionHasErrors('repeat_days');
+        $this->assertDatabaseCount('calendar_entries', 3);
+    }
+
     public function test_collision_edit_adds_the_submitted_serving_count_to_the_target_and_deletes_the_source(): void
     {
         $user = User::factory()->create();

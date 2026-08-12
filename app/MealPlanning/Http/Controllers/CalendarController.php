@@ -31,6 +31,7 @@ use App\ShoppingGeneration\Values\GenerationRequest;
 use App\ShoppingGeneration\Values\GenerationResult;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -66,17 +67,35 @@ final readonly class CalendarController
 
     public function store(CalendarEntryStoreRequest $request): RedirectResponse
     {
-        $result = $this->scope->withinContext(
+        $results = $this->scope->withinContext(
             $request->authenticatedUser(),
-            fn (AuthorizedFamilyContext $context): CalendarEntryWriteResult => $this->createEntry->handle(
-                $context,
-                $request->recipeId(),
-                $request->calendarDate(),
-                $request->mealLabel(),
-                $request->servingCount(),
-            ),
+            fn (AuthorizedFamilyContext $context): array => DB::transaction(function () use ($context, $request): array {
+                $results = [];
+                $start = CarbonImmutable::parse($request->calendarDate());
+                for ($offset = 0; $offset < $request->repeatDays(); $offset++) {
+                    $results[] = $this->createEntry->handle(
+                        $context,
+                        $request->recipeId(),
+                        $start->addDays($offset)->toDateString(),
+                        $request->mealLabel(),
+                        $request->servingCount(),
+                    );
+                }
+
+                return $results;
+            }),
         );
-        $this->flashResult($result);
+        $result = $results[0];
+        if ($request->repeatDays() === 1) {
+            $this->flashResult($result);
+        } else {
+            $created = count(array_filter($results, static fn (CalendarEntryWriteResult $item): bool => ! $item->merged));
+            $merged = count($results) - $created;
+            Inertia::flash('toast', [
+                'type' => 'success',
+                'message' => "Přidáno dnů: {$created}, sloučeno s existujícími: {$merged}.",
+            ]);
+        }
 
         return to_route('calendar.index', ['week' => $this->week($result)]);
     }
@@ -245,7 +264,7 @@ final readonly class CalendarController
         $this->generationSession->saveGenerated(
             $request->session(),
             $family->id,
-            $this->shoppingListPresenter->present($result),
+            $this->shoppingListPresenter->present($result, $family),
         );
 
         return $result;

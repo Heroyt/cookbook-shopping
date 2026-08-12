@@ -7,6 +7,7 @@ import {
     update,
 } from '@/actions/App/MealPlanning/Http/Controllers/CalendarController';
 import CalendarNutrition from '@/components/calendar/CalendarNutrition.vue';
+import AppDatePicker from '@/components/date/AppDatePicker.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,8 +62,8 @@ const open = shallowRef(false);
 </script>
 
 <template>
-    <Card>
-        <CardHeader class="gap-2">
+    <Card class="relative gap-2 py-3">
+        <CardHeader class="gap-1 px-3">
             <div class="flex flex-wrap items-start justify-between gap-2">
                 <CardTitle class="text-base">{{ entry.recipeName }}</CardTitle>
                 <Badge v-if="entry.recipeArchived" variant="destructive">
@@ -70,21 +71,22 @@ const open = shallowRef(false);
                 </Badge>
             </div>
         </CardHeader>
-        <CardContent>
-            <p class="mb-3 text-sm font-medium tabular-nums">
+        <CardContent class="px-3">
+            <p class="text-sm font-medium tabular-nums">
                 {{ entry.servingCount.replace('.', ',') }} porce
             </p>
-            <CalendarNutrition
-                :nutrition="entry.nutrition"
-                label="Výživa pro naplánované porce"
-            />
+            <CalendarNutrition :nutrition="entry.nutrition" label="Souhrn" />
         </CardContent>
-        <CardFooter class="flex flex-wrap gap-2">
+        <CardFooter class="absolute top-2 right-2 flex gap-1 p-0">
             <Dialog v-model:open="open">
                 <DialogTrigger as-child>
-                    <Button type="button" variant="outline" size="sm">
-                        <PencilIcon data-icon="inline-start" />
-                        Upravit
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        :aria-label="`Upravit ${entry.recipeName}`"
+                    >
+                        <PencilIcon />
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -165,11 +167,10 @@ const open = shallowRef(false);
                                     :for="`calendar-entry-${entry.id}-date`"
                                     >Datum</FieldLabel
                                 >
-                                <Input
+                                <AppDatePicker
                                     :id="`calendar-entry-${entry.id}-date`"
                                     name="date"
-                                    type="date"
-                                    :default-value="entry.date"
+                                    :model-value="entry.date"
                                     required
                                     :aria-invalid="Boolean(errors.date)"
                                 />
@@ -260,7 +261,8 @@ const open = shallowRef(false);
                 <Button
                     type="submit"
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
+                    :aria-label="`Smazat ${entry.recipeName}`"
                     :disabled="processing"
                 >
                     <Spinner
@@ -268,8 +270,7 @@ const open = shallowRef(false);
                         data-icon="inline-start"
                         aria-hidden="true"
                     />
-                    <Trash2Icon v-else data-icon="inline-start" />
-                    Smazat
+                    <Trash2Icon v-else />
                 </Button>
             </Form>
         </CardFooter>

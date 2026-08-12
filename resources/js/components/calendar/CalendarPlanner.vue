@@ -12,8 +12,10 @@ import {
     generate,
     store,
 } from '@/actions/App/MealPlanning/Http/Controllers/CalendarController';
+import AddCalendarEntryDialog from '@/components/calendar/AddCalendarEntryDialog.vue';
 import CalendarEntryCard from '@/components/calendar/CalendarEntryCard.vue';
 import CalendarNutrition from '@/components/calendar/CalendarNutrition.vue';
+import AppDatePicker from '@/components/date/AppDatePicker.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -24,6 +26,13 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import {
     Empty,
     EmptyDescription,
@@ -70,6 +79,7 @@ const recipeId = shallowRef('');
 const mealLabel = shallowRef('unlabeled');
 const selectedDates = ref([...props.selectedDates]);
 const manualDate = shallowRef('');
+const newEntryDate = shallowRef(props.week.startsOn);
 const rangeStart = shallowRef(props.week.startsOn);
 const rangeEnd = shallowRef(props.week.endsOn);
 const entryCount = computed(() =>
@@ -198,11 +208,10 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                             <FieldLabel for="calendar-new-date"
                                 >Datum</FieldLabel
                             >
-                            <Input
+                            <AppDatePicker
                                 id="calendar-new-date"
+                                v-model="newEntryDate"
                                 name="date"
-                                type="date"
-                                :default-value="week.startsOn"
                                 required
                                 :aria-invalid="Boolean(errors.date)"
                             />
@@ -264,6 +273,22 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                             >
                             <FieldError :errors="[errors.serving_count]" />
                         </Field>
+                        <Field :data-invalid="Boolean(errors.repeat_days)">
+                            <FieldLabel for="calendar-new-repeat-days"
+                                >Počet po sobě jdoucích dnů</FieldLabel
+                            >
+                            <Input
+                                id="calendar-new-repeat-days"
+                                name="repeat_days"
+                                type="number"
+                                min="1"
+                                max="31"
+                                step="1"
+                                default-value="1"
+                                required
+                            />
+                            <FieldError :errors="[errors.repeat_days]" />
+                        </Field>
                     </FieldGroup>
                     <Button
                         type="submit"
@@ -299,9 +324,19 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                             class="flex flex-col gap-2"
                             :aria-label="`${group.label}, ${day.date}`"
                         >
-                            <h3 class="text-sm font-medium">
-                                {{ group.label }}
-                            </h3>
+                            <div
+                                class="flex items-center justify-between gap-2"
+                            >
+                                <h3 class="text-sm font-medium">
+                                    {{ group.label }}
+                                </h3>
+                                <AddCalendarEntryDialog
+                                    :date="day.date"
+                                    :meal-label="group.mealLabel"
+                                    :group-label="group.label"
+                                    :recipes="recipes"
+                                />
+                            </div>
                             <p
                                 v-if="group.entries.length === 0"
                                 class="text-sm text-muted-foreground"
@@ -329,154 +364,176 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
             </Card>
         </div>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Vytvořit nákupní seznam</CardTitle>
-                <CardDescription>
-                    Vyberte libovolná data. Rozsah je pouze rychlá pomůcka a
-                    konečný výběr lze dále měnit po jednotlivých dnech.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form
-                    v-bind="generate.form()"
-                    v-slot="{ errors, processing }"
-                    class="flex flex-col gap-5"
+        <Dialog>
+            <DialogTrigger as-child>
+                <Button class="self-end"
+                    ><ShoppingCartIcon data-icon="inline-start" />Vytvořit
+                    nákupní seznam</Button
                 >
-                    <input
-                        v-for="date in selectedDates"
-                        :key="date"
-                        type="hidden"
-                        name="dates[]"
-                        :value="date"
-                    />
-                    <FieldSet>
-                        <FieldLegend variant="label"
-                            >Data pro nákupní seznam</FieldLegend
+            </DialogTrigger>
+            <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+                <DialogTitle class="sr-only"
+                    >Vytvořit nákupní seznam</DialogTitle
+                >
+                <DialogDescription class="sr-only"
+                    >Vyberte rozsah nebo jednotlivá data pro nákupní
+                    seznam.</DialogDescription
+                >
+                <Card class="border-0 shadow-none">
+                    <CardHeader>
+                        <CardTitle>Vytvořit nákupní seznam</CardTitle>
+                        <CardDescription>
+                            Vyberte libovolná data. Rozsah je pouze rychlá
+                            pomůcka a konečný výběr lze dále měnit po
+                            jednotlivých dnech.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Form
+                            v-bind="generate.form()"
+                            v-slot="{ errors, processing }"
+                            class="flex flex-col gap-5"
                         >
-                        <FieldDescription
-                            >Vybrány budou všechny označené i neoznačené recepty
-                            na zvolených datech.</FieldDescription
-                        >
-                        <FieldGroup
-                            class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
-                        >
-                            <Field
-                                v-for="day in days"
-                                :key="day.date"
-                                orientation="horizontal"
-                                :data-disabled="!dayHasEntries(day)"
-                            >
-                                <Checkbox
-                                    :id="`calendar-selection-${day.date}`"
-                                    :model-value="
-                                        selectedDates.includes(day.date)
-                                    "
-                                    :disabled="!dayHasEntries(day)"
-                                    @update:model-value="
-                                        toggleDate(day.date, $event)
-                                    "
-                                />
-                                <FieldLabel
-                                    :for="`calendar-selection-${day.date}`"
-                                    class="font-normal"
+                            <input
+                                v-for="date in selectedDates"
+                                :key="date"
+                                type="hidden"
+                                name="dates[]"
+                                :value="date"
+                            />
+                            <FieldSet>
+                                <FieldLegend variant="label"
+                                    >Data pro nákupní seznam</FieldLegend
                                 >
-                                    {{ day.weekdayLabel }} {{ day.dateLabel }}
-                                </FieldLabel>
-                            </Field>
-                        </FieldGroup>
-                    </FieldSet>
-                    <FieldGroup
-                        class="sm:grid sm:grid-cols-[1fr_1fr_auto] sm:items-end"
-                    >
-                        <Field>
-                            <FieldLabel for="calendar-range-start"
-                                >Začátek rozsahu</FieldLabel
+                                <FieldDescription
+                                    >Vybrány budou všechny označené i neoznačené
+                                    recepty na zvolených
+                                    datech.</FieldDescription
+                                >
+                                <FieldGroup
+                                    class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+                                >
+                                    <Field
+                                        v-for="day in days"
+                                        :key="day.date"
+                                        orientation="horizontal"
+                                        :data-disabled="!dayHasEntries(day)"
+                                    >
+                                        <Checkbox
+                                            :id="`calendar-selection-${day.date}`"
+                                            :model-value="
+                                                selectedDates.includes(day.date)
+                                            "
+                                            :disabled="!dayHasEntries(day)"
+                                            @update:model-value="
+                                                toggleDate(day.date, $event)
+                                            "
+                                        />
+                                        <FieldLabel
+                                            :for="`calendar-selection-${day.date}`"
+                                            class="font-normal"
+                                        >
+                                            {{ day.weekdayLabel }}
+                                            {{ day.dateLabel }}
+                                        </FieldLabel>
+                                    </Field>
+                                </FieldGroup>
+                            </FieldSet>
+                            <FieldGroup
+                                class="sm:grid sm:grid-cols-[1fr_1fr_auto] sm:items-end"
                             >
-                            <Input
-                                id="calendar-range-start"
-                                v-model="rangeStart"
-                                type="date"
-                                :min="week.startsOn"
-                                :max="week.endsOn"
-                            />
-                        </Field>
-                        <Field>
-                            <FieldLabel for="calendar-range-end"
-                                >Konec rozsahu</FieldLabel
+                                <Field>
+                                    <FieldLabel for="calendar-range-start"
+                                        >Začátek rozsahu</FieldLabel
+                                    >
+                                    <AppDatePicker
+                                        id="calendar-range-start"
+                                        v-model="rangeStart"
+                                        :min="week.startsOn"
+                                        :max="week.endsOn"
+                                    />
+                                </Field>
+                                <Field>
+                                    <FieldLabel for="calendar-range-end"
+                                        >Konec rozsahu</FieldLabel
+                                    >
+                                    <AppDatePicker
+                                        id="calendar-range-end"
+                                        v-model="rangeEnd"
+                                        :min="week.startsOn"
+                                        :max="week.endsOn"
+                                    />
+                                </Field>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    @click="selectRange"
+                                    >Vybrat rozsah</Button
+                                >
+                            </FieldGroup>
+                            <FieldGroup
+                                class="sm:grid sm:grid-cols-[1fr_auto] sm:items-end"
                             >
-                            <Input
-                                id="calendar-range-end"
-                                v-model="rangeEnd"
-                                type="date"
-                                :min="week.startsOn"
-                                :max="week.endsOn"
-                            />
-                        </Field>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            @click="selectRange"
-                            >Vybrat rozsah</Button
-                        >
-                    </FieldGroup>
-                    <FieldGroup
-                        class="sm:grid sm:grid-cols-[1fr_auto] sm:items-end"
-                    >
-                        <Field>
-                            <FieldLabel for="calendar-manual-date"
-                                >Libovolné datum</FieldLabel
+                                <Field>
+                                    <FieldLabel for="calendar-manual-date"
+                                        >Libovolné datum</FieldLabel
+                                    >
+                                    <AppDatePicker
+                                        id="calendar-manual-date"
+                                        v-model="manualDate"
+                                    />
+                                </Field>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    :disabled="manualDate === ''"
+                                    @click="addManualDate"
+                                    >Přidat libovolné datum</Button
+                                >
+                            </FieldGroup>
+                            <div
+                                v-if="selectedDates.length > 0"
+                                class="flex flex-wrap gap-2"
+                                aria-label="Vybraná data"
                             >
-                            <Input
-                                id="calendar-manual-date"
-                                v-model="manualDate"
-                                type="date"
-                            />
-                        </Field>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            :disabled="manualDate === ''"
-                            @click="addManualDate"
-                            >Přidat libovolné datum</Button
-                        >
-                    </FieldGroup>
-                    <div
-                        v-if="selectedDates.length > 0"
-                        class="flex flex-wrap gap-2"
-                        aria-label="Vybraná data"
-                    >
-                        <Button
-                            v-for="date in selectedDates"
-                            :key="date"
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            :aria-label="`Odebrat datum ${date}`"
-                            @click="toggleDate(date, false)"
-                        >
-                            {{ date }}
-                            <XIcon data-icon="inline-end" />
-                        </Button>
-                    </div>
-                    <FieldError :errors="[errors.dates]" />
-                    <FieldError :errors="[errors['dates.0']]" />
-                    <Button
-                        type="submit"
-                        size="lg"
-                        :disabled="processing || selectedDates.length === 0"
-                    >
-                        <Spinner
-                            v-if="processing"
-                            data-icon="inline-start"
-                            aria-hidden="true"
-                        />
-                        <ShoppingCartIcon v-else data-icon="inline-start" />
-                        Vytvořit z vybraných dat
-                    </Button>
-                </Form>
-            </CardContent>
-        </Card>
+                                <Button
+                                    v-for="date in selectedDates"
+                                    :key="date"
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    :aria-label="`Odebrat datum ${date}`"
+                                    @click="toggleDate(date, false)"
+                                >
+                                    {{ date }}
+                                    <XIcon data-icon="inline-end" />
+                                </Button>
+                            </div>
+                            <FieldError :errors="[errors.dates]" />
+                            <FieldError :errors="[errors['dates.0']]" />
+                            <Button
+                                type="submit"
+                                size="lg"
+                                :disabled="
+                                    processing || selectedDates.length === 0
+                                "
+                            >
+                                <Spinner
+                                    v-if="processing"
+                                    data-icon="inline-start"
+                                    aria-hidden="true"
+                                />
+                                <ShoppingCartIcon
+                                    v-else
+                                    data-icon="inline-start"
+                                />
+                                Vytvořit z vybraných dat
+                            </Button>
+                        </Form>
+                    </CardContent>
+                </Card>
+            </DialogContent>
+        </Dialog>
 
         <Empty v-if="entryCount === 0">
             <EmptyHeader>
