@@ -8,6 +8,7 @@ import {
 } from '@/actions/App/MealPlanning/Http/Controllers/CalendarController';
 import CalendarNutrition from '@/components/calendar/CalendarNutrition.vue';
 import AppDatePicker from '@/components/date/AppDatePicker.vue';
+import RecipeSearchSelect from '@/components/recipes/RecipeSearchSelect.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,15 +45,10 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { formatDecimalInput } from '@/lib/formatDecimalInput';
-import type {
-    CalendarEntryProjection,
-    CalendarMealLabelOption,
-    CalendarRecipeOption,
-} from '@/types';
+import type { CalendarEntryProjection, CalendarMealLabelOption } from '@/types';
 
 const props = defineProps<{
     entry: CalendarEntryProjection;
-    recipes: CalendarRecipeOption[];
     mealLabels: CalendarMealLabelOption[];
 }>();
 
@@ -143,27 +139,18 @@ const open = shallowRef(false);
                                     :for="`calendar-entry-${entry.id}-recipe`"
                                     >Recept</FieldLabel
                                 >
-                                <Select v-model="recipeId" name="recipe_id">
-                                    <SelectTrigger
-                                        :id="`calendar-entry-${entry.id}-recipe`"
-                                        :aria-invalid="
-                                            Boolean(errors.recipe_id)
-                                        "
-                                    >
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem
-                                                v-for="recipe in recipes"
-                                                :key="recipe.id"
-                                                :value="String(recipe.id)"
-                                            >
-                                                {{ recipe.name }}
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                                <RecipeSearchSelect
+                                    :id="`calendar-entry-${entry.id}-recipe`"
+                                    v-model="recipeId"
+                                    name="recipe_id"
+                                    :initial-options="[
+                                        {
+                                            id: entry.recipeId,
+                                            name: entry.recipeName,
+                                        },
+                                    ]"
+                                    :invalid="Boolean(errors.recipe_id)"
+                                />
                                 <FieldError :errors="[errors.recipe_id]" />
                             </Field>
                             <Field

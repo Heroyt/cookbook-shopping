@@ -43,13 +43,6 @@ final readonly class CurrentFamilyCalendar
                 'nextStartsOn' => $startsOn->addWeek()->toDateString(),
             ],
             'days' => $this->days($startsOn, $entries),
-            'recipes' => Recipe::query()
-                ->whereBelongsTo($family)
-                ->whereNull('archived_at')
-                ->orderBy('normalized_name')
-                ->get(['id', 'name'])
-                ->map(fn (Recipe $recipe): array => ['id' => $recipe->id, 'name' => $recipe->name])
-                ->all(),
             'mealLabels' => array_map(
                 static fn (MealLabel $label): array => ['value' => $label->value, 'label' => $label->value],
                 MealLabel::cases(),

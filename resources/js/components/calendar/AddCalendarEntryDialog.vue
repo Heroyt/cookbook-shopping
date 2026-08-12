@@ -22,13 +22,11 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import type { CalendarRecipeOption } from '@/types';
 
 defineProps<{
     date: string;
     mealLabel: string | null;
     groupLabel: string;
-    recipes: CalendarRecipeOption[];
 }>();
 const open = shallowRef(false);
 const recipeId = shallowRef('');
@@ -73,7 +71,6 @@ const recipeId = shallowRef('');
                             id="calendar-slot-recipe"
                             v-model="recipeId"
                             name="recipe_id"
-                            :recipes="recipes"
                             :invalid="Boolean(errors.recipe_id)"
                         />
                         <FieldError :errors="[errors.recipe_id]" />

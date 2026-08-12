@@ -5,14 +5,12 @@ import { index } from '@/routes/calendar';
 import type {
     CalendarDayProjection,
     CalendarMealLabelOption,
-    CalendarRecipeOption,
     CalendarWeekProjection,
 } from '@/types';
 
 defineProps<{
     week: CalendarWeekProjection;
     days: CalendarDayProjection[];
-    recipes: CalendarRecipeOption[];
     mealLabels: CalendarMealLabelOption[];
     selectedDates: string[];
 }>();
@@ -35,7 +33,6 @@ defineOptions({
         <CalendarPlanner
             :week="week"
             :days="days"
-            :recipes="recipes"
             :meal-labels="mealLabels"
             :selected-dates="selectedDates"
         />

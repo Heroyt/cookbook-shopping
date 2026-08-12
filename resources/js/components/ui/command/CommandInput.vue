@@ -4,16 +4,37 @@ import type { HTMLAttributes } from 'vue';
 import { SearchIcon } from '@lucide/vue';
 import { reactiveOmit } from '@vueuse/core';
 import { ListboxFilter, useForwardProps } from 'reka-ui';
+import { watch } from 'vue';
 import { cn } from '@/lib/utils';
 import { useCommand } from '.';
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps<
-    ListboxFilterProps & { class?: HTMLAttributes['class'] }
+    ListboxFilterProps & {
+        class?: HTMLAttributes['class'];
+        searchTerm?: string;
+    }
 >();
-const delegatedProps = reactiveOmit(props, 'class');
+const emit = defineEmits<{
+    'update:searchTerm': [value: string];
+}>();
+const delegatedProps = reactiveOmit(props, 'class', 'searchTerm');
 const forwardedProps = useForwardProps(delegatedProps);
 const { filterState } = useCommand();
+
+watch(
+    () => props.searchTerm,
+    (searchTerm) => {
+        if (searchTerm !== undefined && searchTerm !== filterState.search) {
+            filterState.search = searchTerm;
+        }
+    },
+    { immediate: true },
+);
+watch(
+    () => filterState.search,
+    (searchTerm) => emit('update:searchTerm', searchTerm),
+);
 </script>
 
 <template>

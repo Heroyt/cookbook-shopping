@@ -100,10 +100,14 @@ describe('Calendar UI', () => {
 
         expect(addEntry).toContain('<RecipeSearchSelect');
         expect(addEntry).not.toContain('<Select');
-        expect(searchSelect).toContain('<CommandInput');
+        expect(searchSelect).toContain('<RelationSearchSelect');
+        expect(searchSelect).toContain("from '@/routes/relation-search'");
         expect(searchSelect).toContain('Hledat recept…');
         expect(searchSelect).toContain('Žádný recept nebyl nalezen.');
-        expect(addEntry).toContain(':recipes="recipes"');
+        expect(addEntry).not.toContain(':recipes="recipes"');
+        expect(readSource('../../pages/calendar/Index.vue')).not.toContain(
+            'recipes: CalendarRecipeOption[]',
+        );
     });
 
     it('uses responsive readable day cards and calendar-specific generated recovery', () => {

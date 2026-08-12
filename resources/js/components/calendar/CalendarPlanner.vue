@@ -50,14 +50,12 @@ import { index } from '@/routes/calendar';
 import type {
     CalendarDayProjection,
     CalendarMealLabelOption,
-    CalendarRecipeOption,
     CalendarWeekProjection,
 } from '@/types';
 
 const props = defineProps<{
     week: CalendarWeekProjection;
     days: CalendarDayProjection[];
-    recipes: CalendarRecipeOption[];
     mealLabels: CalendarMealLabelOption[];
     selectedDates: string[];
 }>();
@@ -177,7 +175,6 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                                     :date="day.date"
                                     :meal-label="group.mealLabel"
                                     :group-label="group.label"
-                                    :recipes="recipes"
                                 />
                             </div>
                             <p
@@ -191,7 +188,6 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                                     v-for="entry in group.entries"
                                     :key="entry.id"
                                     :entry="entry"
-                                    :recipes="recipes"
                                     :meal-labels="mealLabels"
                                 />
                             </div>
