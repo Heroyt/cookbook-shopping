@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef, watch } from 'vue';
+import StoreSectionIcon from '@/components/stores/StoreSectionIcon.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -241,7 +242,15 @@ watch(storeSelection, () => {
                                 :key="store.id"
                                 :value="String(store.id)"
                             >
-                                {{ store.name }}
+                                <span class="flex items-center gap-2">
+                                    <img
+                                        v-if="store.logoUrl"
+                                        :src="store.logoUrl"
+                                        alt=""
+                                        class="size-5 rounded object-cover"
+                                    />
+                                    {{ store.name }}
+                                </span>
                             </SelectItem>
                         </SelectGroup>
                     </SelectContent>
@@ -273,7 +282,26 @@ watch(storeSelection, () => {
                                 :key="section.id"
                                 :value="String(section.id)"
                             >
-                                {{ section.name }}
+                                <span class="flex items-center gap-2">
+                                    <span
+                                        class="size-2.5 rounded-full border"
+                                        :style="{
+                                            backgroundColor: section.colour,
+                                        }"
+                                    />
+                                    <img
+                                        v-if="section.iconUrl"
+                                        :src="section.iconUrl"
+                                        alt=""
+                                        class="size-5 rounded object-cover"
+                                    />
+                                    <StoreSectionIcon
+                                        v-else-if="section.icon"
+                                        :name="section.icon"
+                                        class="size-4"
+                                    />
+                                    {{ section.name }}
+                                </span>
                             </SelectItem>
                         </SelectGroup>
                     </SelectContent>

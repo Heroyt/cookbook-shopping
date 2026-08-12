@@ -1,3 +1,5 @@
+import type { StoreSectionIconName } from './store';
+
 export type IngredientSummary = {
     id: number;
     name: string;
@@ -29,9 +31,12 @@ export type IngredientNutritionProfile = {
 export type IngredientPlacementStore = {
     id: number;
     name: string;
+    logoUrl?: string | null;
     sections: Array<{
         id: number;
         name: string;
         colour: string;
+        icon?: StoreSectionIconName;
+        iconUrl?: string | null;
     }>;
 };

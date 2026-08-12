@@ -21,6 +21,7 @@ declare module '@inertiajs/core' {
         flashDataType: {
             toast?: FlashToast;
             agentCredentialSecret?: AgentCredentialSecret;
+            createdIngredient?: { id: number; name: string };
         };
         sharedPageProps: {
             name: string;

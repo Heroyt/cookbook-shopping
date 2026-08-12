@@ -144,14 +144,14 @@ final readonly class CurrentFamilyIngredientManagement
         };
     }
 
-    /** @return list<array{id: int, name: string, sections: list<array{id: int, name: string, colour: string}>}> */
+    /** @return list<array{id: int, name: string, logoUrl: string|null, sections: list<array{id: int, name: string, colour: string, icon: string, iconUrl: string|null}>}> */
     private function stores(Family $family): array
     {
         return array_values(
             Store::query()
                 ->whereBelongsTo($family)
                 ->select(['id', 'name', 'normalized_name'])
-                ->with('storeSections:id,name,colour')
+                ->with('storeSections:id,name,colour,icon')
                 ->get()
                 ->sort(fn (Store $left, Store $right): int => NormalizedName::compare(
                     $left->normalized_name,
@@ -163,11 +163,14 @@ final readonly class CurrentFamilyIngredientManagement
                 ->map(fn (Store $store): array => [
                     'id' => $store->id,
                     'name' => $store->name,
+                    'logoUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreLogo, $store->id),
                     'sections' => array_values(
                         $store->storeSections->map(fn (StoreSection $storeSection): array => [
                             'id' => $storeSection->id,
                             'name' => $storeSection->name,
                             'colour' => $storeSection->colour,
+                            'icon' => $storeSection->icon->value,
+                            'iconUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreSectionIcon, $storeSection->id),
                         ])->all(),
                     ),
                 ])

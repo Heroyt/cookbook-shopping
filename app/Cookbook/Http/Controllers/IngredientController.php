@@ -76,7 +76,7 @@ final class IngredientController extends Controller
 
     public function store(IngredientStoreRequest $request): RedirectResponse
     {
-        $this->currentFamilyScope->withinContext(
+        $ingredient = $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
             fn (AuthorizedFamilyContext $context): Ingredient => $this->createIngredient->handle(
                 $context,
@@ -89,7 +89,10 @@ final class IngredientController extends Controller
             ),
         );
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Ingredient created.')]);
+        Inertia::flash([
+            'toast' => ['type' => 'success', 'message' => __('Ingredient created.')],
+            'createdIngredient' => ['id' => $ingredient->id, 'name' => $ingredient->name],
+        ]);
 
         return to_route('ingredients.index');
     }

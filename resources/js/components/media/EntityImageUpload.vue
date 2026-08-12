@@ -97,8 +97,12 @@ onBeforeUnmount(revokePendingPreview);
                     <FieldLabel :for="inputId">Obrázek</FieldLabel>
                     <label
                         :for="inputId"
-                        class="group relative flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/30 text-center transition-colors hover:bg-muted/60 focus-within:ring-2 focus-within:ring-ring"
-                        :class="isDragging ? 'border-primary bg-primary/5' : 'border-border'"
+                        class="group relative flex min-h-40 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/30 text-center transition-colors focus-within:ring-2 focus-within:ring-ring hover:bg-muted/60"
+                        :class="
+                            isDragging
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border'
+                        "
                         @dragenter.prevent="isDragging = true"
                         @dragover.prevent="isDragging = true"
                         @dragleave.prevent="isDragging = false"
@@ -108,7 +112,11 @@ onBeforeUnmount(revokePendingPreview);
                             v-if="pendingPreviewUrl ?? imageUrl"
                             class="h-full max-h-64 w-full object-cover"
                             :image-url="pendingPreviewUrl ?? imageUrl"
-                            :image-alt="pendingPreviewUrl ? 'Náhled vybraného obrázku' : imageAlt"
+                            :image-alt="
+                                pendingPreviewUrl
+                                    ? 'Náhled vybraného obrázku'
+                                    : imageAlt
+                            "
                         />
                         <span
                             v-else
