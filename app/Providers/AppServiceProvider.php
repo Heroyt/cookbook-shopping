@@ -94,8 +94,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $action = $request->input('action');
 
-        return is_string($action) && AgentCredentialRestrictionAction::tryFrom($action) !== null
-            ? $action
-            : 'invalid';
+        if ( ! is_string($action) || AgentCredentialRestrictionAction::tryFrom($action) === null) {
+            return 'invalid';
+        }
+
+        if ($action === AgentCredentialRestrictionAction::Revoke->value && $request->all() !== ['action' => $action]) {
+            return 'invalid';
+        }
+
+        return $action;
     }
 }

@@ -127,6 +127,24 @@ final class AgentCredentialSelfRestrictionTest extends TestCase
             ->assertJsonPath('error.code', 'rate_limit_exceeded');
     }
 
+    public function test_malformed_revoke_documents_cannot_exhaust_the_emergency_revoke_bucket(): void
+    {
+        [, , $secret] = $this->credential();
+        config(['agent-integration.rates.credential_restriction_per_minute' => 2]);
+
+        foreach ([
+            ['action' => 'revoke', 'expires_at' => '2026-08-12T18:00:00Z'],
+            ['action' => 'revoke', 'unknown' => true],
+        ] as $document) {
+            $this->withToken($secret)->postJson('/api/v1/credential/restrictions', $document)
+                ->assertUnprocessable();
+        }
+
+        $this->withToken($secret)->postJson('/api/v1/credential/restrictions', ['action' => 'revoke'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'revoked');
+    }
+
     public function test_restriction_requires_a_live_agent_credential_and_is_rate_limited_per_credential(): void
     {
         Carbon::setTestNow('2026-08-12 12:00:00');
