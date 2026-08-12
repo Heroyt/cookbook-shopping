@@ -11,7 +11,7 @@ describe('Agent Change History UI contract', () => {
         const page = readSource('../../pages/agent-change-sets/Index.vue');
         const filters = readSource('./AgentChangeSetFilters.vue');
         const list = readSource('./AgentChangeSetList.vue');
-        const sidebar = readSource('../AppSidebar.vue');
+        const userMenu = readSource('../UserMenuContent.vue');
 
         expect(page).toContain('<Head title="Historie změn agentů" />');
         expect(page).toContain('Neměnný přehled změn');
@@ -33,8 +33,8 @@ describe('Agent Change History UI contract', () => {
         expect(list).toContain('md:grid-cols-2');
         expect(list).toContain('xl:grid-cols-3');
         expect(list).toContain('Žádné použité změny');
-        expect(sidebar).toContain("title: 'Historie změn agentů'");
-        expect(sidebar).toContain('AgentChangeSetHistoryController.index()');
+        expect(userMenu).toContain('Historie změn agentů');
+        expect(userMenu).toContain('AgentChangeSetHistoryController.index()');
     });
 
     it('shows immutable detail and a focus-restoring deletion dialog that states consequences', () => {

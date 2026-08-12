@@ -86,4 +86,11 @@ describe('Calendar UI', () => {
         expect(shoppingList).toContain("filter: 'all'");
         expect(shoppingList).toContain('Zobrazit recept');
     });
+
+    it('formats stored serving counts for concise number inputs', () => {
+        const entry = readSource('./CalendarEntryCard.vue');
+
+        expect(entry).toContain("from '@/lib/formatDecimalInput'");
+        expect(entry).toContain('formatDecimalInput(entry.servingCount)');
+    });
 });

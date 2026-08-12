@@ -130,4 +130,52 @@ describe('Recipe UI', () => {
         expect(html).toContain('Obnovit');
         expect(html).not.toContain('Upravit');
     });
+
+    it('shows stored decimal values without unnecessary trailing zeroes', async () => {
+        const html = await render(RecipeFormFields, {
+            ingredients: [{ id: 1, name: 'Mouka', kinds: ['grams'] }],
+            tags: [],
+            recipe: {
+                id: 1,
+                name: 'Chléb',
+                baseServings: '4.000000',
+                version: 1,
+                sourceUrl: null,
+                preparationMinutes: null,
+                cookingMinutes: null,
+                notes: null,
+                archived: false,
+                ingredients: [
+                    {
+                        id: 1,
+                        ingredientId: 1,
+                        ingredientName: 'Mouka',
+                        quantity: '500.250000',
+                        quantityKind: 'grams',
+                    },
+                ],
+                steps: [],
+                tags: [],
+                matchReasons: [],
+                nutrition: {
+                    status: 'override',
+                    perServing: null,
+                    missingIngredientNames: [],
+                },
+                nutritionOverride: {
+                    energyKcal: '350.000000',
+                    fatGrams: '8.500000',
+                    proteinGrams: '17.000000',
+                    carbohydrateGrams: '49.000001',
+                },
+            },
+        });
+
+        for (const value of ['4', '500.25', '350', '8.5', '17']) {
+            expect(html).toContain(`value="${value}"`);
+        }
+
+        expect(html).toContain('value="49.000001"');
+        expect(html).not.toContain('value="4.000000"');
+    });
 });

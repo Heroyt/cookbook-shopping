@@ -10,7 +10,7 @@ describe('Agent Credential UI contract', () => {
     it('keeps the Current Family route page thin and responsive', () => {
         const page = readSource('../../pages/agent-credentials/Index.vue');
         const list = readSource('./AgentCredentialList.vue');
-        const sidebar = readSource('../AppSidebar.vue');
+        const userMenu = readSource('../UserMenuContent.vue');
 
         expect(page).toContain('<Head title="Přístupy agentů" />');
         expect(page).toContain('<CreateAgentCredentialDialog');
@@ -19,8 +19,8 @@ describe('Agent Credential UI contract', () => {
         expect(page).toContain(':key="credentialSecret.secret"');
         expect(list).toContain('sm:grid-cols-2');
         expect(list).toContain('xl:grid-cols-2');
-        expect(sidebar).toContain("title: 'Přístupy agentů'");
-        expect(sidebar).toContain('AgentCredentialController.index()');
+        expect(userMenu).toContain('Přístupy agentů');
+        expect(userMenu).toContain('AgentCredentialController.index()');
     });
 
     it('requires confirmed password before issuer create or rotate actions', () => {

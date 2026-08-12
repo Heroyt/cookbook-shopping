@@ -18,4 +18,21 @@ describe('application navigation', () => {
             expect(source).not.toContain('laravel.com/docs/starter-kits#vue');
         },
     );
+
+    it('places Current Family agent destinations in the User menu', () => {
+        const sidebar = readSource('./AppSidebar.vue');
+        const header = readSource('./AppHeader.vue');
+        const navUser = readSource('./NavUser.vue');
+        const userMenu = readSource('./UserMenuContent.vue');
+
+        expect(sidebar).not.toContain("title: 'Přístupy agentů'");
+        expect(sidebar).not.toContain("title: 'Historie změn agentů'");
+        expect(userMenu).toContain('Přístupy agentů');
+        expect(userMenu).toContain('Historie změn agentů');
+        expect(userMenu).toContain('v-if="showFamilyLinks"');
+        expect(userMenu).toContain('AgentCredentialController.index()');
+        expect(userMenu).toContain('AgentChangeSetHistoryController.index()');
+        expect(header).toContain(':show-family-links="showFamilyLinks"');
+        expect(navUser).toContain(':show-family-links="showFamilyLinks"');
+    });
 });

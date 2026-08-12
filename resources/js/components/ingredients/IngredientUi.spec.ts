@@ -88,7 +88,7 @@ describe('Ingredient UI', () => {
         expect(html).toContain('Bílkoviny (g)');
     });
 
-    it('offers a shared Store Section colour editor for the selected placement', async () => {
+    it('keeps Store Section colour editing out of Ingredient forms', async () => {
         const stores = [
             {
                 id: 1,
@@ -104,18 +104,8 @@ describe('Ingredient UI', () => {
             },
         });
         const fields = readSource('./IngredientFormFields.vue');
-        const dialog = readSource('./EditStoreSectionColourDialog.vue');
-
-        expect(fields).toContain('<EditStoreSectionColourDialog');
-        expect(html).toContain('Změnit barvu části');
-        expect(dialog).toContain(
-            'StoreSectionController.updateColour.form(storeSection.id)',
-        );
-        expect(dialog).toContain(
-            'Změna se projeví u všech surovin přiřazených k této části.',
-        );
-        expect(dialog).toContain(':default-value="storeSection.colour"');
-        expect(dialog).toContain('@success="open = false"');
+        expect(fields).not.toContain('EditStoreSectionColourDialog');
+        expect(html).not.toContain('Změnit barvu části');
     });
 
     it('renders accessible explicit metric units, description, and Czech guidance', async () => {
@@ -130,6 +120,7 @@ describe('Ingredient UI', () => {
         expect(source).toContain('<SelectItem value="cl">');
         expect(source).toContain('<SelectItem value="l">');
         expect(html).toContain('Počet kusů v balení');
+        expect(html).toContain('Počet kusů v balení (volitelné)');
         expect(html).toContain('Popis');
         expect(html).toContain('Vyplňte alespoň jednu hodnotu.');
         expect(html).toContain('počet kusů může být jedinou hodnotou');
@@ -137,6 +128,30 @@ describe('Ingredient UI', () => {
         expect(html).toContain('name="metric_unit"');
         expect(html).toContain('step="0.000001"');
         expect(html).toContain('aria-invalid="false"');
+    });
+
+    it('shows stored decimal values without unnecessary trailing zeroes', async () => {
+        const html = await render(IngredientFormFields, {
+            ingredient: {
+                metricQuantity: '1100.000000',
+                pieceCount: '10.500000',
+                nutrition: {
+                    basisKind: 'grams',
+                    basisQuantity: '100.000000',
+                    energyKcal: '360.000000',
+                    fatGrams: '1.250000',
+                    proteinGrams: '7.000000',
+                    carbohydrateGrams: '78.000001',
+                },
+            },
+        });
+
+        for (const value of ['1100', '10.5', '100', '360', '1.25', '7']) {
+            expect(html).toContain(`value="${value}"`);
+        }
+
+        expect(html).toContain('value="78.000001"');
+        expect(html).not.toContain('value="1100.000000"');
     });
 
     it('renders backend field and package-combination errors accessibly', async () => {
