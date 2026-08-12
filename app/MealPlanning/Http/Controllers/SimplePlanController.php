@@ -205,7 +205,7 @@ final class SimplePlanController extends Controller
         $this->simplePlanSession->saveGenerated(
             $request->session(),
             $family->id,
-            $this->shoppingListPresenter->present($result),
+            $this->shoppingListPresenter->present($result, $family),
         );
 
         return $result;

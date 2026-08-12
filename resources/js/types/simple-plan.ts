@@ -1,3 +1,5 @@
+import type { StoreSectionIconName } from './store';
+
 export type SimplePlanRecipeOption = {
     id: number;
     name: string;
@@ -97,9 +99,13 @@ export type ShoppingListPresentation = {
     storeGroups: Array<{
         storeId: number;
         storeName: string;
+        storeLogoUrl?: string | null;
         sections: Array<{
             sectionId: number;
             sectionName: string;
+            sectionColour?: string | null;
+            sectionIcon?: StoreSectionIconName | null;
+            sectionIconUrl?: string | null;
             lines: ShoppingListLinePresentation[];
         }>;
         unsectionedLines: ShoppingListLinePresentation[];

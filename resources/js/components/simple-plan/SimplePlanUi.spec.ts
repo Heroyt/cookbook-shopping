@@ -135,7 +135,7 @@ describe('Simple Plan UI', () => {
         expect(html).toContain('Albert');
         expect(html).toContain('Pečení');
         expect(html).toContain('Mouka');
-        expect(html).toContain('2 balení');
+        expect(html).toContain('2 bal.');
         expect(html).toContain('Potřeba');
         expect(html).toContain('175 g');
         expect(html).toContain('300 g');
@@ -147,8 +147,12 @@ describe('Simple Plan UI', () => {
         const lineCard = readSource('./ShoppingListLineCard.vue');
         expect(lineCard).toContain('storeAlternative.form()');
         expect(lineCard).toContain('destroyAlternative.form(');
+        expect(readSource('./ShoppingListView.vue')).toContain('<Card>');
         expect(readSource('./ShoppingListView.vue')).toContain(
-            'sm:grid-cols-2 xl:grid-cols-3',
+            'borderLeftColor: section.sectionColour',
+        );
+        expect(readSource('./ShoppingListLineCard.vue')).toContain(
+            'v-model:open="open"',
         );
         expect(readSource('./ShoppingListLineCard.vue')).toContain(
             'Příspěvky receptů',
@@ -200,7 +204,7 @@ describe('Simple Plan UI', () => {
             'contribution.contributionKey',
         );
         expect(readSource('./ShoppingListLineCard.vue')).toContain(
-            '<FieldError :errors="[errors.alternative_ingredient_id]" />',
+            ':errors="[errors.alternative_ingredient_id]"',
         );
     });
 

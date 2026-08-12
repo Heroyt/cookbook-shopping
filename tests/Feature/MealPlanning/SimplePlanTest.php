@@ -258,7 +258,11 @@ final class SimplePlanTest extends TestCase
         $family = $this->createFamilyWithMembers($user);
         $this->selectCurrentFamily($user, $family);
         $store = Store::factory()->for($family)->create(['name' => 'Albert']);
-        $section = StoreSection::factory()->for($family)->create(['name' => 'Pečení']);
+        $section = StoreSection::factory()->for($family)->create([
+            'name' => 'Pečení',
+            'colour' => '#D97706',
+            'icon' => 'package',
+        ]);
         $store->storeSections()->attach($section->id, ['position' => 3]);
         $ingredient = Ingredient::factory()->for($family)->create([
             'name' => 'Mouka',
@@ -291,7 +295,10 @@ final class SimplePlanTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page): Assert => $page
                 ->where('shoppingList.storeGroups.0.storeName', 'Albert')
+                ->where('shoppingList.storeGroups.0.storeLogoUrl', null)
                 ->where('shoppingList.storeGroups.0.sections.0.sectionName', 'Pečení')
+                ->where('shoppingList.storeGroups.0.sections.0.sectionColour', '#D97706')
+                ->where('shoppingList.storeGroups.0.sections.0.sectionIcon', 'package')
                 ->where('shoppingList.storeGroups.0.sections.0.lines.0.quantities.0.required.label', '1,33 kg')
                 ->where('shoppingList.storeGroups.0.sections.0.lines.0.quantities.0.required.approximate', true)
                 ->where('shoppingList.storeGroups.0.sections.0.lines.0.quantities.0.purchased.label', '2 kg')

@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\MealPlanning\Presenters;
 
+use App\Cookbook\Models\Store;
+use App\Cookbook\Models\StoreSection;
+use App\Cookbook\Services\EntityMediaStorage;
+use App\Cookbook\Values\EntityMediaType;
+use App\FamilyAccess\Models\Family;
 use App\ShoppingGeneration\Values\AlternativeChoiceProvenance;
 use App\ShoppingGeneration\Values\AlternativeIngredientDefinition;
 use App\ShoppingGeneration\Values\CalculationProblem;
@@ -18,11 +23,14 @@ use App\ShoppingGeneration\Values\StoreGroup;
 use App\ShoppingGeneration\Values\StoreSectionGroup;
 use Brick\Math\BigRational;
 use Brick\Math\RoundingMode;
+use Illuminate\Support\Collection;
 
-final class ShoppingListPresenter
+final readonly class ShoppingListPresenter
 {
+    public function __construct(private EntityMediaStorage $entityMediaStorage) {}
+
     /** @return array{shoppingList: array<string, mixed>|null, problems: list<array<string, mixed>>} */
-    public function present(GenerationResult $result): array
+    public function present(GenerationResult $result, Family $family): array
     {
         if ($result->shoppingList === null) {
             return [
@@ -35,14 +43,26 @@ final class ShoppingListPresenter
             ];
         }
 
+        $storeIds = array_map(static fn (StoreGroup $group): int => $group->store->id, $result->shoppingList->storeGroups);
+        $sectionIds = [];
+        foreach ($result->shoppingList->storeGroups as $group) {
+            foreach ($group->sections as $section) {
+                $sectionIds[] = $section->section->id;
+            }
+        }
+        $stores = Store::query()->whereBelongsTo($family)->whereIn('id', $storeIds)->get()->keyBy('id');
+        $sections = StoreSection::query()->whereBelongsTo($family)->whereIn('id', $sectionIds)->get()->keyBy('id');
+
         return [
             'shoppingList' => [
                 'storeGroups' => array_map(fn (StoreGroup $group): array => [
                     'storeId' => $group->store->id,
                     'storeName' => $group->store->name,
+                    'storeLogoUrl' => $this->storeLogoUrl($family, $stores, $group->store->id),
                     'sections' => array_map(fn (StoreSectionGroup $section): array => [
                         'sectionId' => $section->section->id,
                         'sectionName' => $section->section->name,
+                        ...$this->sectionVisuals($family, $sections, $section->section->id),
                         'lines' => array_map(fn (ShoppingListLine $line): array => $this->line($line), $section->lines),
                     ], $group->sections),
                     'unsectionedLines' => array_map(fn (ShoppingListLine $line): array => $this->line($line), $group->unsectionedLines),
@@ -50,6 +70,32 @@ final class ShoppingListPresenter
                 'unplacedLines' => array_map(fn (ShoppingListLine $line): array => $this->line($line), $result->shoppingList->unplacedLines),
             ],
             'problems' => [],
+        ];
+    }
+
+    /** @param Collection<int, Store> $stores */
+    private function storeLogoUrl(Family $family, Collection $stores, int $storeId): ?string
+    {
+        return $stores->has($storeId)
+            ? $this->entityMediaStorage->url($family, EntityMediaType::StoreLogo, $storeId)
+            : null;
+    }
+
+    /**
+     * @param  Collection<int, StoreSection>  $sections
+     * @return array{sectionColour: string|null, sectionIcon: string|null, sectionIconUrl: string|null}
+     */
+    private function sectionVisuals(Family $family, Collection $sections, int $sectionId): array
+    {
+        $section = $sections->get($sectionId);
+        if ( ! $section instanceof StoreSection) {
+            return ['sectionColour' => null, 'sectionIcon' => null, 'sectionIconUrl' => null];
+        }
+
+        return [
+            'sectionColour' => $section->colour,
+            'sectionIcon' => $section->icon->value,
+            'sectionIconUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreSectionIcon, $sectionId),
         ];
     }
 

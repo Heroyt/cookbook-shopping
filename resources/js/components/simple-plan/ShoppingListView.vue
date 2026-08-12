@@ -2,8 +2,10 @@
 import { Link } from '@inertiajs/vue3';
 import { TriangleAlertIcon } from '@lucide/vue';
 import ShoppingListLineCard from '@/components/simple-plan/ShoppingListLineCard.vue';
+import StoreSectionIcon from '@/components/stores/StoreSectionIcon.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Empty,
     EmptyDescription,
@@ -93,67 +95,90 @@ withDefaults(
     <section
         v-else-if="shoppingList"
         aria-label="Vygenerovaný nákupní seznam"
-        class="flex flex-col gap-8"
+        class="flex flex-col gap-5"
     >
-        <section
-            v-for="store in shoppingList.storeGroups"
-            :key="store.storeId"
-            class="flex flex-col gap-5"
-        >
-            <h2 class="text-xl font-semibold tracking-tight">
-                {{ store.storeName }}
-            </h2>
-            <section
-                v-for="section in store.sections"
-                :key="section.sectionId"
-                class="flex flex-col gap-3"
-            >
-                <h3 class="font-medium text-muted-foreground">
-                    {{ section.sectionName }}
-                </h3>
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <ShoppingListLineCard
-                        v-for="line in section.lines"
-                        :key="line.ingredientId"
-                        :line="line"
-                        :generation-source="generationSource"
-                        :read-only="readOnly"
-                    />
-                </div>
-            </section>
-            <section
-                v-if="store.unsectionedLines.length > 0"
-                class="flex flex-col gap-3"
-            >
-                <h3 class="font-medium text-muted-foreground">
-                    Mimo části obchodu
-                </h3>
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <ShoppingListLineCard
-                        v-for="line in store.unsectionedLines"
-                        :key="line.ingredientId"
-                        :line="line"
-                        :generation-source="generationSource"
-                        :read-only="readOnly"
-                    />
-                </div>
-            </section>
+        <section v-for="store in shoppingList.storeGroups" :key="store.storeId">
+            <Card>
+                <CardHeader class="pb-3">
+                    <CardTitle class="flex items-center gap-3">
+                        <img
+                            v-if="store.storeLogoUrl"
+                            :src="store.storeLogoUrl"
+                            alt=""
+                            class="size-8 rounded-md border object-cover"
+                        />
+                        {{ store.storeName }}
+                    </CardTitle>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-5">
+                    <section
+                        v-for="section in store.sections"
+                        :key="section.sectionId"
+                        class="flex flex-col gap-2 rounded-lg border-l-4 p-3"
+                        :style="{
+                            borderLeftColor: section.sectionColour ?? undefined,
+                        }"
+                    >
+                        <h3 class="flex items-center gap-2 font-medium">
+                            <img
+                                v-if="section.sectionIconUrl"
+                                :src="section.sectionIconUrl"
+                                alt=""
+                                class="size-6 rounded object-cover"
+                            />
+                            <StoreSectionIcon
+                                v-else-if="section.sectionIcon"
+                                :name="section.sectionIcon"
+                                class="size-5"
+                            />
+                            {{ section.sectionName }}
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            <ShoppingListLineCard
+                                v-for="line in section.lines"
+                                :key="line.ingredientId"
+                                :line="line"
+                                :generation-source="generationSource"
+                                :read-only="readOnly"
+                            />
+                        </div>
+                    </section>
+                    <section
+                        v-if="store.unsectionedLines.length"
+                        class="flex flex-col gap-2 rounded-lg border-l-4 border-l-muted p-3"
+                    >
+                        <h3 class="font-medium text-muted-foreground">
+                            Nezařazené
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            <ShoppingListLineCard
+                                v-for="line in store.unsectionedLines"
+                                :key="line.ingredientId"
+                                :line="line"
+                                :generation-source="generationSource"
+                                :read-only="readOnly"
+                            />
+                        </div>
+                    </section>
+                </CardContent>
+            </Card>
         </section>
 
-        <section
-            v-if="shoppingList.unplacedLines.length > 0"
-            class="flex flex-col gap-3"
-        >
-            <h2 class="text-xl font-semibold tracking-tight">Bez obchodu</h2>
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <ShoppingListLineCard
-                    v-for="line in shoppingList.unplacedLines"
-                    :key="line.ingredientId"
-                    :line="line"
-                    :generation-source="generationSource"
-                    :read-only="readOnly"
-                />
-            </div>
+        <section v-if="shoppingList.unplacedLines.length > 0">
+            <Card>
+                <CardHeader class="pb-3"
+                    ><CardTitle>Bez obchodu</CardTitle></CardHeader
+                >
+                <CardContent class="flex flex-col gap-2">
+                    <ShoppingListLineCard
+                        v-for="line in shoppingList.unplacedLines"
+                        :key="line.ingredientId"
+                        :line="line"
+                        :generation-source="generationSource"
+                        :read-only="readOnly"
+                    />
+                </CardContent>
+            </Card>
         </section>
     </section>
 

@@ -131,7 +131,7 @@ describe('Saved Shopping List UI', () => {
         );
 
         expect(html).toContain('Historická mouka');
-        expect(html).toContain('2 balení');
+        expect(html).toContain('2 bal.');
         expect(html).toContain('1,33 kg');
         expect(html).toContain('Použita alternativa');
         expect(html).not.toContain('Použít alternativu Nová mouka');
