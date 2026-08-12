@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Services;
 
+use App\Cookbook\Exceptions\AnimatedEntityMedia;
 use App\Cookbook\Exceptions\InvalidEntityMedia;
 use App\Cookbook\Values\EntityMediaDeletion;
 use App\Cookbook\Values\EntityMediaType;
@@ -150,11 +151,16 @@ final class EntityMediaStorage
             throw new LogicException('The GD extension with WebP support is required for entity media.');
         }
 
+        if (str_starts_with($contents, 'RIFF') && substr($contents, 8, 4) === 'WEBP'
+            && ! $this->hasCompleteWebpStructure($contents)) {
+            throw new InvalidEntityMedia('The uploaded WebP image is structurally incomplete.');
+        }
+
         $info = @getimagesizefromstring($contents);
         $mime = is_array($info) ? $info['mime'] : null;
 
-        if ( ! in_array($mime, ['image/jpeg', 'image/png'], true)) {
-            throw new InvalidEntityMedia('The uploaded image is not a decodable JPEG or PNG image.');
+        if ( ! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            throw new InvalidEntityMedia('The uploaded image is not a decodable JPEG, PNG, or WebP image.');
         }
 
         $width = $info[0];
@@ -353,7 +359,57 @@ final class EntityMediaStorage
             return str_starts_with($contents, "\xFF\xD8") && str_ends_with($contents, "\xFF\xD9");
         }
 
-        return $this->hasCompletePngStructure($contents);
+        if ($mime === 'image/png') {
+            return $this->hasCompletePngStructure($contents);
+        }
+
+        return $this->hasCompleteWebpStructure($contents);
+    }
+
+    private function hasCompleteWebpStructure(string $contents): bool
+    {
+        $length = strlen($contents);
+        if ($length < 20
+            || substr($contents, 0, 4) !== 'RIFF'
+            || substr($contents, 8, 4) !== 'WEBP') {
+            return false;
+        }
+
+        $declaredSizeData = unpack('Vsize', substr($contents, 4, 4));
+        $declaredSize = is_array($declaredSizeData) ? $declaredSizeData['size'] : null;
+        if ( ! is_int($declaredSize) || $declaredSize !== $length - 8) {
+            return false;
+        }
+
+        $offset = 12;
+        $hasImageData = false;
+        while ($offset + 8 <= $length) {
+            $type = substr($contents, $offset, 4);
+            $chunkSizeData = unpack('Vsize', substr($contents, $offset + 4, 4));
+            $chunkSize = is_array($chunkSizeData) ? $chunkSizeData['size'] : null;
+            if ( ! is_int($chunkSize) || $chunkSize < 0) {
+                return false;
+            }
+
+            $paddedSize = $chunkSize + ($chunkSize % 2);
+            if ($offset + 8 + $paddedSize > $length) {
+                return false;
+            }
+
+            $chunkData = substr($contents, $offset + 8, $chunkSize);
+            if ($type === 'ANIM' || $type === 'ANMF'
+                || ($type === 'VP8X' && $chunkData !== '' && (ord($chunkData[0]) & 0x02) !== 0)) {
+                throw new AnimatedEntityMedia('Animated WebP images are not supported.');
+            }
+
+            if ($type === 'VP8 ' || $type === 'VP8L' || $type === 'VP8X') {
+                $hasImageData = true;
+            }
+
+            $offset += 8 + $paddedSize;
+        }
+
+        return $hasImageData && $offset === $length;
     }
 
     private function hasCompletePngStructure(string $contents): bool

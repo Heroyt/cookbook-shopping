@@ -17,8 +17,8 @@ final readonly class EntityMediaUploadRules
             'image' => [
                 'required',
                 'file',
-                'extensions:jpg,jpeg,png',
-                'mimetypes:image/jpeg,image/png',
+                'extensions:jpg,jpeg,png,webp',
+                'mimetypes:image/jpeg,image/png,image/webp',
                 'max:' . (is_int($maximumKilobytes) ? $maximumKilobytes : 5120),
             ],
         ];

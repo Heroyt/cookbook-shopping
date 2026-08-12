@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Actions;
 
+use App\Cookbook\Exceptions\AnimatedEntityMedia;
 use App\Cookbook\Exceptions\EntityMediaRejected;
 use App\Cookbook\Exceptions\InvalidEntityMedia;
 use App\Cookbook\Models\Ingredient;
@@ -36,6 +37,8 @@ final readonly class ManageEntityMedia
 
         try {
             $this->storage->store($context->family, $type, $entityId, $upload);
+        } catch (AnimatedEntityMedia) {
+            throw new EntityMediaRejected(EntityMediaFailure::AnimatedWebp);
         } catch (InvalidEntityMedia) {
             throw new EntityMediaRejected(EntityMediaFailure::UnsafeImage);
         } catch (RuntimeException) {

@@ -41,8 +41,8 @@ final class AgentMediaUploadRequest extends FormRequest
         return [
             'image.required' => 'The image field is required.',
             'image.file' => 'The image must be an uploaded file.',
-            'image.extensions' => 'The image must have a JPG, JPEG, or PNG extension.',
-            'image.mimetypes' => 'The image must be a JPEG or PNG file.',
+            'image.extensions' => 'The image must have a JPG, JPEG, PNG, or WEBP extension.',
+            'image.mimetypes' => 'The image must be a JPEG, PNG, or static WebP file.',
             'image.max' => 'The image must not be larger than 5 MB.',
         ];
     }

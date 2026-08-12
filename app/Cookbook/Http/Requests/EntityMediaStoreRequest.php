@@ -22,8 +22,8 @@ final class EntityMediaStoreRequest extends AuthenticatedRequest
     public function messages(): array
     {
         return [
-            'image.extensions' => __('The file must have a JPG, JPEG, or PNG extension.'),
-            'image.mimetypes' => __('Select a JPEG or PNG image.'),
+            'image.extensions' => __('The file must have a JPG, JPEG, PNG, or WEBP extension.'),
+            'image.mimetypes' => __('Select a JPEG, PNG, or static WebP image.'),
             'image.max' => __('The image must not be larger than 5 MB.'),
         ];
     }
