@@ -6,6 +6,9 @@ return [
     'disk' => env('MEDIA_DISK', 'local'),
     'root' => 'family-media',
     'max_kilobytes' => 5 * 1024,
+    'max_width' => 8192,
+    'max_height' => 8192,
+    'max_pixels' => 25_000_000,
     'webp_quality' => 82,
 
     'types' => [

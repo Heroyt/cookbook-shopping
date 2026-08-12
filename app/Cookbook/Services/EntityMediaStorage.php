@@ -157,6 +157,12 @@ final class EntityMediaStorage
             throw new InvalidEntityMedia('The uploaded image is not a decodable JPEG or PNG image.');
         }
 
+        $width = $info[0];
+        $height = $info[1];
+        if ( ! $this->dimensionsAreSafe($width, $height)) {
+            throw new InvalidEntityMedia('The uploaded image exceeds the safe decoded image limits.');
+        }
+
         if ( ! $this->hasCompleteStructure($contents, $mime)) {
             throw new InvalidEntityMedia('The uploaded image is structurally incomplete.');
         }
@@ -173,6 +179,27 @@ final class EntityMediaStorage
         }
 
         return $image;
+    }
+
+    private function dimensionsAreSafe(int $width, int $height): bool
+    {
+        if ($width < 1 || $height < 1) {
+            return false;
+        }
+
+        $maximumWidth = config('media.max_width');
+        $maximumHeight = config('media.max_height');
+        $maximumPixels = config('media.max_pixels');
+
+        if ( ! is_int($maximumWidth) || $maximumWidth < 1
+            || ! is_int($maximumHeight) || $maximumHeight < 1
+            || ! is_int($maximumPixels) || $maximumPixels < 1) {
+            throw new LogicException('Media dimension limits must be positive integers.');
+        }
+
+        return $width <= $maximumWidth
+            && $height <= $maximumHeight
+            && $width <= intdiv($maximumPixels, $height);
     }
 
     /** @return array<string, string> */
