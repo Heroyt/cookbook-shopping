@@ -135,6 +135,16 @@ export const useRelationSearch = <TOption extends RelationSearchOption>(
         },
     );
 
+    if (options.initialOptions) {
+        watch(
+            () => toValue(options.initialOptions!),
+            (initialOptions) => {
+                results.value = mergeOptions(initialOptions, results.value);
+            },
+            { deep: true },
+        );
+    }
+
     onBeforeUnmount(() => {
         clearTimeout(debounceTimer);
         http.cancel();

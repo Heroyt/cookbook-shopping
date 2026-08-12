@@ -1,6 +1,10 @@
 import type { AgentCredentialSecret } from '@/types/agent-credential';
 import type { Auth } from '@/types/auth';
 import type { FamilySummary } from '@/types/family';
+import type {
+    IngredientStoreOption,
+    IngredientStoreSectionOption,
+} from '@/types/ingredient';
 import type { FlashToast } from '@/types/ui';
 
 // Extend ImportMeta interface for Vite...
@@ -22,6 +26,8 @@ declare module '@inertiajs/core' {
             toast?: FlashToast;
             agentCredentialSecret?: AgentCredentialSecret;
             createdIngredient?: { id: number; name: string };
+            createdStore?: IngredientStoreOption;
+            createdStoreSection?: IngredientStoreSectionOption;
         };
         sharedPageProps: {
             name: string;

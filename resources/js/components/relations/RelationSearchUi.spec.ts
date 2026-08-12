@@ -28,5 +28,16 @@ describe('lazy relation search UI', () => {
         expect(source).toContain('Načíst další');
         expect(source).toContain('Položky se nepodařilo načíst');
         expect(source).toContain("emit('create')");
+        expect(source).toContain('clearLabel');
+        expect(source).toContain("emit('update:modelValue', '')");
+    });
+
+    it('merges newly created pinned options into loaded results', () => {
+        const source = readSource('../../composables/useRelationSearch.ts');
+
+        expect(source).toContain('toValue(options.initialOptions!)');
+        expect(source).toContain(
+            'results.value = mergeOptions(initialOptions, results.value)',
+        );
     });
 });

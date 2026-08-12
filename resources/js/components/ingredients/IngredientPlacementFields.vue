@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue';
+import { computed, defineAsyncComponent, shallowRef, watch } from 'vue';
 import RelationSearchSelect from '@/components/relations/RelationSearchSelect.vue';
 import StoreSectionIcon from '@/components/stores/StoreSectionIcon.vue';
 import {
@@ -27,6 +27,18 @@ const props = withDefaults(
     { ingredient: null, idPrefix: 'ingredient-create' },
 );
 
+const LayeredCreateStoreDialog = defineAsyncComponent({
+    loader: () => import('@/components/relations/LayeredCreateStoreDialog.vue'),
+    delay: 200,
+    timeout: 30_000,
+});
+const LayeredCreateStoreSectionDialog = defineAsyncComponent({
+    loader: () =>
+        import('@/components/relations/LayeredCreateStoreSectionDialog.vue'),
+    delay: 200,
+    timeout: 30_000,
+});
+
 const storeSelection = shallowRef(
     props.ingredient?.storeId ? String(props.ingredient.storeId) : '',
 );
@@ -35,12 +47,18 @@ const sectionSelection = shallowRef(
         ? String(props.ingredient.storeSectionId)
         : '',
 );
-const initialStores = computed<IngredientStoreOption[]>(() =>
-    props.ingredient?.store ? [props.ingredient.store] : [],
-);
-const initialSections = computed<IngredientStoreSectionOption[]>(() =>
-    props.ingredient?.storeSection ? [props.ingredient.storeSection] : [],
-);
+const createdStores = shallowRef<IngredientStoreOption[]>([]);
+const createdSections = shallowRef<IngredientStoreSectionOption[]>([]);
+const createStoreOpen = shallowRef(false);
+const createSectionOpen = shallowRef(false);
+const initialStores = computed<IngredientStoreOption[]>(() => [
+    ...(props.ingredient?.store ? [props.ingredient.store] : []),
+    ...createdStores.value,
+]);
+const initialSections = computed<IngredientStoreSectionOption[]>(() => [
+    ...(props.ingredient?.storeSection ? [props.ingredient.storeSection] : []),
+    ...createdSections.value,
+]);
 const storeSectionEndpoint = computed(
     () =>
         storeSections({
@@ -50,7 +68,20 @@ const storeSectionEndpoint = computed(
 
 watch(storeSelection, () => {
     sectionSelection.value = '';
+    createdSections.value = [];
 });
+
+const selectCreatedStore = (store: IngredientStoreOption): void => {
+    createdStores.value = [store, ...createdStores.value];
+    storeSelection.value = String(store.id);
+};
+
+const selectCreatedSection = (
+    storeSection: IngredientStoreSectionOption,
+): void => {
+    createdSections.value = [storeSection, ...createdSections.value];
+    sectionSelection.value = String(storeSection.id);
+};
 </script>
 
 <template>
@@ -74,6 +105,8 @@ watch(storeSelection, () => {
                 search-placeholder="Hledat obchod…"
                 empty-label="Žádný obchod nebyl nalezen."
                 clear-label="Bez obchodu"
+                create-label="Vytvořit nový obchod"
+                @create="createStoreOpen = true"
             >
                 <template #selected="{ option }">
                     <span class="flex min-w-0 items-center gap-2 truncate">
@@ -117,6 +150,8 @@ watch(storeSelection, () => {
                 search-placeholder="Hledat část obchodu…"
                 empty-label="Žádná část obchodu nebyla nalezena."
                 clear-label="Bez části obchodu"
+                create-label="Vytvořit novou část obchodu"
+                @create="createSectionOpen = true"
             >
                 <template #selected="{ option }">
                     <span class="flex min-w-0 items-center gap-2 truncate">
@@ -163,4 +198,16 @@ watch(storeSelection, () => {
             <FieldError :errors="[storeSectionError]" />
         </Field>
     </FieldSet>
+
+    <LayeredCreateStoreDialog
+        v-if="createStoreOpen"
+        v-model:open="createStoreOpen"
+        @created="selectCreatedStore"
+    />
+    <LayeredCreateStoreSectionDialog
+        v-if="createSectionOpen && storeSelection !== ''"
+        v-model:open="createSectionOpen"
+        :store-id="Number(storeSelection)"
+        @created="selectCreatedSection"
+    />
 </template>

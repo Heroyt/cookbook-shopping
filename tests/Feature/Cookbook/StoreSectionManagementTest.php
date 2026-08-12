@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Cookbook;
 
+use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
 use App\FamilyAccess\Models\Family;
 use App\FamilyAccess\Models\FamilyMembership;
@@ -81,6 +82,39 @@ final class StoreSectionManagementTest extends TestCase
                 ->where('storeSections.1.name', 'Čerstvá zelenina')
                 ->where('storeSections.1.colour', '#2F855A')
                 ->where('storeSections.1.icon', 'apple'));
+    }
+
+    public function test_layered_creation_associates_the_section_and_returns_it_to_the_parent_form(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+        $store = Store::factory()->for($family)->create();
+
+        $this->actingAs($user)
+            ->from(route('ingredients.index'))
+            ->post(route('store-sections.store'), [
+                'name' => 'Pečivo',
+                'colour' => '#D97706',
+                'icon' => 'package',
+                'store_id' => $store->id,
+                'layered' => '1',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('ingredients.index'))
+            ->assertInertiaFlash('createdStoreSection', [
+                'id' => StoreSection::query()->sole()->id,
+                'name' => 'Pečivo',
+                'colour' => '#D97706',
+                'icon' => 'package',
+                'iconUrl' => null,
+            ]);
+
+        $this->assertDatabaseHas('store_store_section', [
+            'store_id' => $store->id,
+            'store_section_id' => StoreSection::query()->sole()->id,
+            'position' => 0,
+        ]);
     }
 
     public function test_each_member_can_change_a_store_section_icon_within_the_current_family(): void

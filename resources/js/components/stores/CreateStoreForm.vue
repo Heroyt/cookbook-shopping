@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form } from '@inertiajs/vue3';
+import { Form, usePage } from '@inertiajs/vue3';
 import StoreController from '@/actions/App/Cookbook/Http/Controllers/StoreController';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +11,11 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import type { IngredientStoreOption } from '@/types';
 
-const emit = defineEmits<{ success: [] }>();
+withDefaults(defineProps<{ layered?: boolean }>(), { layered: false });
+const emit = defineEmits<{ success: [store?: IngredientStoreOption] }>();
+const page = usePage();
 </script>
 
 <template>
@@ -20,8 +23,9 @@ const emit = defineEmits<{ success: [] }>();
         v-bind="StoreController.store.form()"
         reset-on-success
         v-slot="{ errors, processing }"
-        @success="emit('success')"
+        @success="emit('success', page.flash.createdStore)"
     >
+        <input v-if="layered" type="hidden" name="layered" value="1" />
         <FieldGroup>
             <Field :data-invalid="Boolean(errors.name)">
                 <FieldLabel for="store-name">Název obchodu</FieldLabel>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Http\Controllers;
 
+use App\Cookbook\Actions\AttachStoreSection;
 use App\Cookbook\Actions\ChangeStoreSectionColour;
 use App\Cookbook\Actions\ChangeStoreSectionIcon;
 use App\Cookbook\Actions\CreateStoreSection;
@@ -30,23 +31,41 @@ final class StoreSectionController extends Controller
         private readonly ChangeStoreSectionColour $changeStoreSectionColour,
         private readonly ChangeStoreSectionIcon $changeStoreSectionIcon,
         private readonly UpdateStoreSection $updateStoreSection,
+        private readonly AttachStoreSection $attachStoreSection,
     ) {}
 
     public function store(StoreSectionStoreRequest $request): RedirectResponse
     {
-        $this->currentFamilyScope->withinContext(
+        $storeSection = $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
-            fn (AuthorizedFamilyContext $context): StoreSection => $this->createStoreSection->handle(
-                $context,
-                $request->storeSectionName(),
-                $request->storeSectionColour(),
-                $request->storeSectionIcon(),
-            ),
+            function (AuthorizedFamilyContext $context) use ($request): StoreSection {
+                $storeSection = $this->createStoreSection->handle(
+                    $context,
+                    $request->storeSectionName(),
+                    $request->storeSectionColour(),
+                    $request->storeSectionIcon(),
+                );
+
+                if ($request->storeId() !== null) {
+                    $this->attachStoreSection->handle($context, $request->storeId(), $storeSection->id);
+                }
+
+                return $storeSection;
+            },
         );
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Store Section created.')]);
+        Inertia::flash([
+            'toast' => ['type' => 'success', 'message' => __('Store Section created.')],
+            'createdStoreSection' => [
+                'id' => $storeSection->id,
+                'name' => $storeSection->name,
+                'colour' => $storeSection->colour,
+                'icon' => $storeSection->icon->value,
+                'iconUrl' => null,
+            ],
+        ]);
 
-        return to_route('stores.index');
+        return $request->layered() ? back() : to_route('stores.index');
     }
 
     public function updateColour(StoreSectionColourUpdateRequest $request, int $storeSection): RedirectResponse

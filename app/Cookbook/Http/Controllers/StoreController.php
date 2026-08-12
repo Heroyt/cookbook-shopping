@@ -107,14 +107,21 @@ final class StoreController extends Controller
 
     public function store(StoreStoreRequest $request): RedirectResponse
     {
-        $this->currentFamilyScope->withinContext(
+        $store = $this->currentFamilyScope->withinContext(
             $request->authenticatedUser(),
             fn (AuthorizedFamilyContext $context): Store => $this->createStore->handle($context, $request->storeName()),
         );
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Store created.')]);
+        Inertia::flash([
+            'toast' => ['type' => 'success', 'message' => __('Store created.')],
+            'createdStore' => [
+                'id' => $store->id,
+                'name' => $store->name,
+                'logoUrl' => null,
+            ],
+        ]);
 
-        return to_route('stores.index');
+        return $request->layered() ? back() : to_route('stores.index');
     }
 
     public function update(StoreUpdateRequest $request, int $store): RedirectResponse

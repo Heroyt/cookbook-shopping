@@ -78,6 +78,12 @@ describe('Ingredient UI', () => {
         expect(source).toContain(':endpoint="storeSectionEndpoint"');
         expect(source).toContain("sectionSelection.value = ''");
         expect(source).toContain('clear-label="Bez obchodu"');
+        expect(source).toContain('create-label="Vytvořit nový obchod"');
+        expect(source).toContain('defineAsyncComponent');
+        expect(source).toContain('LayeredCreateStoreDialog');
+        expect(source).toContain('LayeredCreateStoreSectionDialog');
+        expect(source).toContain('@created="selectCreatedStore"');
+        expect(source).toContain('@created="selectCreatedSection"');
         expect(html).toContain('name="store_id"');
         expect(html).toContain('name="store_section_id"');
         expect(html).toContain('Umístění slouží pouze');

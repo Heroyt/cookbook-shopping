@@ -15,6 +15,11 @@ final class StoreStoreRequest extends AuthenticatedRequest
         return $this->string('name')->toString();
     }
 
+    public function layered(): bool
+    {
+        return $this->boolean('layered');
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -22,6 +27,7 @@ final class StoreStoreRequest extends AuthenticatedRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'layered' => ['sometimes', 'boolean'],
         ];
     }
 

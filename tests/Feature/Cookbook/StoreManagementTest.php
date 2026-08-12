@@ -70,6 +70,27 @@ final class StoreManagementTest extends TestCase
                 ->where('stores.1.name', 'Weekend Market'));
     }
 
+    public function test_layered_creation_returns_to_the_parent_form_with_the_created_store(): void
+    {
+        $user = User::factory()->create();
+        $family = $this->createFamilyWithMembers($user);
+        $this->selectCurrentFamily($user, $family);
+
+        $this->actingAs($user)
+            ->from(route('ingredients.index'))
+            ->post(route('stores.store'), [
+                'name' => 'Nový obchod',
+                'layered' => '1',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('ingredients.index'))
+            ->assertInertiaFlash('createdStore', [
+                'id' => Store::query()->sole()->id,
+                'name' => 'Nový obchod',
+                'logoUrl' => null,
+            ]);
+    }
+
     public function test_each_member_can_rename_a_store_in_their_shared_family(): void
     {
         $firstMember = User::factory()->create();
