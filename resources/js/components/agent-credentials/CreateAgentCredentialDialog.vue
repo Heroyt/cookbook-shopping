@@ -207,7 +207,7 @@ const submit = (): void => {
                         :data-invalid="
                             Boolean(
                                 form.errors.validity_days ||
-                                    form.errors.expires_at,
+                                form.errors.expires_at,
                             )
                         "
                     >
