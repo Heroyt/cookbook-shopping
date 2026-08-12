@@ -245,6 +245,16 @@ describe('Ingredient UI', () => {
         expect(listHtml).not.toContain('Upravit');
     });
 
+    it('keeps modal ingredient detail in browser history', () => {
+        const source = readSource('./IngredientList.vue');
+
+        expect(source).toContain("const detailQueryParameter = 'ingredient'");
+        expect(source).toContain('window.history.pushState');
+        expect(source).toContain('window.history.back()');
+        expect(source).toContain("window.addEventListener('popstate'");
+        expect(source).toContain('syncDetailFromUrl()');
+    });
+
     it('adds Ingredients to primary navigation through a generated route', () => {
         const sidebar = readSource('../AppSidebar.vue');
 

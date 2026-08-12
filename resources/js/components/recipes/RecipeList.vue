@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import EntityImagePreview from '@/components/media/EntityImagePreview.vue';
 import EditRecipeDialog from '@/components/recipes/EditRecipeDialog.vue';
 import RecipeLifecycleButton from '@/components/recipes/RecipeLifecycleButton.vue';
@@ -24,7 +24,7 @@ import type {
     RecipeTagOption,
 } from '@/types';
 
-defineProps<{
+const props = defineProps<{
     recipes: RecipeSummary[];
     ingredients: RecipeIngredientOption[];
     tags: RecipeTagOption[];
@@ -32,6 +32,52 @@ defineProps<{
 }>();
 
 const selectedRecipe = ref<RecipeSummary | null>(null);
+const detailQueryParameter = 'recipe';
+const detailHistoryStateKey = 'recipeDetailModal';
+const detailUrl = (recipeId?: number): string => {
+    const url = new URL(window.location.href);
+
+    if (recipeId === undefined) {
+        url.searchParams.delete(detailQueryParameter);
+    } else {
+        url.searchParams.set(detailQueryParameter, String(recipeId));
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`;
+};
+const syncDetailFromUrl = (): void => {
+    const recipeId = Number(
+        new URL(window.location.href).searchParams.get(detailQueryParameter),
+    );
+
+    selectedRecipe.value =
+        props.recipes.find((recipe) => recipe.id === recipeId) ?? null;
+};
+const openDetail = (recipe: RecipeSummary): void => {
+    selectedRecipe.value = recipe;
+    window.history.pushState(
+        { ...window.history.state, [detailHistoryStateKey]: true },
+        '',
+        detailUrl(recipe.id),
+    );
+};
+const closeDetail = (): void => {
+    if (window.history.state?.[detailHistoryStateKey] === true) {
+        window.history.back();
+
+        return;
+    }
+
+    window.history.replaceState(window.history.state, '', detailUrl());
+    selectedRecipe.value = null;
+};
+onMounted(() => {
+    syncDetailFromUrl();
+    window.addEventListener('popstate', syncDetailFromUrl);
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('popstate', syncDetailFromUrl);
+});
 const format = (value: string): string =>
     new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 6 }).format(
         Number(value),
@@ -64,7 +110,7 @@ const kindLabel = (kind: 'grams' | 'millilitres' | 'piece'): string =>
                 type="button"
                 class="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 :aria-label="`Zobrazit detail receptu ${recipe.name}`"
-                @click="selectedRecipe = recipe"
+                @click="openDetail(recipe)"
             >
                 <CardContent class="flex flex-col gap-3 p-3">
                     <div class="flex min-h-6 flex-wrap gap-1 pr-20">
@@ -150,7 +196,7 @@ const kindLabel = (kind: 'grams' | 'millilitres' | 'piece'): string =>
         :open="selectedRecipe !== null"
         @update:open="
             (open) => {
-                if (!open) selectedRecipe = null;
+                if (!open) closeDetail();
             }
         "
     >

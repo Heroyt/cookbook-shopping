@@ -131,6 +131,16 @@ describe('Recipe UI', () => {
         expect(html).not.toContain('Upravit');
     });
 
+    it('keeps modal recipe detail in browser history', () => {
+        const source = readSource('./RecipeList.vue');
+
+        expect(source).toContain("const detailQueryParameter = 'recipe'");
+        expect(source).toContain('window.history.pushState');
+        expect(source).toContain('window.history.back()');
+        expect(source).toContain("window.addEventListener('popstate'");
+        expect(source).toContain('syncDetailFromUrl()');
+    });
+
     it('shows stored decimal values without unnecessary trailing zeroes', async () => {
         const html = await render(RecipeFormFields, {
             ingredients: [{ id: 1, name: 'Mouka', kinds: ['grams'] }],

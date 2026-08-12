@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { WheatIcon } from '@lucide/vue';
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import ArchiveIngredientAlertDialog from '@/components/ingredients/ArchiveIngredientAlertDialog.vue';
 import EditIngredientDialog from '@/components/ingredients/EditIngredientDialog.vue';
 import RestoreIngredientButton from '@/components/ingredients/RestoreIngredientButton.vue';
@@ -39,7 +39,7 @@ import type {
     IngredientSummary,
 } from '@/types';
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         ingredients: IngredientSummary[];
         alternativeOptions?: IngredientAlternativeOption[];
@@ -50,6 +50,29 @@ withDefaults(
 );
 
 const selectedIngredient = ref<IngredientSummary | null>(null);
+const detailQueryParameter = 'ingredient';
+const detailHistoryStateKey = 'ingredientDetailModal';
+const detailUrl = (ingredientId?: number): string => {
+    const url = new URL(window.location.href);
+
+    if (ingredientId === undefined) {
+        url.searchParams.delete(detailQueryParameter);
+    } else {
+        url.searchParams.set(detailQueryParameter, String(ingredientId));
+    }
+
+    return `${url.pathname}${url.search}${url.hash}`;
+};
+const syncDetailFromUrl = (): void => {
+    const ingredientId = Number(
+        new URL(window.location.href).searchParams.get(detailQueryParameter),
+    );
+
+    selectedIngredient.value =
+        props.ingredients.find(
+            (ingredient) => ingredient.id === ingredientId,
+        ) ?? null;
+};
 const quantitiesWithoutRedundantSinglePiece = (
     ingredient: IngredientSummary,
 ): string[] =>
@@ -58,7 +81,29 @@ const quantitiesWithoutRedundantSinglePiece = (
         : ingredient.quantities;
 const openDetail = (ingredient: IngredientSummary): void => {
     selectedIngredient.value = ingredient;
+    window.history.pushState(
+        { ...window.history.state, [detailHistoryStateKey]: true },
+        '',
+        detailUrl(ingredient.id),
+    );
 };
+const closeDetail = (): void => {
+    if (window.history.state?.[detailHistoryStateKey] === true) {
+        window.history.back();
+
+        return;
+    }
+
+    window.history.replaceState(window.history.state, '', detailUrl());
+    selectedIngredient.value = null;
+};
+onMounted(() => {
+    syncDetailFromUrl();
+    window.addEventListener('popstate', syncDetailFromUrl);
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('popstate', syncDetailFromUrl);
+});
 </script>
 
 <template>
@@ -198,7 +243,7 @@ const openDetail = (ingredient: IngredientSummary): void => {
         :open="selectedIngredient !== null"
         @update:open="
             (open) => {
-                if (!open) selectedIngredient = null;
+                if (!open) closeDetail();
             }
         "
     >
