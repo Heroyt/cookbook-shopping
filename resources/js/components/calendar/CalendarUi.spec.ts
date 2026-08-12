@@ -36,8 +36,9 @@ describe('Calendar UI', () => {
 
     it('uses generated Wayfinder actions for every calendar write and generation intent', () => {
         const planner = readSource('./CalendarPlanner.vue');
+        const addEntry = readSource('./AddCalendarEntryDialog.vue');
         const entry = readSource('./CalendarEntryCard.vue');
-        expect(planner).toContain('store.form()');
+        expect(addEntry).toContain('store.form()');
         expect(planner).toContain('generate.form()');
         expect(entry).toContain('update.form(entry.id)');
         expect(entry).toContain('destroy.form(entry.id)');
@@ -53,7 +54,9 @@ describe('Calendar UI', () => {
         const planner = readSource('./CalendarPlanner.vue');
         const entry = readSource('./CalendarEntryCard.vue');
         expect(planner).toContain('name="dates[]"');
-        expect(planner).toContain('Vybrat rozsah');
+        expect(planner).toContain('<AppDateRangePicker');
+        expect(planner).toContain('v-model:start="rangeStart"');
+        expect(planner).toContain('v-model:end="rangeEnd"');
         expect(planner).toContain('Přidat libovolné datum');
         expect(planner).toContain('addManualDate');
         expect(planner).toContain('toggleDate(day.date');
@@ -65,6 +68,8 @@ describe('Calendar UI', () => {
         );
         expect(planner).toContain('<FieldSet v-if="showIndividualDates">');
         expect(planner).toContain('Vybrat jednotlivá data');
+        expect(planner).toContain('@click="generationOpen = true"');
+        expect(planner).not.toContain('Přidat recept do kalendáře');
         expect(planner).toContain('<FieldError :errors="[errors.dates]" />');
         expect(entry).toContain('<DialogTitle>Upravit záznam</DialogTitle>');
         expect(entry).toContain('v-model:open="open"');
@@ -72,6 +77,21 @@ describe('Calendar UI', () => {
         expect(entry).toContain('entry.recipeArchived');
         expect(entry).toMatch(/Nejprve obnovte\s+recept/);
         expect(entry).toContain('<FieldError :errors="[errors.entry]" />');
+    });
+
+    it('uses one responsive click-start and click-end calendar range picker', () => {
+        const rangePicker = readSource('../date/AppDateRangePicker.vue');
+
+        expect(rangePicker).toContain('<Calendar');
+        expect(rangePicker).toContain('multiple');
+        expect(rangePicker).toContain('selectingEnd.value = true');
+        expect(rangePicker).toContain("emit('update:start'");
+        expect(rangePicker).toContain("emit('update:end'");
+        expect(rangePicker).toContain(
+            ':number-of-months="showsTwoMonths ? 2 : 1"',
+        );
+        expect(rangePicker).toContain(':week-starts-on="1"');
+        expect(rangePicker).toContain('locale="cs-CZ"');
     });
 
     it('uses responsive readable day cards and calendar-specific generated recovery', () => {

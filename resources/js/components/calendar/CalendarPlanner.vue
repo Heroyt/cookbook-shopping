@@ -3,19 +3,16 @@ import { Form, Link } from '@inertiajs/vue3';
 import {
     ArrowLeftIcon,
     ArrowRightIcon,
-    CalendarPlusIcon,
     ShoppingCartIcon,
     XIcon,
 } from '@lucide/vue';
 import { computed, ref, shallowRef, watch } from 'vue';
-import {
-    generate,
-    store,
-} from '@/actions/App/MealPlanning/Http/Controllers/CalendarController';
+import { generate } from '@/actions/App/MealPlanning/Http/Controllers/CalendarController';
 import AddCalendarEntryDialog from '@/components/calendar/AddCalendarEntryDialog.vue';
 import CalendarEntryCard from '@/components/calendar/CalendarEntryCard.vue';
 import CalendarNutrition from '@/components/calendar/CalendarNutrition.vue';
 import AppDatePicker from '@/components/date/AppDatePicker.vue';
+import AppDateRangePicker from '@/components/date/AppDateRangePicker.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -31,7 +28,6 @@ import {
     DialogContent,
     DialogDescription,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import {
     Empty,
@@ -48,15 +44,6 @@ import {
     FieldLegend,
     FieldSet,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { index } from '@/routes/calendar';
@@ -75,14 +62,12 @@ const props = defineProps<{
     selectedDates: string[];
 }>();
 
-const recipeId = shallowRef('');
-const mealLabel = shallowRef('unlabeled');
 const selectedDates = ref([...props.selectedDates]);
 const manualDate = shallowRef('');
-const newEntryDate = shallowRef(props.week.startsOn);
 const showIndividualDates = shallowRef(false);
 const rangeStart = shallowRef(props.week.startsOn);
 const rangeEnd = shallowRef(props.week.endsOn);
+const generationOpen = shallowRef(false);
 const entryCount = computed(() =>
     props.days.reduce(
         (total, day) =>
@@ -121,6 +106,8 @@ const selectRange = (): void => {
         .filter((date) => date >= first && date <= last);
 };
 
+watch([rangeStart, rangeEnd], selectRange);
+
 const addManualDate = (): void => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(manualDate.value)) {
         return;
@@ -148,164 +135,19 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
             <p class="font-medium tabular-nums">
                 {{ week.startsOn }} – {{ week.endsOn }}
             </p>
-            <Button as-child variant="outline" size="sm">
-                <Link :href="index({ query: { week: week.nextStartsOn } })">
-                    Další týden
-                    <ArrowRightIcon data-icon="inline-end" />
-                </Link>
-            </Button>
+            <div class="flex flex-wrap justify-end gap-2">
+                <Button as-child variant="outline" size="sm">
+                    <Link :href="index({ query: { week: week.nextStartsOn } })">
+                        Další týden
+                        <ArrowRightIcon data-icon="inline-end" />
+                    </Link>
+                </Button>
+                <Button size="sm" @click="generationOpen = true">
+                    <ShoppingCartIcon data-icon="inline-start" />
+                    Vytvořit nákupní seznam
+                </Button>
+            </div>
         </div>
-
-        <Card>
-            <CardHeader>
-                <CardTitle>Přidat recept do kalendáře</CardTitle>
-                <CardDescription>
-                    Stejný recept na stejném datu a se stejným označením se
-                    přesně přičte k existujícímu záznamu.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form
-                    v-bind="store.form()"
-                    v-slot="{ errors, processing }"
-                    reset-on-success
-                    class="flex flex-col gap-4"
-                    @success="
-                        recipeId = '';
-                        mealLabel = 'unlabeled';
-                    "
-                >
-                    <FieldGroup>
-                        <Field :data-invalid="Boolean(errors.recipe_id)">
-                            <FieldLabel for="calendar-new-recipe"
-                                >Recept</FieldLabel
-                            >
-                            <Select
-                                v-model="recipeId"
-                                name="recipe_id"
-                                required
-                            >
-                                <SelectTrigger
-                                    id="calendar-new-recipe"
-                                    :aria-invalid="Boolean(errors.recipe_id)"
-                                >
-                                    <SelectValue placeholder="Vyberte recept" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectItem
-                                            v-for="recipe in recipes"
-                                            :key="recipe.id"
-                                            :value="String(recipe.id)"
-                                        >
-                                            {{ recipe.name }}
-                                        </SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <FieldError :errors="[errors.recipe_id]" />
-                        </Field>
-                        <Field :data-invalid="Boolean(errors.date)">
-                            <FieldLabel for="calendar-new-date"
-                                >Datum</FieldLabel
-                            >
-                            <AppDatePicker
-                                id="calendar-new-date"
-                                v-model="newEntryDate"
-                                name="date"
-                                required
-                                :aria-invalid="Boolean(errors.date)"
-                            />
-                            <FieldError :errors="[errors.date]" />
-                        </Field>
-                        <Field :data-invalid="Boolean(errors.meal_label)">
-                            <FieldLabel for="calendar-new-label"
-                                >Označení jídla</FieldLabel
-                            >
-                            <input
-                                type="hidden"
-                                name="meal_label"
-                                :value="
-                                    mealLabel === 'unlabeled' ? '' : mealLabel
-                                "
-                            />
-                            <Select v-model="mealLabel">
-                                <SelectTrigger
-                                    id="calendar-new-label"
-                                    :aria-invalid="Boolean(errors.meal_label)"
-                                >
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectItem value="unlabeled"
-                                            >Bez označení</SelectItem
-                                        >
-                                        <SelectItem
-                                            v-for="label in mealLabels"
-                                            :key="label.value"
-                                            :value="label.value"
-                                        >
-                                            {{ label.label }}
-                                        </SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <FieldError :errors="[errors.meal_label]" />
-                        </Field>
-                        <Field :data-invalid="Boolean(errors.serving_count)">
-                            <FieldLabel for="calendar-new-serving-count"
-                                >Počet porcí</FieldLabel
-                            >
-                            <Input
-                                id="calendar-new-serving-count"
-                                name="serving_count"
-                                type="number"
-                                min="0.000001"
-                                step="0.000001"
-                                default-value="1"
-                                required
-                                inputmode="decimal"
-                                :aria-invalid="Boolean(errors.serving_count)"
-                            />
-                            <FieldDescription
-                                >Lze zadat i desetinný počet, například
-                                1,5.</FieldDescription
-                            >
-                            <FieldError :errors="[errors.serving_count]" />
-                        </Field>
-                        <Field :data-invalid="Boolean(errors.repeat_days)">
-                            <FieldLabel for="calendar-new-repeat-days"
-                                >Počet po sobě jdoucích dnů</FieldLabel
-                            >
-                            <Input
-                                id="calendar-new-repeat-days"
-                                name="repeat_days"
-                                type="number"
-                                min="1"
-                                max="31"
-                                step="1"
-                                default-value="1"
-                                required
-                            />
-                            <FieldError :errors="[errors.repeat_days]" />
-                        </Field>
-                    </FieldGroup>
-                    <Button
-                        type="submit"
-                        :disabled="processing || recipes.length === 0"
-                    >
-                        <Spinner
-                            v-if="processing"
-                            data-icon="inline-start"
-                            aria-hidden="true"
-                        />
-                        <CalendarPlusIcon v-else data-icon="inline-start" />
-                        Přidat do kalendáře
-                    </Button>
-                </Form>
-            </CardContent>
-        </Card>
 
         <div class="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Card v-for="day in days" :key="day.date">
@@ -365,13 +207,7 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
             </Card>
         </div>
 
-        <Dialog>
-            <DialogTrigger as-child>
-                <Button class="self-end"
-                    ><ShoppingCartIcon data-icon="inline-start" />Vytvořit
-                    nákupní seznam</Button
-                >
-            </DialogTrigger>
+        <Dialog v-model:open="generationOpen">
             <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                 <DialogTitle class="sr-only"
                     >Vytvořit nákupní seznam</DialogTitle
@@ -440,37 +276,19 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                                     </Field>
                                 </FieldGroup>
                             </FieldSet>
-                            <FieldGroup
-                                class="sm:grid sm:grid-cols-[1fr_1fr_auto] sm:items-end"
-                            >
+                            <FieldGroup>
                                 <Field>
-                                    <FieldLabel for="calendar-range-start"
-                                        >Začátek rozsahu</FieldLabel
+                                    <FieldLabel for="calendar-date-range"
+                                        >Rozsah dat</FieldLabel
                                     >
-                                    <AppDatePicker
-                                        id="calendar-range-start"
-                                        v-model="rangeStart"
+                                    <AppDateRangePicker
+                                        id="calendar-date-range"
+                                        v-model:start="rangeStart"
+                                        v-model:end="rangeEnd"
                                         :min="week.startsOn"
                                         :max="week.endsOn"
                                     />
                                 </Field>
-                                <Field>
-                                    <FieldLabel for="calendar-range-end"
-                                        >Konec rozsahu</FieldLabel
-                                    >
-                                    <AppDatePicker
-                                        id="calendar-range-end"
-                                        v-model="rangeEnd"
-                                        :min="week.startsOn"
-                                        :max="week.endsOn"
-                                    />
-                                </Field>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    @click="selectRange"
-                                    >Vybrat rozsah</Button
-                                >
                             </FieldGroup>
                             <FieldGroup
                                 v-if="showIndividualDates"
@@ -555,8 +373,8 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
             <EmptyHeader>
                 <EmptyTitle>Tento týden je zatím prázdný</EmptyTitle>
                 <EmptyDescription
-                    >Přidejte první recept pomocí formuláře
-                    výše.</EmptyDescription
+                    >Přidejte první recept tlačítkem plus u vybraného dne a
+                    jídla.</EmptyDescription
                 >
             </EmptyHeader>
         </Empty>
