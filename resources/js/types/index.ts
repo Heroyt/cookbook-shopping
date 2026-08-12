@@ -2,6 +2,7 @@ export * from './agent-credential';
 export * from './agent-change-set';
 export * from './auth';
 export * from './calendar';
+export * from './dashboard';
 export * from './family';
 export * from './ingredient';
 export * from './navigation';

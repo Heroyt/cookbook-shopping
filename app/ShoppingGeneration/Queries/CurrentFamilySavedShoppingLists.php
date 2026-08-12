@@ -10,6 +10,22 @@ use Illuminate\Pagination\CursorPaginator;
 
 final class CurrentFamilySavedShoppingLists
 {
+    public function latest(Family $family): ?SavedShoppingList
+    {
+        return SavedShoppingList::query()
+            ->select([
+                'id',
+                'family_id',
+                'generated_at',
+                'source_kind',
+                'payload_schema_version',
+            ])
+            ->whereBelongsTo($family)
+            ->orderByDesc('generated_at')
+            ->orderByDesc('id')
+            ->first();
+    }
+
     /** @return CursorPaginator<int, SavedShoppingList> */
     public function page(Family $family): CursorPaginator
     {
