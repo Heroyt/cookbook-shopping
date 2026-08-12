@@ -17,5 +17,6 @@ return [
         'catalog_per_minute' => 120,
         'preview_per_minute' => 20,
         'apply_per_minute' => 10,
+        'credential_restriction_per_minute' => 10,
     ],
 ];

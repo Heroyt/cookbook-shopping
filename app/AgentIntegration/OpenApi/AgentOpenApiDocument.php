@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\AgentIntegration\OpenApi;
 
 use App\AgentIntegration\Catalog\CatalogResourceType;
+use App\AgentIntegration\OpenApi\Types\ContractObjectType;
+use App\AgentIntegration\OpenApi\Types\OneOfType;
 use Dedoc\Scramble\Contracts\DocumentTransformer;
 use Dedoc\Scramble\OpenApiContext;
 use Dedoc\Scramble\Support\Generator\OpenApi;
@@ -33,6 +35,16 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         $previewDocument->examples($operationSchemas->documentExamples());
         $previewRequest = $this->addSchema($document, 'AgentChangeSetDocument', $previewDocument);
         $applyRequest = $this->addSchema($document, 'ApplyAgentChangeSetDocument', $this->applyRequestSchema());
+        $credentialRestrictionDocument = $this->credentialRestrictionRequestSchema();
+        $credentialRestrictionDocument->examples([
+            ['action' => 'shorten_expiry', 'expires_at' => '2026-08-12T18:00:00Z'],
+            ['action' => 'revoke'],
+        ]);
+        $credentialRestrictionRequest = $this->addSchema(
+            $document,
+            'AgentCredentialRestrictionDocument',
+            $credentialRestrictionDocument,
+        );
         $error = $this->addSchema($document, 'AgentApiError', $this->errorSchema());
         $catalogResource = $this->addSchema($document, 'CatalogResource', $this->catalogResourceSchema());
         $changeSet = $this->addSchema($document, 'AgentChangeSet', $this->changeSetSchema());
@@ -40,6 +52,11 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         $catalogDetail = $this->addSchema($document, 'CatalogDetail', $this->dataEnvelope($catalogResource));
         $changeSetCollection = $this->addSchema($document, 'AgentChangeSetCollection', $this->collectionEnvelope($changeSet));
         $changeSetDetail = $this->addSchema($document, 'AgentChangeSetDetail', $this->dataEnvelope($changeSet));
+        $credentialRestrictionDetail = $this->addSchema(
+            $document,
+            'AgentCredentialRestrictionDetail',
+            $this->dataEnvelope($this->credentialRestrictionResponseSchema()),
+        );
 
         foreach ($document->paths as $path) {
             $pathName = trim($path->path, '/');
@@ -61,6 +78,19 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
                     $operationBuilder->responses = [$this->response(200, 'Complete filtered Family catalog.', $catalogCollection)];
                 } elseif ($pathName === 'catalog/{resourceType}/{id}' && $method === 'get') {
                     $operationBuilder->responses = [$this->response(200, 'Family catalog resource detail.', $catalogDetail)];
+                } elseif ($pathName === 'credential/restrictions' && $method === 'post') {
+                    $operationBuilder->summary('Shorten or revoke the current Agent Credential');
+                    $operationBuilder->description(
+                        'This command can only restrict the authenticated Agent Credential; it cannot extend expiry or target another credential. '
+                        . 'When a bearer secret may have been disclosed in plaintext, use shorten_expiry before other work to set the smallest practical future window. '
+                        . 'After all requested API work and verification, use revoke as the final API request unless the user explicitly asked to keep the credential active. '
+                        . 'After a successful response, report the resulting status and exact expires_at or revoked_at value to the user. '
+                        . 'The application does not send a notification. If a revoke response is lost, do not retry with the same secret; tell the user the outcome is uncertain and ask them to confirm the retained status in Agent Access.',
+                    );
+                    $operationBuilder->addRequestBodyObject($this->requestBody($credentialRestrictionRequest));
+                    $operationBuilder->responses = [
+                        $this->response(200, 'Current Agent Credential restricted or returned as a monotonic no-op.', $credentialRestrictionDetail),
+                    ];
                 }
 
                 foreach ([401, 403, 404, 409, 413, 422, 429] as $status) {
@@ -91,6 +121,37 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         $schema->addProperty('digest', $this->string(min: 64, max: 64, pattern: '^[a-f0-9]{64}$'));
         $schema->addProperty('warning_acknowledgements', $this->arrayOf(new StringType(), unique: true));
         $schema->setRequired(['digest', 'warning_acknowledgements']);
+
+        return $schema;
+    }
+
+    private function credentialRestrictionRequestSchema(): OneOfType
+    {
+        $shorten = new ContractObjectType();
+        $shorten->addProperty('action', $this->string(const: 'shorten_expiry'));
+        $shorten->addProperty(
+            'expires_at',
+            $this->string(format: 'date-time', pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$'),
+        );
+        $shorten->setRequired(['action', 'expires_at']);
+
+        $revoke = new ContractObjectType();
+        $revoke->addProperty('action', $this->string(const: 'revoke'));
+        $revoke->setRequired(['action']);
+
+        return new OneOfType([$shorten, $revoke]);
+    }
+
+    private function credentialRestrictionResponseSchema(): ObjectType
+    {
+        $schema = new ContractObjectType();
+        $schema->addProperty('credential_id', new IntegerType());
+        $schema->addProperty('action', $this->string(enum: ['shorten_expiry', 'revoke']));
+        $schema->addProperty('status', $this->string(enum: ['active', 'revoked']));
+        $schema->addProperty('expires_at', $this->string(nullable: true, format: 'date-time'));
+        $schema->addProperty('revoked_at', $this->string(nullable: true, format: 'date-time'));
+        $schema->addProperty('changed', new BooleanType());
+        $schema->setRequired(['credential_id', 'action', 'status', 'expires_at', 'revoked_at', 'changed']);
 
         return $schema;
     }
@@ -187,7 +248,7 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         return $schema;
     }
 
-    private function dataEnvelope(Reference $data): ObjectType
+    private function dataEnvelope(Type $data): ObjectType
     {
         $schema = new ObjectType();
         $schema->addProperty('data', $data);
@@ -204,6 +265,7 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         ?int $min = null,
         ?int $max = null,
         ?string $pattern = null,
+        ?string $const = null,
     ): StringType {
         $type = new StringType();
         $type->nullable($nullable);
@@ -220,6 +282,9 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
             $type->setMax($max);
         }
         $type->pattern($pattern);
+        if ($const !== null) {
+            $type->const($const);
+        }
 
         return $type;
     }

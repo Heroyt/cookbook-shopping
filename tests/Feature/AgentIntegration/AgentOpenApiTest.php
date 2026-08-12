@@ -52,9 +52,12 @@ final class AgentOpenApiTest extends TestCase
             '/change-sets',
             '/change-sets/{changeSet}',
             '/change-sets/{changeSet}/apply',
+            '/credential/restrictions',
         ], $paths);
         $this->assertArrayHasKey('AgentApiError', $document['components']['schemas']);
         $this->assertArrayHasKey('AgentChangeSetDocument', $document['components']['schemas']);
+        $this->assertArrayHasKey('AgentCredentialRestrictionDocument', $document['components']['schemas']);
+        $this->assertArrayHasKey('AgentCredentialRestrictionDetail', $document['components']['schemas']);
 
         $schemas = $document['components']['schemas'];
         $this->assertSame('object', $schemas['AgentApiError']['properties']['error']['properties']['details']['type']);
@@ -161,6 +164,33 @@ final class AgentOpenApiTest extends TestCase
             'stores/update',
         ], $pairs);
 
+        $restrictionDocument = $schemas['AgentCredentialRestrictionDocument'];
+        $this->assertCount(2, $restrictionDocument['oneOf']);
+        $this->assertSame('shorten_expiry', $restrictionDocument['oneOf'][0]['properties']['action']['const']);
+        $this->assertSame(['action', 'expires_at'], $restrictionDocument['oneOf'][0]['required']);
+        $this->assertFalse($restrictionDocument['oneOf'][0]['additionalProperties']);
+        $this->assertSame('revoke', $restrictionDocument['oneOf'][1]['properties']['action']['const']);
+        $this->assertSame(['action'], $restrictionDocument['oneOf'][1]['required']);
+        $this->assertFalse($restrictionDocument['oneOf'][1]['additionalProperties']);
+        $this->assertSame([
+            ['action' => 'shorten_expiry', 'expires_at' => '2026-08-12T18:00:00Z'],
+            ['action' => 'revoke'],
+        ], $restrictionDocument['examples']);
+
+        $restrictionOperation = $document['paths']['/credential/restrictions']['post'];
+        $this->assertStringContainsString('smallest practical future window', $restrictionOperation['description']);
+        $this->assertStringContainsString('final API request', $restrictionOperation['description']);
+        $this->assertStringContainsString('report the resulting status', $restrictionOperation['description']);
+        $this->assertStringContainsString('does not send a notification', $restrictionOperation['description']);
+        $this->assertSame(
+            '#/components/schemas/AgentCredentialRestrictionDocument',
+            $restrictionOperation['requestBody']['content']['application/json']['schema']['$ref'],
+        );
+        $this->assertSame(
+            '#/components/schemas/AgentCredentialRestrictionDetail',
+            $restrictionOperation['responses']['200']['content']['application/json']['schema']['$ref'],
+        );
+
         $this->get('/docs/api')->assertNotFound();
         $this->get('/docs/api.json')->assertNotFound();
     }
@@ -170,7 +200,7 @@ final class AgentOpenApiTest extends TestCase
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn (Route $route): bool => str_starts_with($route->uri(), 'api/v1/'));
 
-        $this->assertCount(6, $routes);
+        $this->assertCount(7, $routes);
         foreach ($routes as $route) {
             $middleware = $route->gatherMiddleware();
 

@@ -75,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('agent-apply', fn (Request $request): Limit => Limit::perMinute(
             Config::integer('agent-integration.rates.apply_per_minute'),
         )->by($this->agentRateKey($request)));
+        RateLimiter::for('agent-credential-restriction', fn (Request $request): Limit => Limit::perMinute(
+            Config::integer('agent-integration.rates.credential_restriction_per_minute'),
+        )->by($this->agentRateKey($request) . ':' . $request->string('action')->toString()));
     }
 
     private function agentRateKey(Request $request): string

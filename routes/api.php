@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 use App\AgentIntegration\Catalog\CatalogResourceType;
 use App\AgentIntegration\Http\Controllers\AgentChangeSetController;
+use App\AgentIntegration\Http\Controllers\AgentCredentialRestrictionController;
 use App\AgentIntegration\Http\Controllers\CatalogController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:content:read'])->group(function (): void {
+    Route::post('credential/restrictions', [AgentCredentialRestrictionController::class, 'store'])
+        ->middleware('throttle:agent-credential-restriction')
+        ->name('api.v1.credential.restrictions.store');
     Route::get('change-sets', [AgentChangeSetController::class, 'index'])
         ->middleware('throttle:agent-catalog')
         ->name('api.v1.change-sets.index');
