@@ -24,3 +24,10 @@ export type AgentCredentialSecret = {
     name: string;
     secret: string;
 };
+
+export type AgentConnection = {
+    applicationUrl: string;
+    agentAccessUrl: string;
+    apiBaseUrl: string;
+    openApiUrl: string;
+};

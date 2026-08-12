@@ -12,21 +12,28 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import type { AgentCredentialSecret } from '@/types';
+import { useTargetedClipboardCopy } from '@/composables/useClipboardCopy';
+import type { AgentConnection, AgentCredentialSecret } from '@/types';
+import { createCredentialAgentInstructions } from './agentInstructions';
 
-const { credentialSecret } = defineProps<{
+const { connection, credentialSecret } = defineProps<{
+    connection: AgentConnection;
     credentialSecret: AgentCredentialSecret;
 }>();
 const open = shallowRef(true);
-const copyState = shallowRef<'idle' | 'copied' | 'failed'>('idle');
+const { copy, copyState, copyTarget } = useTargetedClipboardCopy<
+    'secret' | 'instructions'
+>();
 
 const copySecret = async (): Promise<void> => {
-    try {
-        await navigator.clipboard.writeText(credentialSecret.secret);
-        copyState.value = 'copied';
-    } catch {
-        copyState.value = 'failed';
-    }
+    await copy('secret', credentialSecret.secret);
+};
+
+const copyInstructions = async (): Promise<void> => {
+    await copy(
+        'instructions',
+        createCredentialAgentInstructions(connection, credentialSecret.secret),
+    );
 };
 </script>
 
@@ -60,18 +67,75 @@ const copySecret = async (): Promise<void> => {
                 />
                 <Button type="button" variant="outline" @click="copySecret">
                     <CheckIcon
-                        v-if="copyState === 'copied'"
+                        v-if="copyTarget === 'secret' && copyState === 'copied'"
                         data-icon="inline-start"
                     />
                     <CopyIcon v-else data-icon="inline-start" />
-                    {{ copyState === 'copied' ? 'Zkopírováno' : 'Kopírovat' }}
+                    {{
+                        copyTarget === 'secret' && copyState === 'copied'
+                            ? 'Tajemství zkopírováno'
+                            : 'Kopírovat tajemství'
+                    }}
                 </Button>
             </div>
+
+            <div
+                class="flex flex-col items-start gap-3 rounded-lg border bg-muted/40 p-4"
+            >
+                <p class="text-sm">
+                    Vložte je do svého AI chatu a odešlete. Agent vás provede
+                    dalším postupem.
+                </p>
+                <Button
+                    type="button"
+                    class="w-full sm:w-auto"
+                    @click="copyInstructions"
+                >
+                    <CheckIcon
+                        v-if="
+                            copyTarget === 'instructions' &&
+                            copyState === 'copied'
+                        "
+                        data-icon="inline-start"
+                    />
+                    <CopyIcon v-else data-icon="inline-start" />
+                    {{
+                        copyTarget === 'instructions' && copyState === 'copied'
+                            ? 'Pokyny zkopírovány'
+                            : 'Kopírovat pokyny s tajemstvím'
+                    }}
+                </Button>
+            </div>
+
             <p aria-live="polite" class="text-sm text-muted-foreground">
-                <template v-if="copyState === 'copied'">
+                <template
+                    v-if="
+                        copyTarget === 'instructions' && copyState === 'copied'
+                    "
+                >
+                    Pokyny s tajemstvím byly zkopírovány. Odešlete je pouze do
+                    důvěryhodného AI chatu.
+                </template>
+                <template
+                    v-else-if="
+                        copyTarget === 'instructions' && copyState === 'failed'
+                    "
+                >
+                    Pokyny se nepodařilo zkopírovat. Zkuste to znovu nebo
+                    povolte přístup ke schránce.
+                </template>
+                <template
+                    v-else-if="
+                        copyTarget === 'secret' && copyState === 'copied'
+                    "
+                >
                     Tajemství bylo zkopírováno.
                 </template>
-                <template v-else-if="copyState === 'failed'">
+                <template
+                    v-else-if="
+                        copyTarget === 'secret' && copyState === 'failed'
+                    "
+                >
                     Kopírování se nezdařilo. Označte a zkopírujte tajemství
                     ručně.
                 </template>

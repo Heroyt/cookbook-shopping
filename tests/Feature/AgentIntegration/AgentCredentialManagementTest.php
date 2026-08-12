@@ -58,6 +58,20 @@ final class AgentCredentialManagementTest extends TestCase
                 ->missing('credentials.0.token'));
     }
 
+    public function test_management_page_exposes_environment_derived_agent_connection_urls_without_a_secret(): void
+    {
+        [$issuer] = $this->memberWithCurrentFamily('Alena');
+
+        $this->actingAs($issuer)->get(route('agent-credentials.index'))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+                ->where('agentConnection.applicationUrl', url('/'))
+                ->where('agentConnection.agentAccessUrl', route('agent-credentials.index'))
+                ->where('agentConnection.apiBaseUrl', url('/api/v1'))
+                ->where('agentConnection.openApiUrl', url('/docs/agent-api/v1/openapi.json'))
+                ->missing('agentConnection.secret'));
+    }
+
     public function test_create_and_rotate_require_recent_password_confirmation_and_only_return_secret_once(): void
     {
         [$issuer, $family] = $this->memberWithCurrentFamily('Alena');

@@ -73,6 +73,12 @@ final class AgentCredentialController extends Controller
         return Inertia::render('agent-credentials/Index', [
             'credentials' => $credentials,
             'passwordConfirmed' => $passwordConfirmed,
+            'agentConnection' => [
+                'applicationUrl' => url('/'),
+                'agentAccessUrl' => route('agent-credentials.index'),
+                'apiBaseUrl' => url('/api/v1'),
+                'openApiUrl' => url('/docs/agent-api/v1/openapi.json'),
+            ],
         ]);
     }
 

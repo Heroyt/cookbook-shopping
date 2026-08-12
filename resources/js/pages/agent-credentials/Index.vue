@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import AgentCredentialController from '@/actions/App/AgentIntegration/Http/Controllers/AgentCredentialController';
 import AgentCredentialList from '@/components/agent-credentials/AgentCredentialList.vue';
 import AgentCredentialSecretDialog from '@/components/agent-credentials/AgentCredentialSecretDialog.vue';
+import AgentInstructionsCard from '@/components/agent-credentials/AgentInstructionsCard.vue';
 import CreateAgentCredentialDialog from '@/components/agent-credentials/CreateAgentCredentialDialog.vue';
 import {
     Card,
@@ -12,11 +13,16 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import type { AgentCredentialSecret, AgentCredentialSummary } from '@/types';
+import type {
+    AgentConnection,
+    AgentCredentialSecret,
+    AgentCredentialSummary,
+} from '@/types';
 
 defineProps<{
     credentials: AgentCredentialSummary[];
     passwordConfirmed: boolean;
+    agentConnection: AgentConnection;
 }>();
 
 const page = usePage();
@@ -55,6 +61,8 @@ defineOptions({
             />
         </div>
 
+        <AgentInstructionsCard :connection="agentConnection" />
+
         <Card>
             <CardHeader>
                 <CardTitle>Přístupy aktuální rodiny</CardTitle>
@@ -77,5 +85,6 @@ defineOptions({
         v-if="credentialSecret !== undefined"
         :key="credentialSecret.secret"
         :credential-secret="credentialSecret"
+        :connection="agentConnection"
     />
 </template>
