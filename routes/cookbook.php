@@ -7,6 +7,7 @@ use App\Cookbook\Http\Controllers\IngredientAlternativeController;
 use App\Cookbook\Http\Controllers\IngredientController;
 use App\Cookbook\Http\Controllers\RecipeController;
 use App\Cookbook\Http\Controllers\RecipeTagController;
+use App\Cookbook\Http\Controllers\RelationSearchController;
 use App\Cookbook\Http\Controllers\StoreController;
 use App\Cookbook\Http\Controllers\StoreSectionAssociationController;
 use App\Cookbook\Http\Controllers\StoreSectionController;
@@ -14,6 +15,12 @@ use App\Cookbook\Values\EntityMediaType;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('relation-search/recipes', [RelationSearchController::class, 'recipes'])
+        ->name('relation-search.recipes');
+    Route::get('relation-search/stores', [RelationSearchController::class, 'stores'])
+        ->name('relation-search.stores');
+    Route::get('relation-search/store-sections', [RelationSearchController::class, 'storeSections'])
+        ->name('relation-search.store-sections');
     Route::post('entity-media/{mediaType}/{entity}', [EntityMediaController::class, 'store'])
         ->whereIn('mediaType', EntityMediaType::values())
         ->whereNumber('entity')
