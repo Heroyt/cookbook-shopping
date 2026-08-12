@@ -17,7 +17,12 @@ import {
 import { Button } from '@/components/ui/button';
 import type { RecipeSummary } from '@/types';
 
-const props = defineProps<{ recipe: RecipeSummary }>();
+const props = withDefaults(
+    defineProps<{ recipe: RecipeSummary; iconOnly?: boolean }>(),
+    {
+        iconOnly: false,
+    },
+);
 const processing = ref(false);
 const changeLifecycle = (): void => {
     processing.value = true;
@@ -36,15 +41,30 @@ const changeLifecycle = (): void => {
         v-if="recipe.archived"
         type="button"
         variant="outline"
-        size="sm"
+        :size="iconOnly ? 'icon-sm' : 'sm'"
+        :aria-label="iconOnly ? `Obnovit recept ${recipe.name}` : undefined"
         :disabled="processing"
         @click="changeLifecycle"
-        ><ArchiveRestoreIcon data-icon="inline-start" /> Obnovit</Button
+        ><ArchiveRestoreIcon
+            :data-icon="iconOnly ? undefined : 'inline-start'"
+        />
+        <span :class="iconOnly ? 'sr-only' : undefined">Obnovit</span></Button
     >
     <AlertDialog v-else>
         <AlertDialogTrigger as-child
-            ><Button type="button" variant="outline" size="sm"
-                ><ArchiveIcon data-icon="inline-start" /> Archivovat</Button
+            ><Button
+                type="button"
+                variant="outline"
+                :size="iconOnly ? 'icon-sm' : 'sm'"
+                :aria-label="
+                    iconOnly ? `Archivovat recept ${recipe.name}` : undefined
+                "
+                ><ArchiveIcon
+                    :data-icon="iconOnly ? undefined : 'inline-start'"
+                />
+                <span :class="iconOnly ? 'sr-only' : undefined"
+                    >Archivovat</span
+                ></Button
             ></AlertDialogTrigger
         >
         <AlertDialogContent>

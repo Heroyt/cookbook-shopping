@@ -3,6 +3,7 @@ import { Form } from '@inertiajs/vue3';
 import { PencilIcon } from '@lucide/vue';
 import { shallowRef } from 'vue';
 import IngredientController from '@/actions/App/Cookbook/Http/Controllers/IngredientController';
+import IngredientAlternatives from '@/components/ingredients/IngredientAlternatives.vue';
 import IngredientFormFields from '@/components/ingredients/IngredientFormFields.vue';
 import EntityImageUpload from '@/components/media/EntityImageUpload.vue';
 import { Button } from '@/components/ui/button';
@@ -18,15 +19,20 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
-import type { IngredientPlacementStore, IngredientSummary } from '@/types';
+import type {
+    IngredientAlternativeOption,
+    IngredientPlacementStore,
+    IngredientSummary,
+} from '@/types';
 
 const props = withDefaults(
     defineProps<{
         ingredient: IngredientSummary;
         stores: IngredientPlacementStore[];
+        alternativeOptions?: IngredientAlternativeOption[];
         openInitially?: boolean;
     }>(),
-    { openInitially: false },
+    { openInitially: false, alternativeOptions: () => [] },
 );
 
 const open = shallowRef(props.openInitially);
@@ -65,6 +71,16 @@ const open = shallowRef(props.openInitially);
                     :entity-id="ingredient.id"
                     :image-url="ingredient.photoUrl"
                     :image-alt="`Fotografie suroviny ${ingredient.name}`"
+                />
+            </section>
+
+            <Separator />
+
+            <section class="flex flex-col gap-3">
+                <h3 class="font-medium">Alternativy</h3>
+                <IngredientAlternatives
+                    :ingredient="ingredient"
+                    :alternative-options="alternativeOptions"
                 />
             </section>
 

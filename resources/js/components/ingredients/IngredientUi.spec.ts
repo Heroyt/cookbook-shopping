@@ -49,12 +49,15 @@ describe('Ingredient UI', () => {
         );
         expect(page).toContain('<CreateIngredientDialog :stores="stores" />');
         expect(readSource('./CreateIngredientDialog.vue')).toContain(
-            '@success="open = false"',
+            '@success="createdIngredient = $event"',
+        );
+        expect(readSource('./CreateIngredientDialog.vue')).toContain(
+            'media-type="ingredient-photo"',
         );
         expect(page).toContain(':stores="stores"');
         expect(page).toContain(':alternative-options="alternativeOptions"');
-        expect(readSource('./IngredientList.vue')).toContain(
-            ':alternative-options="alternativeOptions"',
+        expect(readSource('./EditIngredientDialog.vue')).toContain(
+            '<IngredientAlternatives',
         );
         expect(readSource('./IngredientAlternatives.vue')).toContain(
             'const availableOptions = computed',
@@ -67,7 +70,15 @@ describe('Ingredient UI', () => {
             {
                 id: 1,
                 name: 'Tržiště',
-                sections: [{ id: 2, name: 'Zelenina', colour: '#16A34A' }],
+                logoUrl: '/logo',
+                sections: [
+                    {
+                        id: 2,
+                        name: 'Zelenina',
+                        colour: '#16A34A',
+                        icon: 'apple',
+                    },
+                ],
             },
         ];
         const html = await render(IngredientFormFields, { stores });
@@ -83,6 +94,9 @@ describe('Ingredient UI', () => {
         expect(html).toContain('name="store_section_id"');
         expect(html).toContain('Umístění slouží pouze');
         expect(html).toContain('Nutriční profil');
+        expect(source).toContain('v-if="store.logoUrl"');
+        expect(source).toContain('backgroundColor: section.colour');
+        expect(source).toContain('<StoreSectionIcon');
         expect(html).toContain('Základ profilu');
         expect(html).toContain('Energie (kcal)');
         expect(html).toContain('Bílkoviny (g)');
@@ -218,8 +232,16 @@ describe('Ingredient UI', () => {
         expect(listHtml).toContain('Tržiště · Zelenina');
         expect(listHtml).toContain('Archivovaná');
         expect(listHtml).toContain('Obnovit');
-        expect(listHtml).toContain('Nutriční profil');
-        expect(listHtml).toContain('Bez alternativ');
+        expect(readSource('./IngredientList.vue')).toContain('<DialogContent');
+        expect(readSource('./IngredientList.vue')).toContain(
+            'v-if="selectedIngredient"',
+        );
+        expect(readSource('./IngredientList.vue')).toContain(
+            '<HoverCard v-if="ingredient.alternatives.length"',
+        );
+        expect(readSource('./IngredientList.vue')).not.toContain(
+            '<TableHead>Výživa</TableHead>',
+        );
         expect(listHtml).not.toContain('Upravit');
     });
 

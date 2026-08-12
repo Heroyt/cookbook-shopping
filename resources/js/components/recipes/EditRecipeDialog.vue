@@ -27,8 +27,9 @@ const props = withDefaults(
         ingredients: RecipeIngredientOption[];
         tags: RecipeTagOption[];
         openInitially?: boolean;
+        iconOnly?: boolean;
     }>(),
-    { openInitially: false },
+    { openInitially: false, iconOnly: false },
 );
 const open = ref(props.openInitially);
 </script>
@@ -36,8 +37,18 @@ const open = ref(props.openInitially);
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child
-            ><Button variant="outline" size="sm"
-                ><PencilIcon data-icon="inline-start" /> Upravit</Button
+            ><Button
+                variant="outline"
+                :size="iconOnly ? 'icon-sm' : 'sm'"
+                :aria-label="
+                    iconOnly ? `Upravit recept ${recipe.name}` : undefined
+                "
+                ><PencilIcon
+                    :data-icon="iconOnly ? undefined : 'inline-start'"
+                />
+                <span :class="iconOnly ? 'sr-only' : undefined"
+                    >Upravit</span
+                ></Button
             ></DialogTrigger
         >
         <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
