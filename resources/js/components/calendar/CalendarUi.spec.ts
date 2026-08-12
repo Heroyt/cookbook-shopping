@@ -94,6 +94,18 @@ describe('Calendar UI', () => {
         expect(rangePicker).toContain('locale="cs-CZ"');
     });
 
+    it('uses a visible shadcn command search in the slot add form', () => {
+        const addEntry = readSource('./AddCalendarEntryDialog.vue');
+        const searchSelect = readSource('../recipes/RecipeSearchSelect.vue');
+
+        expect(addEntry).toContain('<RecipeSearchSelect');
+        expect(addEntry).not.toContain('<Select');
+        expect(searchSelect).toContain('<CommandInput');
+        expect(searchSelect).toContain('Hledat recept…');
+        expect(searchSelect).toContain('Žádný recept nebyl nalezen.');
+        expect(addEntry).toContain(':recipes="recipes"');
+    });
+
     it('uses responsive readable day cards and calendar-specific generated recovery', () => {
         const planner = readSource('./CalendarPlanner.vue');
         expect(planner).toContain('md:grid-cols-2 xl:grid-cols-3');
