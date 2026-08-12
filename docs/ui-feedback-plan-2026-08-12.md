@@ -97,7 +97,9 @@ That final interaction frontier is resolved as follows:
 5. **Image drop target:** accept one pending file, replace only its local preview when another is selected, and retain the existing stored image until explicit upload succeeds. During creation, begin the independent upload after the Ingredient save.
 6. **Shared date pickers:** use Czech locale and Monday-first calendars throughout. Provide applicable clear/today actions, show one month on mobile and two for range selection on larger screens, preserve explicit filter submission, and update ordinary form dates immediately.
 
-The WebP addition leaves one final media-contract decision: whether static WebP support applies consistently to every existing entity-image upload while animated WebP receives explicit Czech rejection feedback.
+7. **WebP upload contract:** accept static WebP consistently for Store logos, Store Section images, Ingredient photos, and Recipe covers under the existing safety and normalization rules. Reject animated WebP with explicit Czech feedback because the runtime decoder cannot read it.
+
+The decision frontier is empty. Implementation may begin after the user confirms the consolidated design represents the shared understanding.
 
 Resolved domain terms will be written into `CONTEXT.md` immediately. An ADR will be offered only for decisions that are hard to reverse, surprising, and involve a real trade-off.
 
