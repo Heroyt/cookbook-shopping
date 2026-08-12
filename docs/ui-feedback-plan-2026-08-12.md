@@ -75,6 +75,19 @@ The `grill-with-docs` session uses the domain glossary and code evidence. The in
 
 The next frontier covers interaction details that depend on these choices: hidden individual-date mode behavior, consecutive-addition limits and feedback, modal trigger/action placement, save-then-upload recovery, custom valid-until time semantics, and how much of lazy relation search to introduce in the affected selectors.
 
+That dependent frontier is resolved as follows:
+
+1. **Hidden individual dates:** the generation Dialog defaults to contiguous range mode. Revealing individual-date mode copies the current range into a multi-date selection that can then be edited independently.
+2. **Consecutive additions:** accept one through 31 days and report created versus accumulated entries in one Czech success summary, without interrupting the atomic operation per date.
+3. **Modal detail trigger:** clicking the compact Recipe or Ingredient summary outside its action buttons is the primary detail action. Edit, archive, restore, and other actions remain independent.
+4. **Alternative preview:** provide the requested hover preview on pointer-based layouts. Mobile users reach the same information through the Ingredient detail modal, so no additional tap-only Popover behavior is required.
+5. **Unassigned Shopping List lines:** use a neutral **Bez obchodu** primary card for Ingredients without a Store and a neutral **Nezařazené** section for Store placements without a Section. Do not invent Store or Section colours.
+6. **Photo recovery:** after Ingredient creation, keep the form open while the independent upload runs. On failure, state that the Ingredient is already saved, retain the selected file, and offer immediate retry.
+7. **Custom credential validity:** label the field **Platný do data včetně**; the selected local day is fully valid and expiry occurs at the following local midnight.
+8. **Lazy search scope:** introduce the reusable Family-scoped lazy-search foundation for the Calendar Recipe and Ingredient Store/Section selectors in this delivery. Layered entity creation remains deferred.
+
+The remaining frontier covers the reusable search result/pagination contract, modal URL/history behavior, initial Shopping List expansion state, image replacement behavior inside the drop target, and shared date-picker interaction details.
+
 Resolved domain terms will be written into `CONTEXT.md` immediately. An ADR will be offered only for decisions that are hard to reverse, surprising, and involve a real trade-off.
 
 ## Verification and completion log

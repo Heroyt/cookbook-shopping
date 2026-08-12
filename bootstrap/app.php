@@ -15,6 +15,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
@@ -90,11 +91,24 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            $requiredAbilities = [];
+            $route = $request->route();
+            if ($route instanceof Route) {
+                foreach ($route->gatherMiddleware() as $middleware) {
+                    if ( ! is_string($middleware) || ! str_starts_with($middleware, 'abilities:')) {
+                        continue;
+                    }
+
+                    array_push($requiredAbilities, ...explode(',', substr($middleware, strlen('abilities:'))));
+                }
+            }
+            $requiredAbilities = array_values(array_unique($requiredAbilities));
+
             return AgentApiErrorResponse::make(
                 'ability_required',
                 'The Agent Credential does not have every required ability.',
                 403,
-                details: ['required_abilities' => ['content:read']],
+                details: ['required_abilities' => $requiredAbilities],
             );
         });
         $exceptions->render(function (ValidationException $exception, Request $request): ?JsonResponse {
