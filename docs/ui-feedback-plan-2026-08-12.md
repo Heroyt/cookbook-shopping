@@ -63,14 +63,17 @@ These findings share calendar state, selection, and collision semantics and requ
 
 ## Grill decision tree
 
-The `grill-with-docs` session will use the domain glossary and code evidence. Initial decision frontier:
+The `grill-with-docs` session uses the domain glossary and code evidence. The initial decision frontier is resolved as follows:
 
-1. **Calendar selection semantics:** replace arbitrary Calendar Selection with a contiguous range for generation, or keep arbitrary selection and make range selection the primary shortcut?
-2. **Repeated Calendar Entry write semantics:** one atomic multi-day command or independent per-day results; accumulate same Recipe/date/label collisions or reject/skip them?
-3. **Catalogue detail surface:** Dialog, Collapsible, or responsive combination for Recipe and Ingredient detail; define which actions stay on the summary.
-4. **Ingredient create-time photo:** atomic create request containing the photo or create-then-upload flow with explicit recovery behavior?
-5. **Date-picker coverage:** which date fields benefit from calendar context versus a validity-duration preset or native entry?
-6. **Lazy relation search contract:** shared endpoint/result vocabulary, authorization boundary, initial-page size configuration, and how layered entity creation returns a newly created selection.
+1. **Calendar selection semantics:** retain arbitrary Calendar Selection, make a contiguous range the primary interaction, and hide individual-date selection by default.
+2. **Repeated Calendar Entry write semantics:** use one atomic multi-day command; each date follows the established duplicate-accumulation rule and any failure rolls back the entire command.
+3. **Catalogue detail surface:** consistently use modal detail for Recipe and Ingredient catalogues rather than inline expansion.
+4. **Ingredient create-time photo:** save the Ingredient independently and upload its optional photo separately; upload failure must never block or roll back the save.
+5. **Agent Credential validity:** offer exact 1-, 7-, 30-, 90-, 180-, and 365-day presets, default to 90 days, and reveal a date picker for a custom valid-until date.
+6. **Date-picker coverage:** replace remaining native date controls with consistent calendar-based components, including Agent Change Set History filters.
+7. **Lazy relation search contract:** keep layered entity creation deferred; decide the reusable search foundation when implementing the new Calendar Recipe selector and richer Ingredient placement selectors.
+
+The next frontier covers interaction details that depend on these choices: hidden individual-date mode behavior, consecutive-addition limits and feedback, modal trigger/action placement, save-then-upload recovery, custom valid-until time semantics, and how much of lazy relation search to introduce in the affected selectors.
 
 Resolved domain terms will be written into `CONTEXT.md` immediately. An ADR will be offered only for decisions that are hard to reverse, surprising, and involve a real trade-off.
 

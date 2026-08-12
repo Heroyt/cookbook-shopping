@@ -1,0 +1,3 @@
+# ADR 0038 — Add consecutive Calendar Entries atomically
+
+A consecutive Calendar addition accepts one active Recipe, positive Serving Count, Meal Label, starting date, and positive day count, then applies one independent Calendar Entry to every included calendar date in a single transaction. Existing Recipe/date/Meal Label combinations accumulate the submitted Serving Count according to ADR 0024, while any failure rolls back the entire addition. No recurrence rule or series identity is persisted; this keeps the established Calendar Entry model while preventing a partially applied multi-day action.

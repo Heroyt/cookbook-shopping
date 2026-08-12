@@ -31,7 +31,7 @@ The one family whose data a user is presently viewing and modifying. Operations 
 _Avoid_: Active account, selected tenant
 
 **Agent Credential**:
-A revocable, expiring secret issued by one user to an AI agent for exactly one family with an explicit set of permitted abilities. Every member of that family may inspect its non-secret metadata and revoke it; it also becomes invalid when its issuing user is deleted or leaves the family. The authenticated credential may reduce its own remaining lifetime or revoke itself, but it can never extend or restore its authority.
+A revocable, expiring secret issued by one user to an AI agent for exactly one family with an explicit set of permitted abilities. Preset validity lasts an exact duration from issuance. Every member of that family may inspect its non-secret metadata and revoke it; it also becomes invalid when its issuing user is deleted or leaves the family. The authenticated credential may reduce its own remaining lifetime or revoke itself, but it can never extend or restore its authority.
 _Avoid_: Family credential, user-wide token, API key
 
 **Agent Change Set**:
@@ -67,7 +67,7 @@ A recipe temporarily unavailable for new calendar entries or simple plans but re
 _Avoid_: Deleted recipe, inactive meal
 
 **Ingredient**:
-A concrete purchasable package with a case-insensitively unique name across active and archived ingredients in its family. It defines either a positive canonical weight in grams or a positive canonical volume in millilitres, never both, and may additionally define a positive piece count; at least one quantity is required and every value describes the full contents of one package.
+A concrete purchasable package with a case-insensitively unique name across active and archived ingredients in its family and an optional photo. It defines either a positive canonical weight in grams or a positive canonical volume in millilitres, never both, and may additionally define a positive piece count; at least one quantity is required and every value describes the full contents of one package.
 _Avoid_: Generic ingredient, product
 
 **Store**:
@@ -155,7 +155,7 @@ One of the five fixed labels used to group recipe selections within a calendar d
 _Avoid_: Recipe tag, meal slot, time slot
 
 **Calendar Entry**:
-A live reference to a recipe with a serving count, concrete date, and optional meal label. It does not recur, uses the recipe's current definition, and a recipe may appear at most once for the same date and label combination.
+A live reference to a recipe with a serving count, concrete date, and optional meal label. It does not recur, uses the recipe's current definition, and a recipe may appear at most once for the same date and label combination. A consecutive addition creates one independent Calendar Entry per included date rather than a recurring series.
 _Avoid_: Calendar slot, meal
 
 **Calendar Day**:
