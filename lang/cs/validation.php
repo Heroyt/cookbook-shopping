@@ -167,6 +167,7 @@ return [
         'abilities.*' => 'oprávnění',
         'email' => 'e-mail',
         'expires_at' => 'platnost do',
+        'validity_days' => 'délka platnosti',
         'family_name' => 'název rodiny',
         'image' => 'obrázek',
         'piece_count' => 'počet kusů v balení',

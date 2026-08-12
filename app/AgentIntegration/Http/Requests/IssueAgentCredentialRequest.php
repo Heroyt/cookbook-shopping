@@ -8,11 +8,15 @@ use App\AgentIntegration\AgentCredentialAbility;
 use App\Http\Requests\AuthenticatedRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 use LogicException;
 
 final class IssueAgentCredentialRequest extends AuthenticatedRequest
 {
+    /** @var list<int> */
+    private const array VALIDITY_DAY_PRESETS = [1, 7, 30, 90, 180, 365];
+
     /** @return list<AgentCredentialAbility> */
     public function credentialAbilities(): array
     {
@@ -38,9 +42,16 @@ final class IssueAgentCredentialRequest extends AuthenticatedRequest
 
     public function expiresAt(): ?Carbon
     {
+        $validityDays = $this->validated('validity_days');
+        if (is_int($validityDays)) {
+            return Carbon::now()->addDays($validityDays);
+        }
+
         $expiresAt = $this->validated('expires_at');
 
-        return is_string($expiresAt) ? Carbon::parse($expiresAt)->startOfDay() : null;
+        return is_string($expiresAt)
+            ? Carbon::parse($expiresAt, Config::string('app.timezone'))->startOfDay()->addDay()
+            : null;
     }
 
     /**
@@ -61,7 +72,16 @@ final class IssueAgentCredentialRequest extends AuthenticatedRequest
             ],
             'expires_at' => [
                 'nullable',
-                Rule::date()->format('Y-m-d')->afterToday()->beforeOrEqual(now()->addYear()),
+                Rule::prohibitedIf(fn (): bool => $this->filled('validity_days')),
+                Rule::date()->format('Y-m-d')->todayOrAfter()->beforeOrEqual(
+                    today()->addDays(Config::integer('agent-integration.credentials.max_expiry_days') - 1),
+                ),
+            ],
+            'validity_days' => [
+                'nullable',
+                'integer',
+                Rule::prohibitedIf(fn (): bool => $this->filled('expires_at')),
+                Rule::in(self::VALIDITY_DAY_PRESETS),
             ],
         ];
     }

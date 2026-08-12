@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3';
 import { KeyRoundIcon, PlusIcon } from '@lucide/vue';
-import { shallowRef } from 'vue';
+import { computed, ref, shallowRef, watch } from 'vue';
 import AgentCredentialController from '@/actions/App/AgentIntegration/Http/Controllers/AgentCredentialController';
+import AppDatePicker from '@/components/date/AppDatePicker.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -22,19 +23,61 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import type { AgentCredentialAbility } from '@/types';
 
 const { passwordConfirmed } = defineProps<{ passwordConfirmed: boolean }>();
 const open = shallowRef(false);
+const validityPreset = ref('90');
 const form = useForm<{
     name: string;
     abilities: AgentCredentialAbility[];
+    validity_days: number | null;
     expires_at: string;
 }>({
     name: '',
     abilities: [],
+    validity_days: 90,
     expires_at: '',
+});
+
+const validityOptions = [
+    { value: '1', label: '1 den' },
+    { value: '7', label: '7 dní' },
+    { value: '30', label: '30 dní' },
+    { value: '90', label: '90 dní' },
+    { value: '180', label: '180 dní' },
+    { value: '365', label: '1 rok' },
+    { value: 'custom', label: 'Vlastní datum' },
+] as const;
+
+const dateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+};
+
+const minimumCustomDate = computed(() => dateString(new Date()));
+const maximumCustomDate = computed(() => {
+    const maximum = new Date();
+    maximum.setDate(maximum.getDate() + 364);
+
+    return dateString(maximum);
+});
+
+watch(validityPreset, (preset) => {
+    form.clearErrors('validity_days', 'expires_at');
+    form.expires_at = '';
+    form.validity_days = preset === 'custom' ? null : Number(preset);
 });
 
 const abilityOptions: Array<{
@@ -74,6 +117,7 @@ const submit = (): void => {
         onSuccess: () => {
             open.value = false;
             form.reset();
+            validityPreset.value = '90';
         },
     });
 };
@@ -159,21 +203,63 @@ const submit = (): void => {
                         <FieldError :errors="[form.errors.abilities]" />
                     </fieldset>
 
-                    <Field :data-invalid="Boolean(form.errors.expires_at)">
-                        <FieldLabel for="agent-credential-expiry"
-                            >Platnost do</FieldLabel
+                    <Field
+                        :data-invalid="
+                            Boolean(
+                                form.errors.validity_days ||
+                                    form.errors.expires_at,
+                            )
+                        "
+                    >
+                        <FieldLabel for="agent-credential-validity"
+                            >Délka platnosti</FieldLabel
                         >
-                        <Input
-                            id="agent-credential-expiry"
-                            v-model="form.expires_at"
-                            type="date"
-                            :aria-invalid="Boolean(form.errors.expires_at)"
-                        />
+                        <Select v-model="validityPreset">
+                            <SelectTrigger
+                                id="agent-credential-validity"
+                                class="w-full"
+                                :aria-invalid="
+                                    Boolean(form.errors.validity_days)
+                                "
+                            >
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem
+                                    v-for="option in validityOptions"
+                                    :key="option.value"
+                                    :value="option.value"
+                                >
+                                    {{ option.label }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <template v-if="validityPreset === 'custom'">
+                            <FieldLabel for="agent-credential-expiry"
+                                >Platný do data včetně</FieldLabel
+                            >
+                            <AppDatePicker
+                                id="agent-credential-expiry"
+                                v-model="form.expires_at"
+                                name="expires_at"
+                                :min="minimumCustomDate"
+                                :max="maximumCustomDate"
+                                required
+                                :aria-invalid="Boolean(form.errors.expires_at)"
+                                :show-today="true"
+                                :show-clear="false"
+                            />
+                        </template>
                         <FieldDescription>
-                            Bez data přístup vyprší za 90 dní. Nejdelší povolená
-                            platnost je jeden rok.
+                            Přednastavená délka se počítá přesně od vytvoření.
+                            Vlastní datum platí až do konce vybraného dne.
                         </FieldDescription>
-                        <FieldError :errors="[form.errors.expires_at]" />
+                        <FieldError
+                            :errors="[
+                                form.errors.validity_days,
+                                form.errors.expires_at,
+                            ]"
+                        />
                     </Field>
                 </FieldGroup>
 
