@@ -154,9 +154,9 @@ final class AgentMediaUploadTest extends TestCase
         $section = StoreSection::factory()->for($family)->create();
         $route = '/api/v1/media/stores/' . $store->id;
         $this->withToken($secret)
-            ->post($route, ['image' => UploadedFile::fake()->create('logo.webp', 10, 'image/webp')])
+            ->post($route, ['image' => UploadedFile::fake()->create('logo.gif', 10, 'image/gif')])
             ->assertUnprocessable()
-            ->assertJsonPath('error.details.fields.image.0', 'The image must have a JPG, JPEG, or PNG extension.');
+            ->assertJsonPath('error.details.fields.image.0', 'The image must have a JPG, JPEG, PNG, or WEBP extension.');
         $this->withToken($secret)
             ->post($route, ['image' => UploadedFile::fake()->image('logo.jpg')->size(5121)])
             ->assertUnprocessable()
