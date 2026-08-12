@@ -22,8 +22,8 @@ These findings can be implemented before the design interview.
 - [x] **Finding 6 — optional package piece count.** The ingredient create/edit form now labels package piece count as optional and explains that metric-only packages should leave it blank. `piece_count` remains nullable; no artificial value of one is persisted.
 - [x] **Finding 7 — concise decimal input values.** Editable Ingredient package/nutrition values, Recipe serving/ingredient/nutrition values, and Calendar Serving Counts now trim unnecessary trailing zeroes while preserving the stored precision and up to six decimal places.
 - [x] **Finding 13 — section colour ownership.** Store Section colour editing has been removed from ingredient create/edit. Colour and icon management remain on Store Section management only.
-- [ ] **Finding 4 — richer placement options.** Show a small Store logo in Store options and Store Section colour/icon in Section options. This depends on exposing the existing protected media/icon metadata in the ingredient-management projection but not on relation-search architecture.
-- [ ] **Finding 5 — ingredient image drop target.** Make the entire ingredient image area, including an existing preview, clickable and drag-and-drop capable. Accept one JPEG, PNG, or static WebP source while retaining the existing stored image until the explicit upload succeeds. Ingredient creation commits first, keeps the form open, and then performs the independent retryable upload.
+- [x] **Finding 4 — richer placement options.** Show a small Store logo in Store options and Store Section colour/icon in Section options. This depends on exposing the existing protected media/icon metadata in the ingredient-management projection but not on relation-search architecture.
+- [x] **Finding 5 — ingredient image drop target.** Make the entire ingredient image area, including an existing preview, clickable and drag-and-drop capable. Accept one JPEG, PNG, or static WebP source while retaining the existing stored image until the explicit upload succeeds. Ingredient creation commits first, keeps the form open, and then performs the independent retryable upload.
 
 ### A2. Navigation
 
@@ -31,33 +31,33 @@ These findings can be implemented before the design interview.
 
 ### A3. Agent credential validity
 
-- [ ] **Finding 1a — credential validity presets.** Replace the ordinary credential-expiry date input with a select containing useful durations (from one day through one year) plus **Vlastní datum**. Show a shadcn-vue date picker only for the custom choice. Preserve server-side expiry validation and timezone semantics.
+- [x] **Finding 1a — credential validity presets.** Replace the ordinary credential-expiry date input with a select containing useful durations (from one day through one year) plus **Vlastní datum**. Show a shadcn-vue date picker only for the custom choice. Preserve server-side expiry validation and timezone semantics.
 
 ## Workstream B: compact catalogue views
 
 These are visually substantial but bounded once detail-surface behavior is agreed.
 
-- [ ] **Finding 11 — compact Recipe catalogue.** Use narrower cards with a taller image ratio; place Tags at the top; keep name, nutrition, and icon actions in the summary; move Ingredients and Steps into an accessible detail Dialog or Collapsible surface.
-- [ ] **Finding 12 — compact Ingredient catalogue.** Put the optional image before the name without reserving an empty column; omit a one-piece package label; move nutrition and full Alternatives management to detail/edit surfaces; show Alternative count in the list with a HoverCard/Popover summary.
+- [x] **Finding 11 — compact Recipe catalogue.** Use narrower cards with a taller image ratio; place Tags at the top; keep name, nutrition, and icon actions in the summary; move Ingredients and Steps into an accessible detail Dialog or Collapsible surface.
+- [x] **Finding 12 — compact Ingredient catalogue.** Put the optional image before the name without reserving an empty column; omit a one-piece package label; move nutrition and full Alternatives management to detail/edit surfaces; show Alternative count in the list with a HoverCard/Popover summary.
 
 ## Workstream C: shopping-list redesign
 
 Findings 2 and 3 form one component redesign and should be delivered together.
 
-- [ ] **Finding 2 — compact Shopping List lines.** Replace large line cards with collapsible rows whose summary contains Ingredient name, whole package count, and Required Quantity; keep purchased/surplus/contribution/Alternative details inside the expansion.
-- [ ] **Finding 3 — Store and Section hierarchy.** Render Stores as the primary cards with optional Store logos. Nest Store Sections with their icon and colour; use the Section colour for a non-colour-only border/accent treatment on its item group.
+- [x] **Finding 2 — compact Shopping List lines.** Replace large line cards with collapsible rows whose summary contains Ingredient name, whole package count, and Required Quantity; keep purchased/surplus/contribution/Alternative details inside the expansion.
+- [x] **Finding 3 — Store and Section hierarchy.** Render Stores as the primary cards with optional Store logos. Nest Store Sections with their icon and colour; use the Section colour for a non-colour-only border/accent treatment on its item group.
 
 ## Workstream D: calendar planning and generation
 
 These findings share calendar state, selection, and collision semantics and require the grill before implementation.
 
-- [ ] **Finding 8 — inline Calendar Entry creation.** Add a plus action to each day/Meal Label group. Open a compact Recipe search, Serving Count, and consecutive-day count form seeded from that day and label. Decide duplicate/collision behavior for the multi-day operation and whether it remains one request/transaction.
-- [ ] **Finding 9 — generation action and range Dialog.** Move generation to a top-right action opening a Dialog with a calendar-style range picker. Reconcile the requested contiguous range with the current `Calendar Selection` domain concept, which explicitly allows arbitrary non-contiguous dates.
-- [ ] **Finding 10 — compact Calendar Entry summaries.** Remove the repeated nutrition/override heading; show compact Recipe name, Serving Count, small nutrition overview, and icon-only actions positioned in the corner with accessible names and tooltips.
+- [x] **Finding 8 — inline Calendar Entry creation.** Add a plus action to each day/Meal Label group. Open a compact Recipe search, Serving Count, and consecutive-day count form seeded from that day and label. Decide duplicate/collision behavior for the multi-day operation and whether it remains one request/transaction.
+- [x] **Finding 9 — generation action and range Dialog.** Move generation to a top-right action opening a Dialog with a calendar-style range picker. Reconcile the requested contiguous range with the current `Calendar Selection` domain concept, which explicitly allows arbitrary non-contiguous dates.
+- [x] **Finding 10 — compact Calendar Entry summaries.** Remove the repeated nutrition/override heading; show compact Recipe name, Serving Count, small nutrition overview, and icon-only actions positioned in the corner with accessible names and tooltips.
 
 ## Workstream E: dates and shared relation infrastructure
 
-- [ ] **Finding 1b — general date pickers.** Inventory all remaining native date inputs and use a shadcn-vue Calendar/Popover date picker where calendar context improves the interaction. Keep native input only where it is demonstrably better for the field.
+- [x] **Finding 1b — general date pickers.** Inventory all remaining native date inputs and use a shadcn-vue Calendar/Popover date picker where calendar context improves the interaction. Keep native input only where it is demonstrably better for the field.
 - [ ] **Finding 15 — deferred layered relation creation.** Record only for now: relation selectors should eventually offer full entity creation in a lazy-loaded layered modal without losing the current form state.
 - [ ] **Finding 16 — deferred lazy relation search.** Record as the intended foundation for Finding 15: dedicated reusable Family-scoped search endpoints, configurable initial result size (about 20), and fresh entities available without a page reload. Where current work creates a new searchable relation selector, avoid designs that would block this migration.
 
@@ -113,3 +113,8 @@ Each completed slice will record its focused tests, Docker scenario, browser sce
 | Findings 6, 7, and 13 | 24 Ingredient/Recipe/Calendar/decimal Vitest assertions; focused ESLint | Disposable SQLite in rebuilt Compose stack; created a metric-only Ingredient; edit showed `1100`, an empty optional piece count, Czech optional guidance, and no colour editor           | `535c83ec` implementation; `bdec179a` tests                                              |
 | Finding 14            | 12 navigation/Agent-page Vitest assertions; focused ESLint              | Rebuilt Compose stack; User menu hid Agent links with no Current Family, showed both after creating a disposable Family, and primary navigation omitted both; no console warnings/errors | `535c83ec` implementation; `bdec179a` tests                                              |
 | Full frontend gate    | `pnpm eslint`, `pnpm prettier`, `pnpm tsc`, 94 Vitest assertions        | Same rebuilt Compose stack and browser session; browser console remained clean                                                                                                           | `535c83ec` `:lipstick: [ui] improve forms and profile navigation`; `bdec179a` test suite |
+| Dates and media       | 103 Vitest assertions; 63 PHPUnit tests / 939 assertions; ESLint, Prettier, TypeScript, Pint, CS, PHPStan | Compose app accepted the shared calendar picker and exposed full click/drop image targets; static WebP safety covered programmatically | `b5ed46c0`, `12485b9c`, `97e023ea`, `9cf01a02` |
+| Compact catalogues    | Recipe, Ingredient, and media Vitest suites                            | Docker/Inertia catalogue pages built successfully; summary actions remain independent of modal triggers                                                                                  | `add065b8` |
+| Shopping list         | Simple Plan and saved-history Vitest suites; Simple Plan PHPUnit        | Store cards, neutral groups, coloured Section accents, and collapsed item summaries built in the Compose environment                                                                     | `9b1f847f` |
+| Ingredient creation  | Ingredient/media Vitest; Ingredient Management/Placement PHPUnit       | Create-time image step remains open after the independent Ingredient save and supports retry                                                                                              | `d08ddc0e` |
+| Calendar planning     | Calendar Vitest; 15 PHPUnit tests / 253 assertions                      | Compose browser exposed 42 inline plus actions, the 1–31 day repeat form, compact entries, and the top-right generation Dialog; accessibility warning fixed after browser inspection       | `339822b6` |
