@@ -5,20 +5,13 @@ declare(strict_types=1);
 use App\AgentIntegration\Catalog\CatalogResourceType;
 use App\AgentIntegration\Http\Controllers\AgentChangeSetController;
 use App\AgentIntegration\Http\Controllers\AgentCredentialRestrictionController;
-use App\AgentIntegration\Http\Controllers\AgentMediaController;
 use App\AgentIntegration\Http\Controllers\CatalogController;
-use App\AgentIntegration\Media\AgentMediaResourceType;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:content:read'])->group(function (): void {
     Route::post('credential/restrictions', [AgentCredentialRestrictionController::class, 'store'])
         ->middleware('throttle:agent-credential-restriction')
         ->name('api.v1.credential.restrictions.store');
-    Route::post('media/{resourceType}/{id}', [AgentMediaController::class, 'store'])
-        ->whereIn('resourceType', AgentMediaResourceType::values())
-        ->whereNumber('id')
-        ->middleware(['abilities:cookbook:write', 'throttle:agent-media-upload'])
-        ->name('api.v1.media.store');
     Route::get('change-sets', [AgentChangeSetController::class, 'index'])
         ->middleware('throttle:agent-catalog')
         ->name('api.v1.change-sets.index');

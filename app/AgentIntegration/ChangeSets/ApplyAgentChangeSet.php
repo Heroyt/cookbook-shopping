@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\AgentIntegration\ChangeSets;
 
-use App\AgentIntegration\Actions\ResolveLiveAgentCredential;
 use App\AgentIntegration\Exceptions\AgentApiException;
-use App\AgentIntegration\Exceptions\InvalidAgentCredentialAuthority;
 use App\AgentIntegration\Models\AgentChangeSet;
 use App\AgentIntegration\Models\AgentCredential;
 use App\FamilyAccess\AuthorizedFamilyContext;
+use App\FamilyAccess\Models\FamilyMembership;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
@@ -19,7 +19,6 @@ final readonly class ApplyAgentChangeSet
         private CanonicalAgentDocument $canonicalDocument,
         private AgentOperationPreviewer $operationPreviewer,
         private AgentOperationApplier $operationApplier,
-        private ResolveLiveAgentCredential $liveCredential,
     ) {}
 
     /** @param list<string> $warningAcknowledgements */
@@ -32,15 +31,7 @@ final readonly class ApplyAgentChangeSet
     ): AgentChangeSet {
         try {
             return DB::transaction(function () use ($context, $credential, $changeSetId, $digest, $warningAcknowledgements): AgentChangeSet {
-                try {
-                    $liveCredential = $this->liveCredential->handle($context, $credential);
-                } catch (InvalidAgentCredentialAuthority) {
-                    throw new AgentApiException(
-                        'credential_invalidated',
-                        'The Agent Credential no longer has live authority for this Family.',
-                        401,
-                    );
-                }
+                $liveCredential = $this->liveCredential($context, $credential);
                 $changeSet = AgentChangeSet::query()
                     ->whereBelongsTo($context->family)
                     ->whereBelongsTo($liveCredential, 'credential')
@@ -103,6 +94,36 @@ final readonly class ApplyAgentChangeSet
 
             throw $exception;
         }
+    }
+
+    private function liveCredential(AuthorizedFamilyContext $context, AgentCredential $credential): AgentCredential
+    {
+        $liveCredential = AgentCredential::query()
+            ->whereKey($credential->id)
+            ->whereBelongsTo($context->family)
+            ->lockForUpdate()
+            ->first();
+        $membershipExists = FamilyMembership::query()
+            ->whereBelongsTo($context->family)
+            ->whereBelongsTo($context->user)
+            ->lockForUpdate()
+            ->exists();
+
+        if ( ! $liveCredential instanceof AgentCredential
+            || $liveCredential->revoked_at !== null
+            || $liveCredential->expires_at === null
+            || $liveCredential->expires_at->isPast()
+            || $liveCredential->tokenable_type !== User::class
+            || $liveCredential->tokenable_id !== $context->user->id
+            || ! $membershipExists) {
+            throw new AgentApiException(
+                'credential_invalidated',
+                'The Agent Credential no longer has live authority for this Family.',
+                401,
+            );
+        }
+
+        return $liveCredential;
     }
 
     private function assertDigest(AgentChangeSet $changeSet, string $digest): void

@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\AgentIntegration\OpenApi;
 
 use App\AgentIntegration\Catalog\CatalogResourceType;
-use App\AgentIntegration\Media\AgentMediaResourceType;
 use App\AgentIntegration\OpenApi\Types\ContractObjectType;
 use App\AgentIntegration\OpenApi\Types\OneOfType;
 use Dedoc\Scramble\Contracts\DocumentTransformer;
 use Dedoc\Scramble\OpenApiContext;
 use Dedoc\Scramble\Support\Generator\OpenApi;
-use Dedoc\Scramble\Support\Generator\Parameter;
 use Dedoc\Scramble\Support\Generator\Reference;
 use Dedoc\Scramble\Support\Generator\RequestBodyObject;
 use Dedoc\Scramble\Support\Generator\Response;
@@ -47,11 +45,6 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
             'AgentCredentialRestrictionDocument',
             $credentialRestrictionDocument,
         );
-        $mediaUploadRequest = $this->addSchema(
-            $document,
-            'AgentMediaUploadDocument',
-            $this->mediaUploadRequestSchema(),
-        );
         $error = $this->addSchema($document, 'AgentApiError', $this->errorSchema());
         $catalogResource = $this->addSchema($document, 'CatalogResource', $this->catalogResourceSchema());
         $changeSet = $this->addSchema($document, 'AgentChangeSet', $this->changeSetSchema());
@@ -63,11 +56,6 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
             $document,
             'AgentCredentialRestrictionDetail',
             $this->dataEnvelope($this->credentialRestrictionResponseSchema()),
-        );
-        $mediaUploadDetail = $this->addSchema(
-            $document,
-            'AgentMediaUploadDetail',
-            $this->dataEnvelope($this->mediaUploadResponseSchema()),
         );
 
         foreach ($document->paths as $path) {
@@ -102,30 +90,6 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
                     $operationBuilder->addRequestBodyObject($this->requestBody($credentialRestrictionRequest));
                     $operationBuilder->responses = [
                         $this->response(200, 'Current Agent Credential restricted or returned as a monotonic no-op.', $credentialRestrictionDetail),
-                    ];
-                } elseif ($pathName === 'media/{resourceType}/{id}' && $method === 'post') {
-                    foreach ($operationBuilder->parameters as $parameter) {
-                        if ($parameter instanceof Parameter && $parameter->name === 'resourceType') {
-                            $resourceTypeSchema = Schema::fromType(
-                                $this->string(enum: AgentMediaResourceType::values()),
-                            );
-                            if ( ! $resourceTypeSchema instanceof Schema) {
-                                throw new LogicException('Scramble did not create the media resource type parameter schema.');
-                            }
-                            $parameter->setSchema($resourceTypeSchema);
-                        }
-                    }
-                    $operationBuilder->summary('Upload or replace one Family resource image');
-                    $operationBuilder->description(
-                        'Requires cookbook:write. Send one JPEG or PNG image of at most 5 MiB as multipart/form-data field image. Source dimensions must not exceed 8192 pixels per side or 25,000,000 total pixels. '
-                        . 'Supported resource types are stores, ingredients, and recipes. Store Sections use the predefined icon catalog and do not accept image uploads. '
-                        . 'The credential fixes the Family scope; no Family identifier is accepted. '
-                        . 'A successful request immediately replaces the entity’s existing image through the same normalization, private storage, and archive rules used by the web interface. '
-                        . 'This immediate binary upload is not an Agent Change Set operation.',
-                    );
-                    $operationBuilder->addRequestBodyObject($this->requestBody($mediaUploadRequest, 'multipart/form-data'));
-                    $operationBuilder->responses = [
-                        $this->response(200, 'Entity image uploaded and normalized.', $mediaUploadDetail),
                     ];
                 }
 
@@ -188,26 +152,6 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         $schema->addProperty('revoked_at', $this->string(nullable: true, format: 'date-time'));
         $schema->addProperty('changed', new BooleanType());
         $schema->setRequired(['credential_id', 'action', 'status', 'expires_at', 'revoked_at', 'changed']);
-
-        return $schema;
-    }
-
-    private function mediaUploadRequestSchema(): ObjectType
-    {
-        $schema = new ContractObjectType();
-        $schema->addProperty('image', $this->string(format: 'binary'));
-        $schema->setRequired(['image']);
-
-        return $schema;
-    }
-
-    private function mediaUploadResponseSchema(): ObjectType
-    {
-        $schema = new ContractObjectType();
-        $schema->addProperty('resource_type', $this->string(enum: AgentMediaResourceType::values()));
-        $schema->addProperty('id', new IntegerType());
-        $schema->addProperty('media_type', $this->string(enum: AgentMediaResourceType::mediaTypeValues()));
-        $schema->setRequired(['resource_type', 'id', 'media_type']);
 
         return $schema;
     }
@@ -406,10 +350,10 @@ final readonly class AgentOpenApiDocument implements DocumentTransformer
         return $document->components->addSchema($name, $schema);
     }
 
-    private function requestBody(Reference $schema, string $contentType = 'application/json'): RequestBodyObject
+    private function requestBody(Reference $schema): RequestBodyObject
     {
         $requestBody = new RequestBodyObject();
-        $requestBody->setContent($contentType, $schema);
+        $requestBody->setContent('application/json', $schema);
         $requestBody->required();
 
         return $requestBody;

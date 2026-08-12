@@ -175,15 +175,6 @@ final class EntityMediaTest extends TestCase
             ])
             ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
 
-        $this->actingAs($user)
-            ->post($route, [
-                'image' => UploadedFile::fake()->createWithContent(
-                    'compressed-bomb.png',
-                    $this->oversizedPngHeader(8192, 8192),
-                ),
-            ])
-            ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
-
         $completeJpeg = UploadedFile::fake()->image('complete.jpg')->getContent();
 
         $this->actingAs($user)
@@ -194,34 +185,6 @@ final class EntityMediaTest extends TestCase
                 ),
             ])
             ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
-
-        Storage::disk('media')->assertDirectoryEmpty('family-media');
-    }
-
-    public function test_upload_enforces_each_configured_decoded_dimension_limit_in_czech(): void
-    {
-        $user = User::factory()->create();
-        $family = $this->createFamilyWithMembers('Domov', $user);
-        $this->selectCurrentFamily($user, $family);
-        $store = Store::factory()->for($family)->create();
-        $route = route('entity-media.store', ['mediaType' => 'store-logo', 'entity' => $store]);
-
-        foreach ([
-            ['max_width', 2, 3, 2],
-            ['max_height', 2, 2, 3],
-            ['max_pixels', 8, 3, 3],
-        ] as [$limit, $maximum, $width, $height]) {
-            config()->set('media.max_width', 10);
-            config()->set('media.max_height', 10);
-            config()->set('media.max_pixels', 100);
-            config()->set("media.{$limit}", $maximum);
-
-            $this->actingAs($user)
-                ->post($route, [
-                    'image' => UploadedFile::fake()->image("{$limit}.png", $width, $height),
-                ])
-                ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
-        }
 
         Storage::disk('media')->assertDirectoryEmpty('family-media');
     }
@@ -457,23 +420,6 @@ final class EntityMediaTest extends TestCase
         $this->assertIsString($bytes);
 
         return $bytes;
-    }
-
-    private function oversizedPngHeader(int $width, int $height): string
-    {
-        $ihdr = pack('NNCCCCC', $width, $height, 8, 6, 0, 0, 0);
-
-        return "\x89PNG\r\n\x1A\n"
-            . $this->pngChunk('IHDR', $ihdr)
-            . $this->pngChunk('IEND', '');
-    }
-
-    private function pngChunk(string $type, string $data): string
-    {
-        $crc = hex2bin(hash('crc32b', $type . $data));
-        $this->assertIsString($crc);
-
-        return pack('N', strlen($data)) . $type . $data . $crc;
     }
 
     private function createFamilyWithMembers(string $name, User ...$users): Family

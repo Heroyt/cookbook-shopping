@@ -18,7 +18,7 @@ No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token auth
 > - Recipe and its Ingredient lines, Steps, Tags, nutrition override, and source metadata; and
 > - Calendar Entry.
 >
-> Nested package quantities, nutrition, alternatives, Store section order, Recipe Ingredients, Recipe Steps, and Recipe Tags are parts of their owning API aggregate. Family Access, Users, memberships, general Agent Credential management, Simple Plans, Shopping Generation, Saved Shopping Lists, and general media management are outside v1. The narrow exceptions are authenticated self-restriction and one immediate entity-image upload command for the three Cookbook resource types whose web UI accepts uploads. An Agent API request can never create or select a Family.
+> Nested package quantities, nutrition, alternatives, Store section order, Recipe Ingredients, Recipe Steps, and Recipe Tags are parts of their owning API aggregate. Family Access, Users, memberships, general Agent Credential management, Simple Plans, Shopping Generation, Saved Shopping Lists, and media uploads are outside v1. The sole credential exception is an authenticated self-restriction command that can only shorten or revoke the calling credential. An Agent API request can never create or select a Family.
 
 ## Authorized Family context
 
@@ -62,21 +62,11 @@ No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token auth
 >
 > The household-sized catalog is deliberately unpaginated. It may omit presentation-only expansion, but it must contain the identifiers, normalized identity, relationships, canonical units, lifecycle status, and ordinary `updated_at` values required to construct a Change Set. Use integer API identifiers for existing records. Do not expose storage paths or credential secrets.
 
-## Entity image upload
-
-> **Planned**
->
-> `POST /api/v1/media/{resource_type}/{id}` accepts one `image` field as `multipart/form-data` for `stores`, `ingredients`, or `recipes`. It requires `cookbook:write`, derives Family scope exclusively from the live Agent Credential, and accepts no Family identifier. The route maps those resource types to the existing Store logo, Ingredient photo, and Recipe cover media types. Store Sections use the predefined icon catalogue exposed through their ordinary structured mutation contract and do not accept an image upload.
->
-> The upload rechecks live credential authority, issuer membership, fixed Family scope, and `cookbook:write` inside the transaction, then delegates to the same Cookbook media action as the web interface. It therefore accepts only JPEG or PNG files up to 5 MiB and within the configured pre-decode safety bounds of 8192 pixels per side and 25,000,000 total pixels, safely decodes and normalizes them into the configured private WebP variants, atomically replaces the one existing entity image, rejects archived Ingredients and Recipes, serializes replacement writers through the entity lock, and preserves the rollback behavior of the current storage implementation. Other-Family and unsupported entities remain unavailable.
->
-> Binary upload is an intentional immediate mutation outside the JSON Agent Change Set protocol: Change Sets cannot carry files, previewing file bytes would persist temporary untrusted media, and the entity supports only one replaceable image. Repeating a successful upload replaces the previous image. v1 does not add remote URL fetching, source extraction, image reads, image deletion, galleries, generic attachments, or media for resource types that the web interface does not already support.
-
 ## Agent Change Set protocol
 
 > **Planned**
 >
-> Except for the separately documented immediate binary media upload and monotonic credential self-restriction commands, every supported domain mutation enters through one two-step protocol:
+> All mutation enters through one two-step protocol:
 >
 > 1. `POST /api/v1/change-sets` validates an immutable request and returns its preview, effects, stable warnings, and digest.
 > 2. `POST /api/v1/change-sets/{id}/apply` atomically applies that exact digest after the caller acknowledges every warning code.
@@ -129,13 +119,13 @@ No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token auth
 >
 > Return stable machine-readable error codes with an English message, JSON path, operation reference where applicable, and structured details. Distinguish authentication, ability, Family-scope, validation, name-conflict, stale-preview, digest, acknowledgement, idempotency, expiry, payload-limit, and rate-limit failures. Include retry guidance only where retrying can succeed.
 >
-> Process preview and apply synchronously. Start with configurable limits of 250 operations and 2 MiB of JSON per Change Set. Apply per-credential minute limits of 120 Catalog reads, 20 previews, 10 apply attempts, 10 media uploads, and 10 self-restriction attempts per action. Return ordinary rate-limit metadata so clients can back off. These limits protect accidental agent loops without introducing queues into the personal deployment profile.
+> Process preview and apply synchronously. Start with configurable limits of 250 operations and 2 MiB of JSON per Change Set. Apply per-credential minute limits of 120 Catalog reads, 20 previews, 10 apply attempts, and 10 self-restriction attempts per action. Return ordinary rate-limit metadata so clients can back off. These limits protect accidental agent loops without introducing queues into the personal deployment profile.
 
 ## OpenAPI and versioning
 
 > **Planned**
 >
-> Add `dedoc/scramble` and generate an OpenAPI 3.1 contract from versioned Laravel routes, Form Requests, response resources, and `auth:sanctum` middleware. Treat executable validation and typed responses as the contract source; add explicit Scramble schema customization where inference is incomplete, including the media route's closed multipart binary request and response. Do not maintain a second handwritten schema.
+> Add `dedoc/scramble` and generate an OpenAPI 3.1 contract from versioned Laravel routes, Form Requests, response resources, and `auth:sanctum` middleware. Treat executable validation and typed responses as the contract source; add explicit Scramble schema customization where inference is incomplete. Do not maintain a second handwritten schema.
 >
 > Publish the documentation UI at `/docs/agent-api/v1` and JSON contract at `/docs/agent-api/v1/openapi.json`. Both documentation endpoints are public, while all data endpoints require an Agent Credential. Disable interactive requests in production so long-lived bearer secrets are not pasted into the public renderer. Cache the runtime contract in production and rebuild that cache during deployment. Do not export or commit a generated OpenAPI artifact.
 >

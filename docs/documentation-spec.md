@@ -31,7 +31,7 @@ Do not use the currently connected Laravel Boost database as evidence because it
 - Laravel Boost is connected to an unrelated livestock-management database. Repository migrations and code remain authoritative until that connection is corrected.
 - On 2026-08-10 the User selected operator-only Artisan provisioning with public registration disabled, and persisted nullable Current Family selection validated against membership.
 - On 2026-08-10 the User selected application-generated normalized name keys with database-backed Family-scoped uniqueness and approved documentation version 0.3.0.
-- On 2026-08-11 the User approved JPEG and PNG uploads up to 5 MB with decode checks, no initial pixel-dimension limit, configurable normalized WebP variants, deterministic entity filenames, replacement, and entity-deletion cleanup. DOC-0055 adds pre-decode dimension and total-pixel safety limits for both UI and Agent callers after security review demonstrated that encoded byte limits alone do not bound GD memory allocation.
+- On 2026-08-11 the User approved JPEG and PNG uploads up to 5 MB with decode checks, no pixel-dimension limit, configurable normalized WebP variants, deterministic entity filenames, replacement, and entity-deletion cleanup.
 - On 2026-08-11 the User approved documentation version 0.4.0 and requested validation and publication.
 
 ### Intended-versus-implemented mismatches

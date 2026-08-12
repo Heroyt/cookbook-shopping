@@ -53,14 +53,11 @@ final class AgentOpenApiTest extends TestCase
             '/change-sets/{changeSet}',
             '/change-sets/{changeSet}/apply',
             '/credential/restrictions',
-            '/media/{resourceType}/{id}',
         ], $paths);
         $this->assertArrayHasKey('AgentApiError', $document['components']['schemas']);
         $this->assertArrayHasKey('AgentChangeSetDocument', $document['components']['schemas']);
         $this->assertArrayHasKey('AgentCredentialRestrictionDocument', $document['components']['schemas']);
         $this->assertArrayHasKey('AgentCredentialRestrictionDetail', $document['components']['schemas']);
-        $this->assertArrayHasKey('AgentMediaUploadDocument', $document['components']['schemas']);
-        $this->assertArrayHasKey('AgentMediaUploadDetail', $document['components']['schemas']);
 
         $schemas = $document['components']['schemas'];
         $this->assertSame('object', $schemas['AgentApiError']['properties']['error']['properties']['details']['type']);
@@ -194,34 +191,6 @@ final class AgentOpenApiTest extends TestCase
             $restrictionOperation['responses']['200']['content']['application/json']['schema']['$ref'],
         );
 
-        $mediaDocument = $schemas['AgentMediaUploadDocument'];
-        $this->assertSame(['image'], $mediaDocument['required']);
-        $this->assertFalse($mediaDocument['additionalProperties']);
-        $this->assertSame('string', $mediaDocument['properties']['image']['type']);
-        $this->assertSame('binary', $mediaDocument['properties']['image']['format']);
-
-        $mediaOperation = $document['paths']['/media/{resourceType}/{id}']['post'];
-        $this->assertStringContainsString('JPEG or PNG', $mediaOperation['description']);
-        $this->assertStringContainsString('5 MiB', $mediaOperation['description']);
-        $this->assertStringContainsString('immediately replaces', $mediaOperation['description']);
-        $this->assertStringContainsString('cookbook:write', $mediaOperation['description']);
-        $this->assertSame(
-            '#/components/schemas/AgentMediaUploadDocument',
-            $mediaOperation['requestBody']['content']['multipart/form-data']['schema']['$ref'],
-        );
-        $this->assertSame(
-            '#/components/schemas/AgentMediaUploadDetail',
-            $mediaOperation['responses']['200']['content']['application/json']['schema']['$ref'],
-        );
-        $resourceTypeParameter = collect($mediaOperation['parameters'])->firstWhere('name', 'resourceType');
-        $this->assertSame(
-            ['stores', 'ingredients', 'recipes'],
-            $resourceTypeParameter['schema']['enum'],
-        );
-        $mediaResponse = $schemas['AgentMediaUploadDetail']['properties']['data']['properties'];
-        $this->assertSame(['stores', 'ingredients', 'recipes'], $mediaResponse['resource_type']['enum']);
-        $this->assertSame(['store-logo', 'ingredient-photo', 'recipe-cover'], $mediaResponse['media_type']['enum']);
-
         $this->get('/docs/api')->assertNotFound();
         $this->get('/docs/api.json')->assertNotFound();
     }
@@ -231,17 +200,13 @@ final class AgentOpenApiTest extends TestCase
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn (Route $route): bool => str_starts_with($route->uri(), 'api/v1/'));
 
-        $this->assertCount(8, $routes);
+        $this->assertCount(7, $routes);
         foreach ($routes as $route) {
             $middleware = $route->gatherMiddleware();
 
             $this->assertContains('auth:sanctum', $middleware, $route->uri());
             $this->assertContains('abilities:content:read', $middleware, $route->uri());
         }
-
-        $mediaRoute = $routes->firstWhere('uri', 'api/v1/media/{resourceType}/{id}');
-        $this->assertNotNull($mediaRoute);
-        $this->assertContains('abilities:cookbook:write', $mediaRoute->gatherMiddleware());
     }
 
     public function test_every_published_operation_example_is_accepted_by_the_preview_runtime(): void

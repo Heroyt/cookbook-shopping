@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Actions;
 
-use App\Cookbook\Exceptions\EntityMediaRejected;
 use App\Cookbook\Exceptions\InvalidEntityMedia;
 use App\Cookbook\Models\Ingredient;
 use App\Cookbook\Models\Recipe;
 use App\Cookbook\Models\Store;
 use App\Cookbook\Models\StoreSection;
 use App\Cookbook\Services\EntityMediaStorage;
-use App\Cookbook\Values\EntityMediaFailure;
 use App\Cookbook\Values\EntityMediaType;
 use App\FamilyAccess\AuthorizedFamilyContext;
 use App\FamilyAccess\Models\Family;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -31,15 +30,21 @@ final readonly class ManageEntityMedia
         $entity = $this->entity($context->family, $type, $entityId, true);
 
         if (($entity instanceof Ingredient || $entity instanceof Recipe) && $entity->archived_at !== null) {
-            throw new EntityMediaRejected(EntityMediaFailure::ArchivedEntity);
+            throw ValidationException::withMessages([
+                'image' => __('Restore the entity before changing its image.'),
+            ]);
         }
 
         try {
             $this->storage->store($context->family, $type, $entityId, $upload);
         } catch (InvalidEntityMedia) {
-            throw new EntityMediaRejected(EntityMediaFailure::UnsafeImage);
+            throw ValidationException::withMessages([
+                'image' => __('The image could not be decoded safely.'),
+            ]);
         } catch (RuntimeException) {
-            throw new EntityMediaRejected(EntityMediaFailure::StorageFailed);
+            throw ValidationException::withMessages([
+                'image' => __('The image could not be saved. Please try again.'),
+            ]);
         }
     }
 

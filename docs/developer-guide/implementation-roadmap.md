@@ -87,7 +87,7 @@ The verified Slice 2 tracer now provides:
 - database-backed placement, Alternative-pair, and Nutrition Profile invariants plus lifecycle cleanup for Store, association, and reusable Section removal; and
 - Czech shadcn-vue/Inertia controls for placement, nutrition, alternatives, filtering, archive confirmation, restoration, and restore-before-edit behavior.
 
-- private Store logo, Store Section image, Ingredient photo, and Recipe cover uploads accept approved JPEG/PNG input up to 5 MB and configured pre-decode dimension/pixel limits, decode and normalize to configured deterministic WebP variants, authorize every read, serialize replacement writers, restore prior variants on failure, retain Recipe/Ingredient archive media, and remove affected files with rollback-aware hard Store, Store Section, or Family deletion;
+- private Store logo, Store Section image, Ingredient photo, and Recipe cover uploads accept approved JPEG/PNG input up to 5 MB, decode and normalize to configured deterministic WebP variants, authorize every read, serialize replacement writers, restore prior variants on failure, retain Recipe/Ingredient archive media, and remove affected files with rollback-aware hard Store, Store Section, or Family deletion;
 - Store Sections may select one allowlisted SVG icon key independently of their colour or uploaded image; and
 - the Ingredient quantity-kind removal guard now checks indexed Recipe Ingredient dependencies in addition to Nutrition Profiles.
 

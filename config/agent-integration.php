@@ -18,6 +18,5 @@ return [
         'preview_per_minute' => 20,
         'apply_per_minute' => 10,
         'credential_restriction_per_minute' => 10,
-        'media_upload_per_minute' => 10,
     ],
 ];

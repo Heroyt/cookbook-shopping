@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Cookbook\Http\Requests;
 
-use App\Cookbook\Validation\EntityMediaUploadRules;
 use App\Http\Requests\AuthenticatedRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Http\UploadedFile;
@@ -13,9 +12,19 @@ use LogicException;
 final class EntityMediaStoreRequest extends AuthenticatedRequest
 {
     /** @return array<string, ValidationRule|array<mixed>|string> */
-    public function rules(EntityMediaUploadRules $rules): array
+    public function rules(): array
     {
-        return $rules->rules();
+        $maximumKilobytes = config('media.max_kilobytes');
+
+        return [
+            'image' => [
+                'required',
+                'file',
+                'extensions:jpg,jpeg,png',
+                'mimetypes:image/jpeg,image/png',
+                'max:' . (is_int($maximumKilobytes) ? $maximumKilobytes : 5120),
+            ],
+        ];
     }
 
     /** @return array<string, string> */
