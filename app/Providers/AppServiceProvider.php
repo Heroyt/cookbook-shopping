@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\AgentIntegration\AgentCredentialRestrictionAction;
 use App\AgentIntegration\Models\AgentCredential;
 use App\AgentIntegration\OpenApi\AgentOpenApiDocument;
 use Carbon\CarbonImmutable;
@@ -77,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
         )->by($this->agentRateKey($request)));
         RateLimiter::for('agent-credential-restriction', fn (Request $request): Limit => Limit::perMinute(
             Config::integer('agent-integration.rates.credential_restriction_per_minute'),
-        )->by($this->agentRateKey($request) . ':' . $request->string('action')->toString()));
+        )->by($this->agentRateKey($request) . ':' . $this->agentRestrictionActionRateKey($request)));
     }
 
     private function agentRateKey(Request $request): string
@@ -87,5 +88,14 @@ class AppServiceProvider extends ServiceProvider
         return $credential instanceof AgentCredential
             ? 'agent-credential:' . $credential->id
             : 'agent-source:' . $request->ip();
+    }
+
+    private function agentRestrictionActionRateKey(Request $request): string
+    {
+        $action = $request->input('action');
+
+        return is_string($action) && AgentCredentialRestrictionAction::tryFrom($action) !== null
+            ? $action
+            : 'invalid';
     }
 }

@@ -101,6 +101,7 @@ final class AgentCredentialSelfRestrictionTest extends TestCase
             ['action' => 'revoke', 'expires_at' => '2026-08-12T18:00:00Z'],
             ['action' => 'revoke', 'credential_id' => $credential->id],
             ['action' => 'rotate'],
+            ['action' => []],
         ] as $document) {
             $this->withToken($secret)->postJson('/api/v1/credential/restrictions', $document)
                 ->assertUnprocessable()
@@ -109,6 +110,21 @@ final class AgentCredentialSelfRestrictionTest extends TestCase
 
         $this->assertNull($credential->fresh()?->revoked_at);
         $this->assertTrue($credential->fresh()?->expires_at?->equalTo(now()->addDays(90)) ?? false);
+    }
+
+    public function test_invalid_actions_share_one_bounded_rate_limit_bucket(): void
+    {
+        [, , $secret] = $this->credential();
+        config(['agent-integration.rates.credential_restriction_per_minute' => 2]);
+
+        foreach (['invalid-one', 'invalid-two'] as $action) {
+            $this->withToken($secret)->postJson('/api/v1/credential/restrictions', ['action' => $action])
+                ->assertUnprocessable();
+        }
+
+        $this->withToken($secret)->postJson('/api/v1/credential/restrictions', ['action' => 'invalid-three'])
+            ->assertTooManyRequests()
+            ->assertJsonPath('error.code', 'rate_limit_exceeded');
     }
 
     public function test_restriction_requires_a_live_agent_credential_and_is_rate_limited_per_credential(): void
