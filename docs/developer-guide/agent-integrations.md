@@ -18,7 +18,7 @@ No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token auth
 > - Recipe and its Ingredient lines, Steps, Tags, nutrition override, and source metadata; and
 > - Calendar Entry.
 >
-> Nested package quantities, nutrition, alternatives, Store section order, Recipe Ingredients, Recipe Steps, and Recipe Tags are parts of their owning API aggregate. Family Access, Users, memberships, Agent Credential management, Simple Plans, Shopping Generation, Saved Shopping Lists, and media uploads are outside v1. An Agent API request can never create or select a Family.
+> Nested package quantities, nutrition, alternatives, Store section order, Recipe Ingredients, Recipe Steps, and Recipe Tags are parts of their owning API aggregate. Family Access, Users, memberships, general Agent Credential management, Simple Plans, Shopping Generation, Saved Shopping Lists, and media uploads are outside v1. The sole credential exception is an authenticated self-restriction command that can only shorten or revoke the calling credential. An Agent API request can never create or select a Family.
 
 ## Authorized Family context
 
@@ -44,9 +44,11 @@ No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token auth
 > - exposes its plaintext secret exactly once at creation or rotation; and
 > - becomes unusable when revoked, expired, the issuer is deleted, or the issuer leaves the Family.
 >
-> `cookbook:write` authorizes non-destructive Cookbook creates and updates. `planning:write` authorizes non-destructive Calendar Entry changes. `destructive:write` is additionally required when the applicable domain action archives or deletes a record. Restoration requires the corresponding write ability. No ability grants Family Access, User, membership, or credential management through the API.
+> `cookbook:write` authorizes non-destructive Cookbook creates and updates. `planning:write` authorizes non-destructive Calendar Entry changes. `destructive:write` is additionally required when the applicable domain action archives or deletes a record. Restoration requires the corresponding write ability. No ability grants Family Access, User, membership, or general credential management through the API. Every live credential may call the self-restriction command because that command can only reduce its existing authority.
 >
 > The issuer may create and rotate a credential after recent password confirmation. Any current Family member may inspect non-secret metadata and revoke it immediately without password reconfirmation. Rotation replaces the secret, immediately revokes the old token, and invalidates every unapplied preview created by the old credential; the caller must preview again with the replacement. Revoked metadata is non-restorable and retained until the Family is deleted. [ADR 0009](../adr/0009-scope-agent-credentials-to-one-user-and-family.md) records the security trade-off.
+>
+> `POST /api/v1/credential/restrictions` acts only on the authenticated credential and accepts one of two closed documents: `shorten_expiry` with a future whole-second RFC 3339 UTC timestamp, or `revoke` with no timestamp. Shortening never moves expiry later and returns a successful unchanged result when the requested timestamp is equal to or later than the current expiry. Revocation is immediate, retains non-secret metadata, attributes no revoking User, and invalidates unapplied previews. The command cannot accept a credential or Family identifier, change abilities or display name, rotate a secret, or restore authority. It has a dedicated configurable per-credential and action rate limit so an accidental shortening loop cannot prevent the final revoke call. The generated OpenAPI description instructs agents to reduce plausible plaintext exposure to the smallest practical window, use revoke as the final request unless continued access was requested, and report the returned status and exact timestamps to the User. No application notification is sent.
 
 ## Catalog reads
 
@@ -117,7 +119,7 @@ No Agent API, MCP server, Agent Credential, Agent Change Set, Sanctum token auth
 >
 > Return stable machine-readable error codes with an English message, JSON path, operation reference where applicable, and structured details. Distinguish authentication, ability, Family-scope, validation, name-conflict, stale-preview, digest, acknowledgement, idempotency, expiry, payload-limit, and rate-limit failures. Include retry guidance only where retrying can succeed.
 >
-> Process preview and apply synchronously. Start with configurable limits of 250 operations and 2 MiB of JSON per Change Set. Apply per-credential minute limits of 120 Catalog reads, 20 previews, and 10 apply attempts. Return ordinary rate-limit metadata so clients can back off. These limits protect accidental agent loops without introducing queues into the personal deployment profile.
+> Process preview and apply synchronously. Start with configurable limits of 250 operations and 2 MiB of JSON per Change Set. Apply per-credential minute limits of 120 Catalog reads, 20 previews, 10 apply attempts, and 10 self-restriction attempts per action. Return ordinary rate-limit metadata so clients can back off. These limits protect accidental agent loops without introducing queues into the personal deployment profile.
 
 ## OpenAPI and versioning
 
