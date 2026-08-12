@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue';
-import StoreSectionIcon from '@/components/stores/StoreSectionIcon.vue';
+import { shallowRef } from 'vue';
+import IngredientPlacementFields from '@/components/ingredients/IngredientPlacementFields.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -23,7 +23,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDecimalInput } from '@/lib/formatDecimalInput';
-import type { IngredientPlacementStore, IngredientSummary } from '@/types';
+import type { IngredientSummary } from '@/types';
 
 type IngredientField =
     | 'name'
@@ -47,7 +47,6 @@ const props = withDefaults(
         errors?: Partial<Record<IngredientField, string>>;
         processing?: boolean;
         ingredient?: IngredientSummary | null;
-        stores?: IngredientPlacementStore[];
         idPrefix?: string;
         submitLabel?: string;
         showSubmit?: boolean;
@@ -56,40 +55,15 @@ const props = withDefaults(
         errors: () => ({}),
         processing: false,
         ingredient: null,
-        stores: () => [],
         idPrefix: 'ingredient-create',
         submitLabel: 'Vytvořit surovinu',
         showSubmit: true,
     },
 );
 
-const storeSelection = shallowRef(
-    props.ingredient?.storeId === null ||
-        props.ingredient?.storeId === undefined
-        ? 'none'
-        : String(props.ingredient.storeId),
-);
-const sectionSelection = shallowRef(
-    props.ingredient?.storeSectionId === null ||
-        props.ingredient?.storeSectionId === undefined
-        ? 'none'
-        : String(props.ingredient.storeSectionId),
-);
 const nutritionBasis = shallowRef(
     props.ingredient?.nutrition?.basisKind ?? 'none',
 );
-const selectedStore = computed(() =>
-    props.stores.find((store) => String(store.id) === storeSelection.value),
-);
-watch(storeSelection, () => {
-    if (
-        !selectedStore.value?.sections.some(
-            (section) => String(section.id) === sectionSelection.value,
-        )
-    ) {
-        sectionSelection.value = 'none';
-    }
-});
 </script>
 
 <template>
@@ -207,108 +181,12 @@ watch(storeSelection, () => {
             </Field>
         </FieldSet>
 
-        <FieldSet>
-            <FieldLegend variant="legend">Umístění v obchodě</FieldLegend>
-            <FieldDescription>
-                Umístění slouží pouze pro budoucí seskupení nákupního seznamu.
-                Nevyjadřuje dostupnost ani skladovou zásobu.
-            </FieldDescription>
-
-            <input
-                type="hidden"
-                name="store_id"
-                :value="storeSelection === 'none' ? '' : storeSelection"
-            />
-            <input
-                type="hidden"
-                name="store_section_id"
-                :value="sectionSelection === 'none' ? '' : sectionSelection"
-            />
-
-            <Field :data-invalid="Boolean(errors.store_id)">
-                <FieldLabel :for="`${idPrefix}-store`">Obchod</FieldLabel>
-                <Select v-model="storeSelection">
-                    <SelectTrigger
-                        :id="`${idPrefix}-store`"
-                        :aria-invalid="Boolean(errors.store_id)"
-                    >
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectItem value="none">Bez obchodu</SelectItem>
-                            <SelectItem
-                                v-for="store in stores"
-                                :key="store.id"
-                                :value="String(store.id)"
-                            >
-                                <span class="flex items-center gap-2">
-                                    <img
-                                        v-if="store.logoUrl"
-                                        :src="store.logoUrl"
-                                        alt=""
-                                        class="size-5 rounded object-cover"
-                                    />
-                                    {{ store.name }}
-                                </span>
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <FieldError :errors="[errors.store_id]" />
-            </Field>
-
-            <Field :data-invalid="Boolean(errors.store_section_id)">
-                <FieldLabel :for="`${idPrefix}-store-section`">
-                    Část obchodu
-                </FieldLabel>
-                <Select
-                    v-model="sectionSelection"
-                    :disabled="storeSelection === 'none'"
-                >
-                    <SelectTrigger
-                        :id="`${idPrefix}-store-section`"
-                        :aria-invalid="Boolean(errors.store_section_id)"
-                    >
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectItem value="none"
-                                >Bez části obchodu</SelectItem
-                            >
-                            <SelectItem
-                                v-for="section in selectedStore?.sections ?? []"
-                                :key="section.id"
-                                :value="String(section.id)"
-                            >
-                                <span class="flex items-center gap-2">
-                                    <span
-                                        class="size-2.5 rounded-full border"
-                                        :style="{
-                                            backgroundColor: section.colour,
-                                        }"
-                                    />
-                                    <img
-                                        v-if="section.iconUrl"
-                                        :src="section.iconUrl"
-                                        alt=""
-                                        class="size-5 rounded object-cover"
-                                    />
-                                    <StoreSectionIcon
-                                        v-else-if="section.icon"
-                                        :name="section.icon"
-                                        class="size-4"
-                                    />
-                                    {{ section.name }}
-                                </span>
-                            </SelectItem>
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <FieldError :errors="[errors.store_section_id]" />
-            </Field>
-        </FieldSet>
+        <IngredientPlacementFields
+            :ingredient="ingredient"
+            :id-prefix="idPrefix"
+            :store-error="errors.store_id"
+            :store-section-error="errors.store_section_id"
+        />
 
         <FieldSet>
             <FieldLegend variant="legend">Nutriční profil</FieldLegend>

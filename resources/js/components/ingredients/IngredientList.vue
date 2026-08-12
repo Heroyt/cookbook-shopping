@@ -33,17 +33,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type {
-    IngredientAlternativeOption,
-    IngredientPlacementStore,
-    IngredientSummary,
-} from '@/types';
+import type { IngredientAlternativeOption, IngredientSummary } from '@/types';
 
 const props = withDefaults(
     defineProps<{
         ingredients: IngredientSummary[];
         alternativeOptions?: IngredientAlternativeOption[];
-        stores: IngredientPlacementStore[];
         editIngredientId?: number | null;
     }>(),
     { alternativeOptions: () => [] },
@@ -223,7 +218,6 @@ onBeforeUnmount(() => {
                         <template v-else>
                             <EditIngredientDialog
                                 :ingredient="ingredient"
-                                :stores="stores"
                                 :alternative-options="alternativeOptions"
                                 :open-initially="
                                     editIngredientId === ingredient.id

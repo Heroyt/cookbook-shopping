@@ -15,10 +15,10 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import type { IngredientPlacementStore } from '@/types';
+import type { IngredientStoreSectionOption } from '@/types';
 
 defineProps<{
-    storeSection: IngredientPlacementStore['sections'][number];
+    storeSection: IngredientStoreSectionOption;
 }>();
 
 const open = shallowRef(false);

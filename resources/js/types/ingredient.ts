@@ -11,6 +11,8 @@ export type IngredientSummary = {
     quantities: string[];
     storeId: number | null;
     storeSectionId: number | null;
+    store: IngredientStoreOption | null;
+    storeSection: IngredientStoreSectionOption | null;
     placement: string | null;
     archived: boolean;
     alternatives: Array<{ id: number; name: string; archived: boolean }>;
@@ -28,15 +30,16 @@ export type IngredientNutritionProfile = {
     carbohydrateGrams: string;
 };
 
-export type IngredientPlacementStore = {
+export type IngredientStoreOption = {
     id: number;
     name: string;
-    logoUrl?: string | null;
-    sections: Array<{
-        id: number;
-        name: string;
-        colour: string;
-        icon?: StoreSectionIconName;
-        iconUrl?: string | null;
-    }>;
+    logoUrl: string | null;
+};
+
+export type IngredientStoreSectionOption = {
+    id: number;
+    name: string;
+    colour: string;
+    icon: StoreSectionIconName;
+    iconUrl: string | null;
 };

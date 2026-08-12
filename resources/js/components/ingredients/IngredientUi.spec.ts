@@ -47,14 +47,14 @@ describe('Ingredient UI', () => {
         expect(readSource('./IngredientAlternatives.vue')).toContain(
             'IngredientAlternativeController.destroy',
         );
-        expect(page).toContain('<CreateIngredientDialog :stores="stores" />');
+        expect(page).toContain('<CreateIngredientDialog />');
         expect(readSource('./CreateIngredientDialog.vue')).toContain(
             '@success="createdIngredient = $event"',
         );
         expect(readSource('./CreateIngredientDialog.vue')).toContain(
             'media-type="ingredient-photo"',
         );
-        expect(page).toContain(':stores="stores"');
+        expect(page).not.toContain(':stores="stores"');
         expect(page).toContain(':alternative-options="alternativeOptions"');
         expect(readSource('./EditIngredientDialog.vue')).toContain(
             '<IngredientAlternatives',
@@ -65,37 +65,25 @@ describe('Ingredient UI', () => {
         expect(page).toContain("filter: 'archived'");
     });
 
-    it('renders accessible Store Placement selectors and non-colour placement output', async () => {
-        const stores = [
-            {
-                id: 1,
-                name: 'Tržiště',
-                logoUrl: '/logo',
-                sections: [
-                    {
-                        id: 2,
-                        name: 'Zelenina',
-                        colour: '#16A34A',
-                        icon: 'apple',
-                    },
-                ],
-            },
-        ];
-        const html = await render(IngredientFormFields, { stores });
-        const source = readSource('./IngredientFormFields.vue');
+    it('uses lazy accessible Store Placement selectors and rich option visuals', async () => {
+        const html = await render(IngredientFormFields);
+        const source = readSource('./IngredientPlacementFields.vue');
 
         expect(html).toContain('Umístění v obchodě');
         expect(html).toContain('Obchod');
         expect(html).toContain('Část obchodu');
-        expect(source).toContain(
-            '<SelectItem value="none">Bez obchodu</SelectItem>',
-        );
+        expect(source).toContain('<RelationSearchSelect');
+        expect(source).toContain("from '@/routes/relation-search'");
+        expect(source).toContain(':endpoint="stores().url"');
+        expect(source).toContain(':endpoint="storeSectionEndpoint"');
+        expect(source).toContain("sectionSelection.value = ''");
+        expect(source).toContain('clear-label="Bez obchodu"');
         expect(html).toContain('name="store_id"');
         expect(html).toContain('name="store_section_id"');
         expect(html).toContain('Umístění slouží pouze');
         expect(html).toContain('Nutriční profil');
-        expect(source).toContain('v-if="store.logoUrl"');
-        expect(source).toContain('backgroundColor: section.colour');
+        expect(source).toContain('option?.logoUrl');
+        expect(source).toContain('backgroundColor: option.colour');
         expect(source).toContain('<StoreSectionIcon');
         expect(html).toContain('Základ profilu');
         expect(html).toContain('Energie (kcal)');
@@ -103,18 +91,18 @@ describe('Ingredient UI', () => {
     });
 
     it('keeps Store Section colour editing out of Ingredient forms', async () => {
-        const stores = [
-            {
-                id: 1,
-                name: 'Tržiště',
-                sections: [{ id: 2, name: 'Zelenina', colour: '#16A34A' }],
-            },
-        ];
         const html = await render(IngredientFormFields, {
-            stores,
             ingredient: {
                 storeId: 1,
                 storeSectionId: 2,
+                store: { id: 1, name: 'Tržiště', logoUrl: null },
+                storeSection: {
+                    id: 2,
+                    name: 'Zelenina',
+                    colour: '#16A34A',
+                    icon: 'apple',
+                    iconUrl: null,
+                },
             },
         });
         const fields = readSource('./IngredientFormFields.vue');
@@ -194,10 +182,8 @@ describe('Ingredient UI', () => {
     it('renders an empty state and derived package quantities', async () => {
         const emptyHtml = await render(IngredientList, {
             ingredients: [],
-            stores: [],
         });
         const listHtml = await render(IngredientList, {
-            stores: [],
             alternativeOptions: [],
             ingredients: [
                 {
@@ -210,6 +196,14 @@ describe('Ingredient UI', () => {
                     quantities: ['1,1 kg', '10 ks'],
                     storeId: 1,
                     storeSectionId: 2,
+                    store: { id: 1, name: 'Tržiště', logoUrl: null },
+                    storeSection: {
+                        id: 2,
+                        name: 'Zelenina',
+                        colour: '#16A34A',
+                        icon: 'apple',
+                        iconUrl: null,
+                    },
                     placement: 'Tržiště · Zelenina',
                     archived: true,
                     alternatives: [],

@@ -2,9 +2,6 @@
 import { Form, usePage } from '@inertiajs/vue3';
 import IngredientController from '@/actions/App/Cookbook/Http/Controllers/IngredientController';
 import IngredientFormFields from '@/components/ingredients/IngredientFormFields.vue';
-import type { IngredientPlacementStore } from '@/types';
-
-defineProps<{ stores: IngredientPlacementStore[] }>();
 
 const emit = defineEmits<{
     success: [ingredient: { id: number; name: string }];
@@ -22,10 +19,6 @@ const page = usePage();
             emit('success', page.flash.createdIngredient)
         "
     >
-        <IngredientFormFields
-            :errors="errors"
-            :processing="processing"
-            :stores="stores"
-        />
+        <IngredientFormFields :errors="errors" :processing="processing" />
     </Form>
 </template>

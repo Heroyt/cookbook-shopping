@@ -11,16 +11,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { index } from '@/routes/ingredients';
-import type {
-    IngredientAlternativeOption,
-    IngredientPlacementStore,
-    IngredientSummary,
-} from '@/types';
+import type { IngredientAlternativeOption, IngredientSummary } from '@/types';
 
 defineProps<{
     ingredients: IngredientSummary[];
     alternativeOptions: IngredientAlternativeOption[];
-    stores: IngredientPlacementStore[];
     filter: 'active' | 'archived' | 'all';
     editIngredientId: number | null;
 }>();
@@ -48,7 +43,7 @@ defineOptions({
                     Spravujte konkrétní balení surovin aktuální rodiny.
                 </p>
             </div>
-            <CreateIngredientDialog :stores="stores" />
+            <CreateIngredientDialog />
         </div>
 
         <Card>
@@ -94,7 +89,6 @@ defineOptions({
                 <IngredientList
                     :ingredients="ingredients"
                     :alternative-options="alternativeOptions"
-                    :stores="stores"
                     :edit-ingredient-id="editIngredientId"
                 />
             </CardContent>

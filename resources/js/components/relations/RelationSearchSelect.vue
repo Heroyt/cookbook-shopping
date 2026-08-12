@@ -33,6 +33,7 @@ const props = withDefaults(
         placeholder?: string;
         searchPlaceholder?: string;
         emptyLabel?: string;
+        clearLabel?: string;
         createLabel?: string;
     }>(),
     {
@@ -58,11 +59,20 @@ const selectedOption = computed(() =>
     ),
 );
 const createValue = '__create_relation__';
+const clearValue = '__clear_relation__';
 
 const selectOption = (value: string): void => {
     if (value === createValue) {
         open.value = false;
         emit('create');
+
+        return;
+    }
+
+    if (value === clearValue) {
+        emit('update:modelValue', '');
+        emit('selected', null);
+        open.value = false;
 
         return;
     }
@@ -129,6 +139,17 @@ defineExpose({ refresh: search.refresh });
                         {{ emptyLabel }}
                     </CommandEmpty>
                     <CommandGroup>
+                        <CommandItem v-if="clearLabel" :value="clearValue">
+                            <CheckIcon
+                                :class="
+                                    cn(
+                                        'opacity-0',
+                                        modelValue === '' && 'opacity-100',
+                                    )
+                                "
+                            />
+                            {{ clearLabel }}
+                        </CommandItem>
                         <CommandItem
                             v-for="option in search.results.value"
                             :key="option.id"

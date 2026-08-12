@@ -47,8 +47,9 @@ final class IngredientPlacementTest extends TestCase
                 ->where('ingredients.0.placement', "{$store->name} · {$section->name}")
                 ->where('ingredients.0.storeId', $store->id)
                 ->where('ingredients.0.storeSectionId', $section->id)
-                ->where('stores.0.id', $store->id)
-                ->where('stores.0.sections.0.id', $section->id),
+                ->where('ingredients.0.store.id', $store->id)
+                ->where('ingredients.0.storeSection.id', $section->id)
+                ->missing('stores'),
         );
 
         $this->actingAs($user)->patch(route('ingredients.update', $ingredient), [

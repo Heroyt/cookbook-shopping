@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace App\Cookbook\Queries;
 
 use App\Cookbook\Models\Ingredient;
-use App\Cookbook\Models\Store;
-use App\Cookbook\Models\StoreSection;
 use App\Cookbook\Services\EntityMediaStorage;
 use App\Cookbook\Values\EntityMediaType;
 use App\Cookbook\Values\NormalizedName;
@@ -42,7 +40,6 @@ final readonly class CurrentFamilyIngredientManagement
                 ->values()
                 ->all(),
             'filter' => $filter,
-            'stores' => $this->stores($family),
         ];
     }
 
@@ -52,7 +49,7 @@ final readonly class CurrentFamilyIngredientManagement
         return Ingredient::query()
             ->whereBelongsTo($family)
             ->select(['id', 'name', 'normalized_name', 'description', 'weight_grams', 'volume_millilitres', 'piece_count', 'store_id', 'store_section_id', 'archived_at'])
-            ->with(['store:id,name', 'storeSection:id,name', 'nutritionProfile'])
+            ->with(['store:id,name', 'storeSection:id,name,colour,icon', 'nutritionProfile'])
             ->get()
             ->sort(fn (Ingredient $left, Ingredient $right): int => NormalizedName::compare(
                 $left->normalized_name,
@@ -119,6 +116,26 @@ final readonly class CurrentFamilyIngredientManagement
             'quantities' => $ingredient->packageQuantities()->display(),
             'storeId' => $ingredient->store_id,
             'storeSectionId' => $ingredient->store_section_id,
+            'store' => $ingredient->store === null ? null : [
+                'id' => $ingredient->store->id,
+                'name' => $ingredient->store->name,
+                'logoUrl' => $this->entityMediaStorage->url(
+                    $family,
+                    EntityMediaType::StoreLogo,
+                    $ingredient->store->id,
+                ),
+            ],
+            'storeSection' => $ingredient->storeSection === null ? null : [
+                'id' => $ingredient->storeSection->id,
+                'name' => $ingredient->storeSection->name,
+                'colour' => $ingredient->storeSection->colour,
+                'icon' => $ingredient->storeSection->icon->value,
+                'iconUrl' => $this->entityMediaStorage->url(
+                    $family,
+                    EntityMediaType::StoreSectionIcon,
+                    $ingredient->storeSection->id,
+                ),
+            ],
             'placement' => $ingredient->store === null
                 ? null
                 : implode(' · ', array_filter([$ingredient->store->name, $ingredient->storeSection?->name])),
@@ -142,39 +159,5 @@ final readonly class CurrentFamilyIngredientManagement
             'archived' => $ingredient->archived_at !== null,
             default => true,
         };
-    }
-
-    /** @return list<array{id: int, name: string, logoUrl: string|null, sections: list<array{id: int, name: string, colour: string, icon: string, iconUrl: string|null}>}> */
-    private function stores(Family $family): array
-    {
-        return array_values(
-            Store::query()
-                ->whereBelongsTo($family)
-                ->select(['id', 'name', 'normalized_name'])
-                ->with('storeSections:id,name,colour,icon')
-                ->get()
-                ->sort(fn (Store $left, Store $right): int => NormalizedName::compare(
-                    $left->normalized_name,
-                    $left->id,
-                    $right->normalized_name,
-                    $right->id,
-                ))
-                ->values()
-                ->map(fn (Store $store): array => [
-                    'id' => $store->id,
-                    'name' => $store->name,
-                    'logoUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreLogo, $store->id),
-                    'sections' => array_values(
-                        $store->storeSections->map(fn (StoreSection $storeSection): array => [
-                            'id' => $storeSection->id,
-                            'name' => $storeSection->name,
-                            'colour' => $storeSection->colour,
-                            'icon' => $storeSection->icon->value,
-                            'iconUrl' => $this->entityMediaStorage->url($family, EntityMediaType::StoreSectionIcon, $storeSection->id),
-                        ])->all(),
-                    ),
-                ])
-                ->all(),
-        );
     }
 }

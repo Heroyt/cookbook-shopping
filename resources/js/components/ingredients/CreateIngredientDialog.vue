@@ -12,10 +12,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import type { IngredientPlacementStore } from '@/types';
-
-defineProps<{ stores: IngredientPlacementStore[] }>();
-
 const open = shallowRef(false);
 const createdIngredient = shallowRef<{ id: number; name: string } | null>(null);
 </script>
@@ -48,7 +44,6 @@ const createdIngredient = shallowRef<{ id: number; name: string } | null>(null);
             </template>
             <CreateIngredientForm
                 v-else
-                :stores="stores"
                 @success="createdIngredient = $event"
             />
         </DialogContent>

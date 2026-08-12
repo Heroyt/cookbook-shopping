@@ -19,16 +19,11 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
-import type {
-    IngredientAlternativeOption,
-    IngredientPlacementStore,
-    IngredientSummary,
-} from '@/types';
+import type { IngredientAlternativeOption, IngredientSummary } from '@/types';
 
 const props = withDefaults(
     defineProps<{
         ingredient: IngredientSummary;
-        stores: IngredientPlacementStore[];
         alternativeOptions?: IngredientAlternativeOption[];
         openInitially?: boolean;
     }>(),
@@ -95,7 +90,6 @@ const open = shallowRef(props.openInitially);
             >
                 <IngredientFormFields
                     :ingredient="ingredient"
-                    :stores="stores"
                     :errors="errors"
                     :processing="processing"
                     :id-prefix="`ingredient-${ingredient.id}-edit`"
