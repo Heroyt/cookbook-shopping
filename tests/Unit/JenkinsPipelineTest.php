@@ -44,4 +44,12 @@ final class JenkinsPipelineTest extends TestCase
             $this->pipeline,
         );
     }
+
+    public function test_phpunit_uses_the_project_php_memory_limit(): void
+    {
+        $configuration = file_get_contents(dirname(__DIR__, 2) . '/phpunit.xml');
+
+        self::assertIsString($configuration);
+        $this->assertStringContainsString('<ini name="memory_limit" value="256M"/>', $configuration);
+    }
 }
