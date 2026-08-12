@@ -45,6 +45,7 @@
     "dependencies": {
         "@inertiajs/vite": "^3.6.1",
         "@inertiajs/vue3": "^3.6.1",
+        "@internationalized/date": "3.12.3",
         "@laravel/passkeys": "^0.2.0",
         "@lucide/vue": "^1.31.0",
         "@vueuse/core": "^12.8.2",
