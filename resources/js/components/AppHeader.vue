@@ -41,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+const showFamilyLinks = computed(() => page.props.currentFamily !== null);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
 const activeItemStyles =
@@ -189,7 +190,10 @@ const mainNavItems: NavItem[] = [
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-56">
-                            <UserMenuContent :user="auth.user" />
+                            <UserMenuContent
+                                :user="auth.user"
+                                :show-family-links="showFamilyLinks"
+                            />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

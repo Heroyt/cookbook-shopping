@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, shallowRef, watch } from 'vue';
-import EditStoreSectionColourDialog from '@/components/ingredients/EditStoreSectionColourDialog.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
@@ -22,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { formatDecimalInput } from '@/lib/formatDecimalInput';
 import type { IngredientPlacementStore, IngredientSummary } from '@/types';
 
 type IngredientField =
@@ -80,12 +80,6 @@ const nutritionBasis = shallowRef(
 const selectedStore = computed(() =>
     props.stores.find((store) => String(store.id) === storeSelection.value),
 );
-const selectedSection = computed(() =>
-    selectedStore.value?.sections.find(
-        (section) => String(section.id) === sectionSelection.value,
-    ),
-);
-
 watch(storeSelection, () => {
     if (
         !selectedStore.value?.sections.some(
@@ -152,7 +146,9 @@ watch(storeSelection, () => {
                         min="0.000001"
                         step="0.000001"
                         placeholder="500"
-                        :default-value="ingredient?.metricQuantity ?? ''"
+                        :default-value="
+                            formatDecimalInput(ingredient?.metricQuantity)
+                        "
                         :aria-invalid="Boolean(errors.metric_quantity)"
                     />
                     <FieldError :errors="[errors.metric_quantity]" />
@@ -189,7 +185,7 @@ watch(storeSelection, () => {
 
             <Field :data-invalid="Boolean(errors.piece_count)">
                 <FieldLabel :for="`${idPrefix}-pieces`">
-                    Počet kusů v balení
+                    Počet kusů v balení (volitelné)
                 </FieldLabel>
                 <Input
                     :id="`${idPrefix}-pieces`"
@@ -199,9 +195,13 @@ watch(storeSelection, () => {
                     min="0.000001"
                     step="0.000001"
                     placeholder="10"
-                    :default-value="ingredient?.pieceCount ?? ''"
+                    :default-value="formatDecimalInput(ingredient?.pieceCount)"
                     :aria-invalid="Boolean(errors.piece_count)"
                 />
+                <FieldDescription>
+                    Nechte prázdné, pokud balení určujete pouze hmotností nebo
+                    objemem.
+                </FieldDescription>
                 <FieldError :errors="[errors.piece_count]" />
             </Field>
         </FieldSet>
@@ -280,11 +280,6 @@ watch(storeSelection, () => {
                 </Select>
                 <FieldError :errors="[errors.store_section_id]" />
             </Field>
-
-            <EditStoreSectionColourDialog
-                v-if="ingredient && selectedSection"
-                :store-section="selectedSection"
-            />
         </FieldSet>
 
         <FieldSet>
@@ -338,7 +333,11 @@ watch(storeSelection, () => {
                         min="0.000001"
                         step="0.000001"
                         :disabled="nutritionBasis === 'none'"
-                        :default-value="ingredient?.nutrition?.basisQuantity"
+                        :default-value="
+                            formatDecimalInput(
+                                ingredient?.nutrition?.basisQuantity,
+                            )
+                        "
                         :aria-invalid="Boolean(errors.nutrition_basis_quantity)"
                     />
                     <FieldError :errors="[errors.nutrition_basis_quantity]" />
@@ -380,7 +379,7 @@ watch(storeSelection, () => {
                         min="0"
                         step="0.000001"
                         :disabled="nutritionBasis === 'none'"
-                        :default-value="field[2]"
+                        :default-value="formatDecimalInput(field[2])"
                         :aria-invalid="Boolean(errors[`nutrition_${field[0]}`])"
                     />
                     <FieldError :errors="[errors[`nutrition_${field[0]}`]]" />

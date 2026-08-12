@@ -42,6 +42,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { formatDecimalInput } from '@/lib/formatDecimalInput';
 import type {
     CalendarEntryProjection,
     CalendarMealLabelOption,
@@ -230,7 +231,9 @@ const open = shallowRef(false);
                                     type="number"
                                     min="0.000001"
                                     step="0.000001"
-                                    :default-value="entry.servingCount"
+                                    :default-value="
+                                        formatDecimalInput(entry.servingCount)
+                                    "
                                     required
                                     inputmode="decimal"
                                     :aria-invalid="

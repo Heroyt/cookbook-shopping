@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from '@lucide/vue';
+import { BotIcon, HistoryIcon, LogOut, Settings } from '@lucide/vue';
+import AgentChangeSetHistoryController from '@/actions/App/AgentIntegration/Http/Controllers/AgentChangeSetHistoryController';
+import AgentCredentialController from '@/actions/App/AgentIntegration/Http/Controllers/AgentCredentialController';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -14,6 +16,7 @@ import type { User } from '@/types';
 
 type Props = {
     user: User;
+    showFamilyLinks: boolean;
 };
 
 const handleLogout = () => {
@@ -33,10 +36,32 @@ defineProps<Props>();
     <DropdownMenuGroup>
         <DropdownMenuItem :as-child="true">
             <Link class="block w-full cursor-pointer" :href="edit()" prefetch>
-                <Settings class="mr-2 h-4 w-4" />
+                <Settings />
                 Nastavení
             </Link>
         </DropdownMenuItem>
+        <template v-if="showFamilyLinks">
+            <DropdownMenuItem :as-child="true">
+                <Link
+                    class="block w-full cursor-pointer"
+                    :href="AgentCredentialController.index()"
+                    prefetch
+                >
+                    <BotIcon />
+                    Přístupy agentů
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem :as-child="true">
+                <Link
+                    class="block w-full cursor-pointer"
+                    :href="AgentChangeSetHistoryController.index()"
+                    prefetch
+                >
+                    <HistoryIcon />
+                    Historie změn agentů
+                </Link>
+            </DropdownMenuItem>
+        </template>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
     <DropdownMenuItem :as-child="true">
@@ -47,7 +72,7 @@ defineProps<Props>();
             as="button"
             data-test="logout-button"
         >
-            <LogOut class="mr-2 h-4 w-4" />
+            <LogOut />
             Odhlásit se
         </Link>
     </DropdownMenuItem>

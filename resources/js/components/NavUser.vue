@@ -18,6 +18,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const showFamilyLinks = computed(() => page.props.currentFamily !== null);
 const { isMobile, state } = useSidebar();
 </script>
 
@@ -47,7 +48,10 @@ const { isMobile, state } = useSidebar();
                     align="end"
                     :side-offset="4"
                 >
-                    <UserMenuContent :user="user" />
+                    <UserMenuContent
+                        :user="user"
+                        :show-family-links="showFamilyLinks"
+                    />
                 </DropdownMenuContent>
             </DropdownMenu>
         </SidebarMenuItem>

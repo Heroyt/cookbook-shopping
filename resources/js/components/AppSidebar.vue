@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    BotIcon,
     CalendarDaysIcon,
     ClipboardListIcon,
     HistoryIcon,
@@ -12,8 +11,6 @@ import {
     WheatIcon,
 } from '@lucide/vue';
 import { computed } from 'vue';
-import AgentChangeSetHistoryController from '@/actions/App/AgentIntegration/Http/Controllers/AgentChangeSetHistoryController';
-import AgentCredentialController from '@/actions/App/AgentIntegration/Http/Controllers/AgentCredentialController';
 import AppLogo from '@/components/AppLogo.vue';
 import FamilySwitcher from '@/components/families/FamilySwitcher.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -81,16 +78,6 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: 'Obchody',
                   href: storesIndex(),
                   icon: StoreIcon,
-              },
-              {
-                  title: 'Přístupy agentů',
-                  href: AgentCredentialController.index(),
-                  icon: BotIcon,
-              },
-              {
-                  title: 'Historie změn agentů',
-                  href: AgentChangeSetHistoryController.index(),
-                  icon: HistoryIcon,
               },
           ]),
 ]);

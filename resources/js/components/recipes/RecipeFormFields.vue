@@ -20,6 +20,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { formatDecimalInput } from '@/lib/formatDecimalInput';
 import type {
     RecipeIngredientOption,
     RecipeSummary,
@@ -46,7 +47,7 @@ type Line = {
 const lines = ref<Line[]>(
     props.recipe?.ingredients.map((line) => ({
         ingredientId: String(line.ingredientId),
-        quantity: line.quantity,
+        quantity: formatDecimalInput(line.quantity),
         quantityKind: line.quantityKind,
     })) ?? [{ ingredientId: '', quantity: '', quantityKind: 'grams' }],
 );
@@ -125,7 +126,7 @@ const quantityKindLabel = (kind: Line['quantityKind']): string =>
                 type="number"
                 min="0.000001"
                 step="0.000001"
-                :default-value="recipe?.baseServings ?? '4'"
+                :default-value="formatDecimalInput(recipe?.baseServings ?? '4')"
                 required
                 :aria-invalid="Boolean(errors.base_servings)"
             />
@@ -417,7 +418,7 @@ const quantityKindLabel = (kind: Line['quantityKind']): string =>
                         type="number"
                         min="0"
                         step="0.000001"
-                        :default-value="field[2] ?? ''"
+                        :default-value="formatDecimalInput(field[2])"
                         :aria-invalid="Boolean(errors[String(field[0])])"
                     />
                     <FieldError :errors="[errors[String(field[0])]]" />
