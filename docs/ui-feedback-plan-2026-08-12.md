@@ -23,7 +23,7 @@ These findings can be implemented before the design interview.
 - [x] **Finding 7 — concise decimal input values.** Editable Ingredient package/nutrition values, Recipe serving/ingredient/nutrition values, and Calendar Serving Counts now trim unnecessary trailing zeroes while preserving the stored precision and up to six decimal places.
 - [x] **Finding 13 — section colour ownership.** Store Section colour editing has been removed from ingredient create/edit. Colour and icon management remain on Store Section management only.
 - [ ] **Finding 4 — richer placement options.** Show a small Store logo in Store options and Store Section colour/icon in Section options. This depends on exposing the existing protected media/icon metadata in the ingredient-management projection but not on relation-search architecture.
-- [ ] **Finding 5 — ingredient image drop target.** Make the entire ingredient image area, including an existing preview, clickable and drag-and-drop capable. Determine whether create-time upload should be atomic with Ingredient creation or a post-create follow-up before extending this beyond the existing edit-time media endpoint.
+- [ ] **Finding 5 — ingredient image drop target.** Make the entire ingredient image area, including an existing preview, clickable and drag-and-drop capable. Accept one JPEG, PNG, or static WebP source while retaining the existing stored image until the explicit upload succeeds. Ingredient creation commits first, keeps the form open, and then performs the independent retryable upload.
 
 ### A2. Navigation
 
@@ -87,6 +87,17 @@ That dependent frontier is resolved as follows:
 8. **Lazy search scope:** introduce the reusable Family-scoped lazy-search foundation for the Calendar Recipe and Ingredient Store/Section selectors in this delivery. Layered entity creation remains deferred.
 
 The remaining frontier covers the reusable search result/pagination contract, modal URL/history behavior, initial Shopping List expansion state, image replacement behavior inside the drop target, and shared date-picker interaction details.
+
+That final interaction frontier is resolved as follows:
+
+1. **Lazy-search contract:** expose dedicated Current-Family Recipe, Store, and Store Section endpoints with one `q`, cursor, and configurable-limit contract. Load 20 results on first open, debounce text searches, support further pages, and constrain Sections by the selected Store.
+2. **Modal loading and history:** represent Recipe and Ingredient detail in the URL, lazily load and cache the full detail, close through browser Back, and restore the modal on refresh. Initial catalogue payloads contain summaries only.
+3. **Detail-to-edit transition:** include edit or restore actions in modal detail, close detail before opening edit, and never stack the two modals.
+4. **Shopping List expansion:** start every compact item row collapsed and allow several rows to remain independently expanded.
+5. **Image drop target:** accept one pending file, replace only its local preview when another is selected, and retain the existing stored image until explicit upload succeeds. During creation, begin the independent upload after the Ingredient save.
+6. **Shared date pickers:** use Czech locale and Monday-first calendars throughout. Provide applicable clear/today actions, show one month on mobile and two for range selection on larger screens, preserve explicit filter submission, and update ordinary form dates immediately.
+
+The WebP addition leaves one final media-contract decision: whether static WebP support applies consistently to every existing entity-image upload while animated WebP receives explicit Czech rejection feedback.
 
 Resolved domain terms will be written into `CONTEXT.md` immediately. An ADR will be offered only for decisions that are hard to reverse, surprising, and involve a real trade-off.
 
