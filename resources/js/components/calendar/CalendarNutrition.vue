@@ -4,10 +4,17 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import type { CalendarNutritionProjection } from '@/types';
 
-defineProps<{
-    nutrition: CalendarNutritionProjection;
-    label: string;
-}>();
+withDefaults(
+    defineProps<{
+        nutrition: CalendarNutritionProjection;
+        label?: string;
+        showSourceBadge?: boolean;
+    }>(),
+    {
+        label: undefined,
+        showSourceBadge: true,
+    },
+);
 
 const format = (value: string): string => {
     const normalized = value.includes('.')
@@ -20,9 +27,15 @@ const format = (value: string): string => {
 
 <template>
     <div class="flex flex-col gap-2 text-sm">
-        <div class="flex flex-wrap items-center gap-2">
-            <p class="font-medium">{{ label }}</p>
-            <Badge v-if="nutrition.source === 'override'" variant="secondary">
+        <div
+            v-if="label || (showSourceBadge && nutrition.source === 'override')"
+            class="flex flex-wrap items-center gap-2"
+        >
+            <p v-if="label" class="font-medium">{{ label }}</p>
+            <Badge
+                v-if="showSourceBadge && nutrition.source === 'override'"
+                variant="secondary"
+            >
                 Ruční přepis
             </Badge>
         </div>

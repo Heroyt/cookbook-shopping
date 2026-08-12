@@ -63,9 +63,13 @@ const open = shallowRef(false);
 
 <template>
     <Card class="relative gap-2 py-3">
-        <CardHeader class="gap-1 px-3">
+        <CardHeader class="gap-1 px-3 pr-20">
             <div class="flex flex-wrap items-start justify-between gap-2">
-                <CardTitle class="text-base">{{ entry.recipeName }}</CardTitle>
+                <CardTitle
+                    class="line-clamp-2 min-w-0 text-base leading-snug break-words"
+                >
+                    {{ entry.recipeName }}
+                </CardTitle>
                 <Badge v-if="entry.recipeArchived" variant="destructive">
                     Archivováno
                 </Badge>
@@ -75,7 +79,10 @@ const open = shallowRef(false);
             <p class="text-sm font-medium tabular-nums">
                 {{ entry.servingCount.replace('.', ',') }} porce
             </p>
-            <CalendarNutrition :nutrition="entry.nutrition" label="Souhrn" />
+            <CalendarNutrition
+                :nutrition="entry.nutrition"
+                :show-source-badge="false"
+            />
         </CardContent>
         <CardFooter class="absolute top-2 right-2 flex gap-1 p-0">
             <Dialog v-model:open="open">

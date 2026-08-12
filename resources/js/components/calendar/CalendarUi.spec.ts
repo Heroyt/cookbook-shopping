@@ -126,4 +126,13 @@ describe('Calendar UI', () => {
         expect(entry).toContain("from '@/lib/formatDecimalInput'");
         expect(entry).toContain('formatDecimalInput(entry.servingCount)');
     });
+
+    it('reserves the calendar entry action gutter and keeps its summary compact', () => {
+        const entry = readSource('./CalendarEntryCard.vue');
+
+        expect(entry).toContain('px-3 pr-20');
+        expect(entry).toContain('line-clamp-2');
+        expect(entry).toContain(':show-source-badge="false"');
+        expect(entry).not.toContain('label="Souhrn"');
+    });
 });
