@@ -11,7 +11,7 @@ const readSource = (relativePath: string): string =>
     readFileSync(new URL(relativePath, import.meta.url), 'utf8');
 
 describe('Entity image upload UI', () => {
-    it('uses the generated Wayfinder action with JPEG/PNG, progress, and Czech field feedback', () => {
+    it('uses the generated Wayfinder action with static WebP, progress, and Czech field feedback', () => {
         const source = readSource('./EntityImageUpload.vue');
 
         expect(source).toContain(
@@ -21,10 +21,14 @@ describe('Entity image upload UI', () => {
         expect(source).toContain('FieldGroup');
         expect(source).toContain(':data-disabled="form.processing"');
         expect(source).not.toContain('space-y-');
-        expect(source).toContain('accept="image/jpeg,image/png"');
+        expect(source).toContain('image/webp');
+        expect(source).toContain('@drop.prevent="dropFile"');
+        expect(source).toContain('pendingPreviewUrl ?? imageUrl');
+        expect(source).toContain('URL.revokeObjectURL');
         expect(source).toContain('form.progress.percentage');
         expect(source).toContain(':errors="[form.errors.image]"');
-        expect(source).toContain('JPEG nebo PNG, nejvýše 5 MB');
+        expect(source).toContain('JPEG, PNG nebo statický WebP');
+        expect(source).toContain('Klikněte nebo sem přetáhněte obrázek');
         expect(source).toContain('Nahrát obrázek');
         expect(source).toContain('Nahradit obrázek');
     });
@@ -43,7 +47,10 @@ describe('Entity image upload UI', () => {
             'src="/entity-media/ingredient-photo/7/catalogue"',
         );
         expect(editableHtml).toContain('alt="Fotografie suroviny Mouka"');
-        expect(editableHtml).toContain('Vybrat obrázek');
+        expect(editableHtml).toContain('Obrázek');
+        expect(editableHtml).toContain(
+            'Kliknutím nebo přetažením vyberete jiný obrázek',
+        );
         expect(editableHtml).toContain('type="file"');
     });
 

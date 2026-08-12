@@ -142,7 +142,7 @@ final class EntityMediaTest extends TestCase
         );
     }
 
-    public function test_upload_validation_rejects_unsupported_oversized_and_undecodable_files_in_czech(): void
+    public function test_upload_accepts_static_webp_and_rejects_animated_unsupported_oversized_and_undecodable_files_in_czech(): void
     {
         $user = User::factory()->create();
         $family = $this->createFamilyWithMembers('Domov', $user);
@@ -152,7 +152,22 @@ final class EntityMediaTest extends TestCase
 
         $this->actingAs($user)
             ->post($route, ['image' => UploadedFile::fake()->createWithContent('logo.webp', $this->webpBytes())])
-            ->assertSessionHasErrors(['image' => 'Vyberte obrázek ve formátu JPEG nebo PNG.']);
+            ->assertSessionHasNoErrors();
+
+        $storedPath = $this->mediaPath($family, 'store-logo', $store->id, 'catalogue');
+        Storage::disk('media')->assertExists($storedPath);
+        $storedBytes = Storage::disk('media')->get($storedPath);
+
+        $this->actingAs($user)
+            ->post($route, [
+                'image' => UploadedFile::fake()->createWithContent(
+                    'animated.webp',
+                    $this->animatedWebpBytes(),
+                ),
+            ])
+            ->assertSessionHasErrors([
+                'image' => 'Animované obrázky WebP nejsou podporované. Vyberte statický obrázek.',
+            ]);
 
         $jpeg = UploadedFile::fake()->image('logo.jpg');
 
@@ -160,7 +175,7 @@ final class EntityMediaTest extends TestCase
             ->post($route, [
                 'image' => UploadedFile::fake()->createWithContent('logo.txt', $jpeg->getContent()),
             ])
-            ->assertSessionHasErrors(['image' => 'Soubor musí mít příponu JPG, JPEG nebo PNG.']);
+            ->assertSessionHasErrors(['image' => 'Soubor musí mít příponu JPG, JPEG, PNG nebo WEBP.']);
 
         $this->actingAs($user)
             ->post($route, ['image' => UploadedFile::fake()->image('logo.jpg')->size(5121)])
@@ -195,7 +210,7 @@ final class EntityMediaTest extends TestCase
             ])
             ->assertSessionHasErrors(['image' => 'Obrázek se nepodařilo bezpečně načíst.']);
 
-        Storage::disk('media')->assertDirectoryEmpty('family-media');
+        $this->assertSame($storedBytes, Storage::disk('media')->get($storedPath));
     }
 
     public function test_upload_enforces_each_configured_decoded_dimension_limit_in_czech(): void
@@ -457,6 +472,15 @@ final class EntityMediaTest extends TestCase
         $this->assertIsString($bytes);
 
         return $bytes;
+    }
+
+    private function animatedWebpBytes(): string
+    {
+        $static = $this->webpBytes();
+        $animationChunk = 'ANIM' . pack('V', 6) . str_repeat("\0", 6);
+        $contents = substr($static, 0, 12) . $animationChunk . substr($static, 12);
+
+        return substr_replace($contents, pack('V', strlen($contents) - 8), 4, 4);
     }
 
     private function oversizedPngHeader(int $width, int $height): string
