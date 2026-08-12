@@ -36,6 +36,19 @@ describe('Agent Credential UI contract', () => {
         );
     });
 
+    it('offers exact validity presets and a custom inclusive date picker', () => {
+        const create = readSource('./CreateAgentCredentialDialog.vue');
+
+        for (const days of [1, 7, 30, 90, 180, 365]) {
+            expect(create).toContain(`value: '${days}'`);
+        }
+
+        expect(create).toContain("value: 'custom'");
+        expect(create).toContain('Platný do data včetně');
+        expect(create).toContain('<AppDatePicker');
+        expect(create).not.toContain('type="date"');
+    });
+
     it('states one-time secret handling and exposes an accessible copy flow', () => {
         const secret = readSource('./AgentCredentialSecretDialog.vue');
 

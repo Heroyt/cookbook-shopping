@@ -13,6 +13,7 @@ use App\FamilyAccess\Models\FamilyMembership;
 use App\Models\User;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
@@ -82,7 +83,7 @@ final class AgentCredentialManagementTest extends TestCase
         $secret = Arr::get(app(Session::class)->get(SessionKey::FLASH_DATA, []), 'agentCredentialSecret.secret');
         $this->assertIsString($secret);
         $this->assertSame($credential->id, AgentCredential::findToken($secret)?->id);
-        $this->assertTrue($credential->expires_at?->isSameDay(now()->addDays(60)) ?? false);
+        $this->assertTrue($credential->expires_at?->equalTo(now()->addDays(61)->startOfDay()) ?? false);
 
         $this->actingAs($issuer)->get(route('agent-credentials.index'))
             ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
@@ -107,6 +108,53 @@ final class AgentCredentialManagementTest extends TestCase
         $this->assertIsString($replacementSecret);
         $this->assertNull(AgentCredential::findToken($secret));
         $this->assertNotNull(AgentCredential::findToken($replacementSecret));
+    }
+
+    public function test_create_accepts_exact_duration_presets_and_an_inclusive_custom_date(): void
+    {
+        Carbon::setTestNow('2026-08-12 12:00:00');
+        [$issuer] = $this->memberWithCurrentFamily('Alena');
+        $confirmedPassword = ['auth.password_confirmed_at' => now()->unix()];
+
+        $this->actingAs($issuer)
+            ->withSession($confirmedPassword)
+            ->post(route('agent-credentials.store'), [
+                'name' => 'Týdenní agent',
+                'validity_days' => 7,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('agent-credentials.index'));
+
+        $this->assertTrue(
+            AgentCredential::query()
+                ->where('name', 'Týdenní agent')
+                ->sole()
+                ->expires_at?->equalTo('2026-08-19 12:00:00') ?? false,
+        );
+
+        $this->actingAs($issuer)
+            ->withSession($confirmedPassword)
+            ->post(route('agent-credentials.store'), [
+                'name' => 'Agent s vlastním datem',
+                'expires_at' => '2026-08-20',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('agent-credentials.index'));
+
+        $this->assertTrue(
+            AgentCredential::query()
+                ->where('name', 'Agent s vlastním datem')
+                ->sole()
+                ->expires_at?->equalTo('2026-08-21 00:00:00') ?? false,
+        );
+
+        $this->actingAs($issuer)
+            ->withSession($confirmedPassword)
+            ->post(route('agent-credentials.store'), [
+                'name' => 'Neplatná délka',
+                'validity_days' => 2,
+            ])
+            ->assertSessionHasErrors('validity_days');
     }
 
     public function test_only_issuer_can_rotate_but_each_current_member_can_revoke(): void
