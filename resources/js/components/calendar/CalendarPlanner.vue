@@ -80,6 +80,7 @@ const mealLabel = shallowRef('unlabeled');
 const selectedDates = ref([...props.selectedDates]);
 const manualDate = shallowRef('');
 const newEntryDate = shallowRef(props.week.startsOn);
+const showIndividualDates = shallowRef(false);
 const rangeStart = shallowRef(props.week.startsOn);
 const rangeEnd = shallowRef(props.week.endsOn);
 const entryCount = computed(() =>
@@ -401,7 +402,7 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                                 name="dates[]"
                                 :value="date"
                             />
-                            <FieldSet>
+                            <FieldSet v-if="showIndividualDates">
                                 <FieldLegend variant="label"
                                     >Data pro nákupní seznam</FieldLegend
                                 >
@@ -472,6 +473,7 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                                 >
                             </FieldGroup>
                             <FieldGroup
+                                v-if="showIndividualDates"
                                 class="sm:grid sm:grid-cols-[1fr_auto] sm:items-end"
                             >
                                 <Field>
@@ -491,6 +493,20 @@ const dayHasEntries = (day: CalendarDayProjection): boolean =>
                                     >Přidat libovolné datum</Button
                                 >
                             </FieldGroup>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                class="self-start"
+                                @click="
+                                    showIndividualDates = !showIndividualDates
+                                "
+                            >
+                                {{
+                                    showIndividualDates
+                                        ? 'Skrýt jednotlivá data'
+                                        : 'Vybrat jednotlivá data'
+                                }}
+                            </Button>
                             <div
                                 v-if="selectedDates.length > 0"
                                 class="flex flex-wrap gap-2"

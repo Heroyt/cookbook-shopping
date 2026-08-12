@@ -63,7 +63,8 @@ describe('Calendar UI', () => {
         expect(planner).not.toMatch(
             /selectedDates\.length === 0 \|\|\s*entryCount/,
         );
-        expect(planner).toContain('<FieldSet>');
+        expect(planner).toContain('<FieldSet v-if="showIndividualDates">');
+        expect(planner).toContain('Vybrat jednotlivá data');
         expect(planner).toContain('<FieldError :errors="[errors.dates]" />');
         expect(entry).toContain('<DialogTitle>Upravit záznam</DialogTitle>');
         expect(entry).toContain('v-model:open="open"');
