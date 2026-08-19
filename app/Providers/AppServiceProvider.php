@@ -7,6 +7,8 @@ namespace App\Providers;
 use App\AgentIntegration\AgentCredentialRestrictionAction;
 use App\AgentIntegration\Models\AgentCredential;
 use App\AgentIntegration\OpenApi\AgentOpenApiDocument;
+use App\FamilyAccess\CurrentFamily;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -17,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Passport\Passport;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        Passport::ignoreRoutes();
         Scramble::ignoreDefaultRoutes();
     }
 
@@ -35,6 +39,19 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(AgentCredential::class);
+        Passport::authorizationView(function (array $parameters) {
+            $user = $parameters['user'] ?? null;
+            abort_unless($user instanceof User, 403);
+            $parameters['family'] = app(CurrentFamily::class)->resolve($user);
+
+            return response()->view('mcp.authorize', $parameters);
+        });
+        Passport::tokensExpireIn(now()->addDays(
+            Config::integer('agent-integration.credentials.default_expiry_days'),
+        ));
+        Passport::refreshTokensExpireIn(now()->addDays(
+            Config::integer('agent-integration.credentials.default_expiry_days'),
+        ));
         Scramble::configure()
             ->expose('/docs/agent-api/v1', '/docs/agent-api/v1/openapi.json')
             ->withDocumentTransformers([AgentOpenApiDocument::class]);

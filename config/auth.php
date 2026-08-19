@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Mcp\Models\McpOAuthUser;
 use App\Models\User;
 
 return [
@@ -44,6 +45,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'mcp_users',
+        ],
     ],
 
     /*
@@ -67,6 +72,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'mcp_users' => [
+            'driver' => 'eloquent',
+            'model' => McpOAuthUser::class,
         ],
 
         // 'users' => [
