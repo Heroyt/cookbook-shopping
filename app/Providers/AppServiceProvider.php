@@ -7,6 +7,10 @@ namespace App\Providers;
 use App\AgentIntegration\AgentCredentialRestrictionAction;
 use App\AgentIntegration\Models\AgentCredential;
 use App\AgentIntegration\OpenApi\AgentOpenApiDocument;
+use App\FamilyAccess\CurrentFamily;
+use App\FamilyAccess\Models\Family;
+use App\Mcp\McpConsentFamilyBinding;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -17,6 +21,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Passport\Client;
+use Laravel\Passport\Passport;
 use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        Passport::ignoreRoutes();
         Scramble::ignoreDefaultRoutes();
     }
 
@@ -35,6 +42,25 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(AgentCredential::class);
+        Passport::authorizationView(function (array $parameters) {
+            $user = $parameters['user'] ?? null;
+            $client = $parameters['client'] ?? null;
+            $authToken = $parameters['authToken'] ?? null;
+            abort_unless($user instanceof User && $client instanceof Client && is_string($authToken), 403);
+            $family = app(CurrentFamily::class)->resolve($user);
+            $parameters['family'] = $family;
+            $parameters['familyBinding'] = $family instanceof Family
+                ? app(McpConsentFamilyBinding::class)->issue($user, $family, $client->id, $authToken)
+                : null;
+
+            return response()->view('mcp.authorize', $parameters);
+        });
+        Passport::tokensExpireIn(now()->addDays(
+            Config::integer('agent-integration.credentials.default_expiry_days'),
+        ));
+        Passport::refreshTokensExpireIn(now()->addDays(
+            Config::integer('agent-integration.credentials.default_expiry_days'),
+        ));
         Scramble::configure()
             ->expose('/docs/agent-api/v1', '/docs/agent-api/v1/openapi.json')
             ->withDocumentTransformers([AgentOpenApiDocument::class]);

@@ -15,6 +15,7 @@ final readonly class RecordAgentCredentialRevocation
         AgentCredential $credential,
         ?int $revokedByUserId,
         string $reason,
+        ?int $rotatedToId = null,
     ): bool {
         if ($credential->revoked_at !== null) {
             return false;
@@ -24,6 +25,7 @@ final readonly class RecordAgentCredentialRevocation
             'revoked_at' => now(),
             'revoked_by_user_id' => $revokedByUserId,
             'revocation_reason' => $reason,
+            'rotated_to_id' => $rotatedToId,
         ])->save();
         $this->invalidateCredentialPreviews->handle($credential);
 

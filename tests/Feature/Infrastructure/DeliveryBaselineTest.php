@@ -113,6 +113,7 @@ SH);
 
         $this->assertMatchesRegularExpression('/^DB_CONNECTION=sqlite$/m', $localEnvironment);
         $this->assertStringContainsString('<ini name="memory_limit" value="256M"/>', $phpUnitConfiguration);
+        $this->assertStringContainsString('<env name="APP_URL" value="http://localhost"/>', $phpUnitConfiguration);
         $this->assertStringContainsString('<env name="DB_CONNECTION" value="sqlite"/>', $phpUnitConfiguration);
         $this->assertMatchesRegularExpression('/^APP_ENV=production$/m', $productionEnvironment);
         $this->assertMatchesRegularExpression('/^APP_DEBUG=false$/m', $productionEnvironment);
