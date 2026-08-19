@@ -43,6 +43,7 @@ final class AgentMcpAuthorizationTest extends TestCase
 
         $authorization = app(AuthorizeMcpConnection::class)->handle(
             $user,
+            $authorizedFamily,
             $client->id,
             [AgentCredentialAbility::CookbookWrite, AgentCredentialAbility::PlanningWrite],
         );
@@ -74,7 +75,7 @@ final class AgentMcpAuthorizationTest extends TestCase
         FamilyMembership::factory()->create(['user_id' => $user->id, 'family_id' => $currentFamily->id]);
         $user->forceFill(['current_family_id' => $authorizedFamily->id])->save();
         $client = Client::factory()->asPublic()->create();
-        $authorization = app(AuthorizeMcpConnection::class)->handle($user, $client->id, []);
+        $authorization = app(AuthorizeMcpConnection::class)->handle($user, $authorizedFamily, $client->id, []);
 
         $user->forceFill(['current_family_id' => $currentFamily->id])->save();
         $oauthUser = McpOAuthUser::query()->findOrFail($user->id);
@@ -121,6 +122,8 @@ final class AgentMcpAuthorizationTest extends TestCase
             ->assertSeeText('Úpravy kuchařky')
             ->assertSeeText('Úpravy kalendáře')
             ->assertSeeText('Archivace a mazání')
+            ->assertSeeText('Archivace obsahu a podporované mazání položek kuchařky a kalendáře.')
+            ->assertDontSeeText('mazání historie změn')
             ->assertSee('name="abilities[]"', escape: false);
     }
 
@@ -149,7 +152,9 @@ final class AgentMcpAuthorizationTest extends TestCase
     {
         $user = User::factory()->create();
         $family = Family::factory()->create(['name' => 'Domov']);
+        $otherFamily = Family::factory()->create(['name' => 'Chata']);
         FamilyMembership::factory()->create(['user_id' => $user->id, 'family_id' => $family->id]);
+        FamilyMembership::factory()->create(['user_id' => $user->id, 'family_id' => $otherFamily->id]);
         $user->forceFill(['current_family_id' => $family->id])->save();
         $client = Client::factory()->asPublic()->create([
             'name' => 'ChatGPT',
@@ -169,9 +174,14 @@ final class AgentMcpAuthorizationTest extends TestCase
         $consent = $this->actingAs($user)->withSession($session)->get('/oauth/authorize?' . $query)->assertOk();
         preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
         $this->assertArrayHasKey(1, $matches);
+        preg_match('/name="family_binding" value="([^"]+)"/', $consent->getContent(), $familyBindingMatches);
+        $this->assertArrayHasKey(1, $familyBindingMatches);
+
+        $user->forceFill(['current_family_id' => $otherFamily->id])->save();
 
         $this->actingAs($user)->withSession($session)->post('/oauth/authorize', [
             'auth_token' => $matches[1],
+            'family_binding' => html_entity_decode($familyBindingMatches[1]),
             'abilities' => [
                 AgentCredentialAbility::CookbookWrite->value,
                 AgentCredentialAbility::PlanningWrite->value,
@@ -180,6 +190,7 @@ final class AgentMcpAuthorizationTest extends TestCase
 
         $authorization = McpAuthorization::query()->sole();
         $this->assertSame($family->id, $authorization->family_id);
+        $this->assertSame($otherFamily->id, $user->fresh()->current_family_id);
         $this->assertSame($client->id, $authorization->passport_client_id);
         $this->assertSame([
             AgentCredentialAbility::ContentRead->value,
@@ -197,7 +208,7 @@ final class AgentMcpAuthorizationTest extends TestCase
         FamilyMembership::factory()->create(['user_id' => $user->id, 'family_id' => $secondFamily->id]);
         $user->forceFill(['current_family_id' => $firstFamily->id])->save();
         $client = Client::factory()->asPublic()->create();
-        $first = app(AuthorizeMcpConnection::class)->handle($user, $client->id, []);
+        $first = app(AuthorizeMcpConnection::class)->handle($user, $firstFamily, $client->id, []);
         $oldCredential = $first->credential()->sole();
         $oldAccessToken = Token::query()->create([
             'id' => str_repeat('a', 80),
@@ -217,6 +228,7 @@ final class AgentMcpAuthorizationTest extends TestCase
         $user->forceFill(['current_family_id' => $secondFamily->id])->save();
         $reauthorized = app(AuthorizeMcpConnection::class)->handle(
             $user,
+            $secondFamily,
             $client->id,
             [AgentCredentialAbility::CookbookWrite],
         );
@@ -225,6 +237,7 @@ final class AgentMcpAuthorizationTest extends TestCase
         $this->assertSame($secondFamily->id, $reauthorized->family_id);
         $this->assertNotSame($oldCredential->id, $reauthorized->agent_credential_id);
         $this->assertSame('mcp_reauthorized', $oldCredential->fresh()?->revocation_reason);
+        $this->assertSame($reauthorized->agent_credential_id, $oldCredential->fresh()?->rotated_to_id);
         $this->assertSame([
             AgentCredentialAbility::ContentRead->value,
             AgentCredentialAbility::CookbookWrite->value,
@@ -237,6 +250,44 @@ final class AgentMcpAuthorizationTest extends TestCase
             'access_token_id' => $oldAccessToken->id,
             'revoked' => true,
         ]);
+    }
+
+    public function test_oauth_approval_rechecks_membership_in_the_family_shown_at_consent(): void
+    {
+        $user = User::factory()->create();
+        $family = Family::factory()->create(['name' => 'Domov']);
+        FamilyMembership::factory()->create(['user_id' => $user->id, 'family_id' => $family->id]);
+        $user->forceFill(['current_family_id' => $family->id])->save();
+        $redirectUri = 'https://chatgpt.com/connector_platform_oauth_redirect';
+        $client = Client::factory()->asPublic()->create(['redirect_uris' => [$redirectUri]]);
+        $session = ['auth.password_confirmed_at' => now()->unix()];
+        $query = http_build_query([
+            'client_id' => $client->id,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'scope' => 'mcp:use',
+            'state' => 'state-123',
+            'code_challenge' => str_repeat('a', 43),
+            'code_challenge_method' => 'S256',
+        ]);
+
+        $consent = $this->actingAs($user)->withSession($session)->get('/oauth/authorize?' . $query)->assertOk();
+        preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $authTokenMatches);
+        preg_match('/name="family_binding" value="([^"]+)"/', $consent->getContent(), $familyBindingMatches);
+        $this->assertArrayHasKey(1, $authTokenMatches);
+        $this->assertArrayHasKey(1, $familyBindingMatches);
+
+        FamilyMembership::query()->where('family_id', $family->id)->where('user_id', $user->id)->delete();
+
+        $this->actingAs($user)->withSession($session)->post('/oauth/authorize', [
+            'auth_token' => $authTokenMatches[1],
+            'family_binding' => html_entity_decode($familyBindingMatches[1]),
+        ])->assertSessionHasErrors([
+            'family_binding' => 'Vybraná rodina už pro toto připojení není dostupná. Zahajte připojení znovu.',
+        ]);
+
+        $this->assertDatabaseCount('mcp_authorizations', 0);
+        $this->assertDatabaseCount('agent_credentials', 0);
     }
 
     public function test_oauth_code_exchange_can_initialize_the_laravel_mcp_endpoint(): void
@@ -262,9 +313,12 @@ final class AgentMcpAuthorizationTest extends TestCase
         ]))->assertOk();
         preg_match('/name="auth_token" value="([^"]+)"/', $consent->getContent(), $matches);
         $this->assertArrayHasKey(1, $matches);
+        preg_match('/name="family_binding" value="([^"]+)"/', $consent->getContent(), $familyBindingMatches);
+        $this->assertArrayHasKey(1, $familyBindingMatches);
 
         $approval = $this->actingAs($user)->withSession($session)->post('/oauth/authorize', [
             'auth_token' => $matches[1],
+            'family_binding' => html_entity_decode($familyBindingMatches[1]),
             'abilities' => [AgentCredentialAbility::CookbookWrite->value],
         ])->assertRedirect();
         parse_str((string) parse_url((string) $approval->headers->get('Location'), PHP_URL_QUERY), $callbackQuery);

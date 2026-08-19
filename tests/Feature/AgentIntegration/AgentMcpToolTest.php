@@ -244,6 +244,23 @@ final class AgentMcpToolTest extends TestCase
             ->assertOk();
     }
 
+    public function test_validation_errors_expose_only_stable_english_machine_details(): void
+    {
+        [$oauthUser] = $this->authority();
+
+        AgentServer::actingAs($oauthUser, 'api')
+            ->tool(GetFamilyResource::class, [
+                'resource_type' => 'ingredients',
+                'id' => 'not-an-integer',
+            ])
+            ->assertHasErrors(['validation_failed'])
+            ->assertStructuredContent(fn (AssertableJson $json) => $json
+                ->where('error.code', 'validation_failed')
+                ->where('error.message', 'The MCP tool arguments are invalid.')
+                ->where('error.details.fields', ['id'])
+                ->etc());
+    }
+
     /**
      * @param  list<AgentCredentialAbility>  $abilities
      * @return array{McpOAuthUser, Family}
@@ -255,7 +272,7 @@ final class AgentMcpToolTest extends TestCase
         FamilyMembership::factory()->create(['user_id' => $user->id, 'family_id' => $family->id]);
         $user->forceFill(['current_family_id' => $family->id])->save();
         $client = Client::factory()->asPublic()->create();
-        app(AuthorizeMcpConnection::class)->handle($user, $client->id, $abilities);
+        app(AuthorizeMcpConnection::class)->handle($user, $family, $client->id, $abilities);
 
         $oauthUser = McpOAuthUser::query()->findOrFail($user->id);
         $oauthUser->withAccessToken(new AccessToken([
