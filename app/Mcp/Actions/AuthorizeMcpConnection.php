@@ -9,38 +9,28 @@ use App\AgentIntegration\Actions\RecordAgentCredentialRevocation;
 use App\AgentIntegration\AgentCredentialAbility;
 use App\AgentIntegration\Models\AgentCredential;
 use App\FamilyAccess\AuthorizedFamilyContext;
-use App\FamilyAccess\CurrentFamily;
 use App\FamilyAccess\Models\Family;
 use App\Mcp\Models\McpAuthorization;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 final readonly class AuthorizeMcpConnection
 {
     public function __construct(
-        private CurrentFamily $currentFamily,
         private IssueAgentCredential $issueAgentCredential,
         private RecordAgentCredentialRevocation $recordRevocation,
         private RevokeMcpOAuthTokens $revokeOAuthTokens,
     ) {}
 
     /** @param list<AgentCredentialAbility> $abilities */
-    public function handle(User $user, string $passportClientId, array $abilities): McpAuthorization
+    public function handle(User $user, Family $family, string $passportClientId, array $abilities): McpAuthorization
     {
-        return DB::transaction(function () use ($user, $passportClientId, $abilities): McpAuthorization {
+        return DB::transaction(function () use ($user, $family, $passportClientId, $abilities): McpAuthorization {
             $existing = McpAuthorization::query()
                 ->whereBelongsTo($user)
                 ->where('passport_client_id', $passportClientId)
                 ->lockForUpdate()
                 ->first();
-
-            $family = $this->currentFamily->resolve($user);
-            if ( ! $family instanceof Family) {
-                throw ValidationException::withMessages([
-                    'family' => __('Před připojením agenta nejprve vytvořte rodinu.'),
-                ]);
-            }
 
             $issued = $this->issueAgentCredential->handle(
                 new AuthorizedFamilyContext($user, $family),
@@ -52,7 +42,12 @@ final readonly class AuthorizeMcpConnection
                 $this->revokeOAuthTokens->handle($user->id, $passportClientId);
                 $oldCredential = $existing->credential()->lockForUpdate()->first();
                 if ($oldCredential instanceof AgentCredential) {
-                    $this->recordRevocation->handle($oldCredential, $user->id, 'mcp_reauthorized');
+                    $this->recordRevocation->handle(
+                        $oldCredential,
+                        $user->id,
+                        'mcp_reauthorized',
+                        $issued->credential->id,
+                    );
                 }
 
                 $existing->forceFill([

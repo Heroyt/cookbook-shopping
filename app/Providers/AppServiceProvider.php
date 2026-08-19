@@ -8,6 +8,8 @@ use App\AgentIntegration\AgentCredentialRestrictionAction;
 use App\AgentIntegration\Models\AgentCredential;
 use App\AgentIntegration\OpenApi\AgentOpenApiDocument;
 use App\FamilyAccess\CurrentFamily;
+use App\FamilyAccess\Models\Family;
+use App\Mcp\McpConsentFamilyBinding;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Dedoc\Scramble\Scramble;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Passport\Client;
 use Laravel\Passport\Passport;
 use Laravel\Sanctum\Sanctum;
 
@@ -41,8 +44,14 @@ class AppServiceProvider extends ServiceProvider
         Sanctum::usePersonalAccessTokenModel(AgentCredential::class);
         Passport::authorizationView(function (array $parameters) {
             $user = $parameters['user'] ?? null;
-            abort_unless($user instanceof User, 403);
-            $parameters['family'] = app(CurrentFamily::class)->resolve($user);
+            $client = $parameters['client'] ?? null;
+            $authToken = $parameters['authToken'] ?? null;
+            abort_unless($user instanceof User && $client instanceof Client && is_string($authToken), 403);
+            $family = app(CurrentFamily::class)->resolve($user);
+            $parameters['family'] = $family;
+            $parameters['familyBinding'] = $family instanceof Family
+                ? app(McpConsentFamilyBinding::class)->issue($user, $family, $client->id, $authToken)
+                : null;
 
             return response()->view('mcp.authorize', $parameters);
         });

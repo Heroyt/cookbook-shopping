@@ -150,7 +150,7 @@ abstract class McpAgentTool extends Tool
             );
         } catch (ValidationException $exception) {
             return $this->error('validation_failed', 'The MCP tool arguments are invalid.', details: [
-                'fields' => $exception->errors(),
+                'fields' => array_keys($exception->errors()),
             ]);
         } catch (ModelNotFoundException) {
             return $this->error('resource_not_found', 'The requested Family resource was not found.');

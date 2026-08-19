@@ -28,6 +28,7 @@ final class ApproveMcpAuthorizationRequest extends FormRequest
     {
         return [
             'auth_token' => ['required', 'string'],
+            'family_binding' => ['required', 'string'],
             'abilities' => ['sometimes', 'array'],
             'abilities.*' => [
                 'distinct',
@@ -56,5 +57,12 @@ final class ApproveMcpAuthorizationRequest extends FormRequest
         }
 
         return $abilities;
+    }
+
+    public function familyBinding(): string
+    {
+        $binding = $this->validated('family_binding');
+
+        return is_string($binding) ? $binding : '';
     }
 }

@@ -41,6 +41,7 @@
         <form method="POST" action="{{ route('passport.authorizations.approve') }}" class="flex flex-col gap-5">
             @csrf
             <input type="hidden" name="auth_token" value="{{ $authToken }}">
+            <input type="hidden" name="family_binding" value="{{ $familyBinding }}">
 
             <fieldset class="flex flex-col gap-3" @disabled($family === null)>
                 <legend class="mb-2 font-medium">{{ __('Oprávnění') }}</legend>
@@ -56,7 +57,7 @@
                 @foreach([
                     \App\AgentIntegration\AgentCredentialAbility::CookbookWrite->value => [__('Úpravy kuchařky'), __('Obchody, části obchodů, suroviny, štítky a recepty.')],
                     \App\AgentIntegration\AgentCredentialAbility::PlanningWrite->value => [__('Úpravy kalendáře'), __('Přidávání a úpravy jídel v kalendáři.')],
-                    \App\AgentIntegration\AgentCredentialAbility::DestructiveWrite->value => [__('Archivace a mazání'), __('Archivace obsahu a mazání historie změn.')],
+                    \App\AgentIntegration\AgentCredentialAbility::DestructiveWrite->value => [__('Archivace a mazání'), __('Archivace obsahu a podporované mazání položek kuchařky a kalendáře.')],
                 ] as $ability => [$label, $description])
                     <div class="flex items-start gap-3 rounded-md border p-3">
                         <input id="ability-{{ $loop->index }}" name="abilities[]" value="{{ $ability }}" type="checkbox" class="mt-0.5 size-4 rounded border-input">

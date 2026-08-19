@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Mcp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Mcp\ApproveMcpAuthorizationRequest;
 use App\Mcp\Actions\AuthorizeMcpConnection;
+use App\Mcp\McpConsentFamilyBinding;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\Http\Controllers\ConvertsPsrResponses;
@@ -25,6 +26,7 @@ final class ApproveMcpAuthorizationController extends Controller
     public function __construct(
         private readonly AuthorizationServer $server,
         private readonly AuthorizeMcpConnection $authorizeMcpConnection,
+        private readonly McpConsentFamilyBinding $consentFamilyBinding,
     ) {}
 
     public function __invoke(
@@ -36,9 +38,17 @@ final class ApproveMcpAuthorizationController extends Controller
         abort_unless($user instanceof User, 403);
 
         return DB::transaction(function () use ($authRequest, $psrResponse, $request, $user): Response {
+            $clientId = $authRequest->getClient()->getIdentifier();
+            $family = $this->consentFamilyBinding->resolve(
+                $user,
+                $clientId,
+                $request->string('auth_token')->toString(),
+                $request->familyBinding(),
+            );
             $this->authorizeMcpConnection->handle(
                 $user,
-                $authRequest->getClient()->getIdentifier(),
+                $family,
+                $clientId,
                 $request->abilities(),
             );
 
